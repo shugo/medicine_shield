@@ -22,12 +22,7 @@ module MedicineShield
       config = create_config
       FileUtils.mkdir_p(File.dirname(path))
       old_umask = File.umask
-      File.umask(0066)
-      begin
-        File.write(path, config.to_json)
-      ensure
-        File.umask(old_umask)
-      end
+      File.write(path, config.to_json, perm: 0600)
       config
     end
   end
