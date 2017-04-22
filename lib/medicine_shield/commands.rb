@@ -59,5 +59,5 @@ define_command(:toot) do
   client = Mastodon::REST::Client.new(base_url: config["url"],
                                       bearer_token: config["access_token"])
   response = client.create_status(msg)
-  message(response.inspect)
+  message("Tooted")
 end
