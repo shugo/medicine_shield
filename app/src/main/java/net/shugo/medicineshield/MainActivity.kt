@@ -1,4 +1,4 @@
-package com.example.medicineshield
+package net.shugo.medicineshield
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -16,14 +16,14 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.medicineshield.data.database.AppDatabase
-import com.example.medicineshield.data.repository.MedicationRepository
-import com.example.medicineshield.ui.screen.MedicationFormScreen
-import com.example.medicineshield.ui.screen.MedicationListScreen
-import com.example.medicineshield.ui.screen.DailyMedicationScreen
-import com.example.medicineshield.viewmodel.MedicationFormViewModel
-import com.example.medicineshield.viewmodel.MedicationListViewModel
-import com.example.medicineshield.viewmodel.DailyMedicationViewModel
+import net.shugo.medicineshield.data.database.AppDatabase
+import net.shugo.medicineshield.data.repository.MedicationRepository
+import net.shugo.medicineshield.ui.screen.MedicationFormScreen
+import net.shugo.medicineshield.ui.screen.MedicationListScreen
+import net.shugo.medicineshield.ui.screen.DailyMedicationScreen
+import net.shugo.medicineshield.viewmodel.MedicationFormViewModel
+import net.shugo.medicineshield.viewmodel.MedicationListViewModel
+import net.shugo.medicineshield.viewmodel.DailyMedicationViewModel
 
 class MainActivity : ComponentActivity() {
     private lateinit var repository: MedicationRepository

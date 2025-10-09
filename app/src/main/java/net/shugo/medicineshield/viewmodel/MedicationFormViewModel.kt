@@ -1,10 +1,10 @@
-package com.example.medicineshield.viewmodel
+package net.shugo.medicineshield.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.medicineshield.data.model.CycleType
-import com.example.medicineshield.data.model.Medication
-import com.example.medicineshield.data.repository.MedicationRepository
+import net.shugo.medicineshield.data.model.CycleType
+import net.shugo.medicineshield.data.model.Medication
+import net.shugo.medicineshield.data.repository.MedicationRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

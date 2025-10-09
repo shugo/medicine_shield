@@ -1,9 +1,9 @@
-package com.example.medicineshield.viewmodel
+package net.shugo.medicineshield.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.medicineshield.data.model.MedicationWithTimes
-import com.example.medicineshield.data.repository.MedicationRepository
+import net.shugo.medicineshield.data.model.MedicationWithTimes
+import net.shugo.medicineshield.data.repository.MedicationRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn

@@ -1,14 +1,14 @@
-package com.example.medicineshield.data.repository
+package net.shugo.medicineshield.data.repository
 
-import com.example.medicineshield.data.dao.MedicationDao
-import com.example.medicineshield.data.dao.MedicationIntakeDao
-import com.example.medicineshield.data.dao.MedicationTimeDao
-import com.example.medicineshield.data.model.CycleType
-import com.example.medicineshield.data.model.Medication
-import com.example.medicineshield.data.model.MedicationIntake
-import com.example.medicineshield.data.model.MedicationTime
-import com.example.medicineshield.data.model.MedicationWithTimes
-import com.example.medicineshield.data.model.DailyMedicationItem
+import net.shugo.medicineshield.data.dao.MedicationDao
+import net.shugo.medicineshield.data.dao.MedicationIntakeDao
+import net.shugo.medicineshield.data.dao.MedicationTimeDao
+import net.shugo.medicineshield.data.model.CycleType
+import net.shugo.medicineshield.data.model.Medication
+import net.shugo.medicineshield.data.model.MedicationIntake
+import net.shugo.medicineshield.data.model.MedicationTime
+import net.shugo.medicineshield.data.model.MedicationWithTimes
+import net.shugo.medicineshield.data.model.DailyMedicationItem
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import java.text.SimpleDateFormat

@@ -1,4 +1,4 @@
-package com.example.medicineshield.data.model
+package net.shugo.medicineshield.data.model
 
 enum class CycleType {
     DAILY,      // 毎日

@@ -1,7 +1,7 @@
-package com.example.medicineshield.data.database
+package net.shugo.medicineshield.data.database
 
 import androidx.room.TypeConverter
-import com.example.medicineshield.data.model.CycleType
+import net.shugo.medicineshield.data.model.CycleType
 
 class Converters {
     @TypeConverter
