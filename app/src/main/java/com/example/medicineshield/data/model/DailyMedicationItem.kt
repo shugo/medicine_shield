@@ -1,6 +1,6 @@
 package com.example.medicineshield.data.model
 
-data class TodayMedicationItem(
+data class DailyMedicationItem(
     val medicationId: Long,
     val medicationName: String,
     val scheduledTime: String,

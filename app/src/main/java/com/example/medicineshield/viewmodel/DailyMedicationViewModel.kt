@@ -1,0 +1,109 @@
+package com.example.medicineshield.viewmodel
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.medicineshield.data.model.DailyMedicationItem
+import com.example.medicineshield.data.repository.MedicationRepository
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.*
+
+class DailyMedicationViewModel(
+    private val repository: MedicationRepository
+) : ViewModel() {
+
+    private val _dailyMedications = MutableStateFlow<List<DailyMedicationItem>>(emptyList())
+    val dailyMedications: StateFlow<List<DailyMedicationItem>> = _dailyMedications.asStateFlow()
+
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    private val _selectedDate = MutableStateFlow(Calendar.getInstance())
+    val selectedDate: StateFlow<Calendar> = _selectedDate.asStateFlow()
+
+    private val _displayDateText = MutableStateFlow("")
+    val displayDateText: StateFlow<String> = _displayDateText.asStateFlow()
+
+    init {
+        loadMedicationsForSelectedDate()
+        updateDisplayDate()
+    }
+
+    private fun loadMedicationsForSelectedDate() {
+        viewModelScope.launch {
+            _isLoading.value = true
+            val dateString = formatDateToString(_selectedDate.value)
+            repository.getMedicationsForDate(dateString).collect { medications ->
+                _dailyMedications.value = medications
+                _isLoading.value = false
+            }
+        }
+    }
+
+    private fun updateDisplayDate() {
+        val calendar = _selectedDate.value
+        val dateFormat = SimpleDateFormat("yyyy年MM月dd日 (E)", Locale.JAPANESE)
+
+        // 今日かどうかチェック
+        val today = Calendar.getInstance()
+        val isToday = calendar.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
+                      calendar.get(Calendar.DAY_OF_YEAR) == today.get(Calendar.DAY_OF_YEAR)
+
+        val dateText = dateFormat.format(calendar.time)
+        _displayDateText.value = if (isToday) "今日 $dateText" else dateText
+    }
+
+    fun onPreviousDay() {
+        val newDate = _selectedDate.value.clone() as Calendar
+        newDate.add(Calendar.DAY_OF_YEAR, -1)
+        _selectedDate.value = newDate
+        updateDisplayDate()
+        loadMedicationsForSelectedDate()
+    }
+
+    fun onNextDay() {
+        val newDate = _selectedDate.value.clone() as Calendar
+        newDate.add(Calendar.DAY_OF_YEAR, 1)
+        _selectedDate.value = newDate
+        updateDisplayDate()
+        loadMedicationsForSelectedDate()
+    }
+
+    fun onDateSelected(year: Int, month: Int, dayOfMonth: Int) {
+        val newDate = Calendar.getInstance()
+        newDate.set(year, month, dayOfMonth)
+        _selectedDate.value = newDate
+        updateDisplayDate()
+        loadMedicationsForSelectedDate()
+    }
+
+    fun toggleMedicationTaken(medicationId: Long, scheduledTime: String, currentStatus: Boolean) {
+        viewModelScope.launch {
+            val dateString = formatDateToString(_selectedDate.value)
+            repository.updateIntakeStatus(medicationId, scheduledTime, !currentStatus, dateString)
+        }
+    }
+
+    fun refreshData() {
+        updateDisplayDate()
+        loadMedicationsForSelectedDate()
+    }
+
+    /**
+     * 時刻でグループ化されたデータを取得
+     */
+    fun getMedicationsGroupedByTime(): Map<String, List<DailyMedicationItem>> {
+        return _dailyMedications.value.groupBy { it.scheduledTime }
+    }
+
+    /**
+     * CalendarをYYYY-MM-DD形式の文字列に変換
+     */
+    private fun formatDateToString(calendar: Calendar): String {
+        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        return sdf.format(calendar.time)
+    }
+}
