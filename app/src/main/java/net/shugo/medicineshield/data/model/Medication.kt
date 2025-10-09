@@ -1,4 +1,4 @@
-package com.example.medicineshield.data.model
+package net.shugo.medicineshield.data.model
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey

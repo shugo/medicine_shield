@@ -1,4 +1,4 @@
-package com.example.medicineshield.ui.screen
+package net.shugo.medicineshield.ui.screen
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -16,8 +16,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.medicineshield.data.model.DailyMedicationItem
-import com.example.medicineshield.viewmodel.DailyMedicationViewModel
+import net.shugo.medicineshield.data.model.DailyMedicationItem
+import net.shugo.medicineshield.viewmodel.DailyMedicationViewModel
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)

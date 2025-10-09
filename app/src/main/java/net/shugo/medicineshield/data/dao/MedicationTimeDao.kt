@@ -1,7 +1,7 @@
-package com.example.medicineshield.data.dao
+package net.shugo.medicineshield.data.dao
 
 import androidx.room.*
-import com.example.medicineshield.data.model.MedicationTime
+import net.shugo.medicineshield.data.model.MedicationTime
 
 @Dao
 interface MedicationTimeDao {

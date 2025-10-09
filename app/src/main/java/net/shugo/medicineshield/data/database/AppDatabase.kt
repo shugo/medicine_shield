@@ -1,4 +1,4 @@
-package com.example.medicineshield.data.database
+package net.shugo.medicineshield.data.database
 
 import android.content.Context
 import androidx.room.Database
@@ -7,12 +7,12 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
-import com.example.medicineshield.data.dao.MedicationDao
-import com.example.medicineshield.data.dao.MedicationIntakeDao
-import com.example.medicineshield.data.dao.MedicationTimeDao
-import com.example.medicineshield.data.model.Medication
-import com.example.medicineshield.data.model.MedicationIntake
-import com.example.medicineshield.data.model.MedicationTime
+import net.shugo.medicineshield.data.dao.MedicationDao
+import net.shugo.medicineshield.data.dao.MedicationIntakeDao
+import net.shugo.medicineshield.data.dao.MedicationTimeDao
+import net.shugo.medicineshield.data.model.Medication
+import net.shugo.medicineshield.data.model.MedicationIntake
+import net.shugo.medicineshield.data.model.MedicationTime
 
 @Database(
     entities = [Medication::class, MedicationTime::class, MedicationIntake::class],

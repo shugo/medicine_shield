@@ -1,4 +1,4 @@
-package com.example.medicineshield.data.model
+package net.shugo.medicineshield.data.model
 
 data class DailyMedicationItem(
     val medicationId: Long,

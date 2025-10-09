@@ -1,7 +1,7 @@
-package com.example.medicineshield.data.dao
+package net.shugo.medicineshield.data.dao
 
 import androidx.room.*
-import com.example.medicineshield.data.model.MedicationIntake
+import net.shugo.medicineshield.data.model.MedicationIntake
 import kotlinx.coroutines.flow.Flow
 
 @Dao

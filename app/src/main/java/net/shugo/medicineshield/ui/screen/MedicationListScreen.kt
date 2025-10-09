@@ -1,4 +1,4 @@
-package com.example.medicineshield.ui.screen
+package net.shugo.medicineshield.ui.screen
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -13,9 +13,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.medicineshield.data.model.CycleType
-import com.example.medicineshield.data.model.MedicationWithTimes
-import com.example.medicineshield.viewmodel.MedicationListViewModel
+import net.shugo.medicineshield.data.model.CycleType
+import net.shugo.medicineshield.data.model.MedicationWithTimes
+import net.shugo.medicineshield.viewmodel.MedicationListViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 
