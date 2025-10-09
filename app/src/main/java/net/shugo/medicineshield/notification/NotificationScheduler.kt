@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import net.shugo.medicineshield.data.model.CycleType
 import net.shugo.medicineshield.data.model.MedicationWithTimes
@@ -37,11 +38,7 @@ class NotificationScheduler(
      */
     suspend fun rescheduleAllNotifications() = withContext(Dispatchers.IO) {
         // すべての薬を取得
-        val medications = mutableListOf<MedicationWithTimes>()
-        repository.getAllMedicationsWithTimes().collect { list ->
-            medications.clear()
-            medications.addAll(list)
-        }
+        val medications = repository.getAllMedicationsWithTimes().first()
 
         // すべての時刻を収集
         val allTimes = mutableSetOf<String>()
@@ -205,11 +202,7 @@ class NotificationScheduler(
      * 指定時刻・指定日に服用すべき薬のリストを取得
      */
     private suspend fun getMedicationsForTime(time: String, dateTime: Long): List<MedicationWithTimes> {
-        val medications = mutableListOf<MedicationWithTimes>()
-        repository.getAllMedicationsWithTimes().collect { list ->
-            medications.clear()
-            medications.addAll(list)
-        }
+        val medications = repository.getAllMedicationsWithTimes().first()
 
         return medications.filter { medWithTimes ->
             // この薬がその時刻を持っているか

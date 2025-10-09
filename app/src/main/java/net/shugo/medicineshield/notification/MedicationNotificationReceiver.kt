@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import net.shugo.medicineshield.data.database.AppDatabase
 import net.shugo.medicineshield.data.repository.MedicationRepository
@@ -30,13 +31,9 @@ class MedicationNotificationReceiver : BroadcastReceiver() {
 
                 // 現在日時の薬リストを取得
                 val currentDate = getCurrentDateString()
-                val medications = mutableListOf<String>()
-
-                repository.getMedications(currentDate).collect { items ->
-                    medications.clear()
-                    items.filter { it.scheduledTime == time && !it.isTaken }
-                        .forEach { medications.add(it.medicationName) }
-                }
+                val items = repository.getMedications(currentDate).first()
+                val medications = items.filter { it.scheduledTime == time && !it.isTaken }
+                    .map { it.medicationName }
 
                 // 通知を表示
                 if (medications.isNotEmpty()) {
