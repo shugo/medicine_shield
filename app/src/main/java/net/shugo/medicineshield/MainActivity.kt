@@ -1,14 +1,22 @@
 package net.shugo.medicineshield
 
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -16,8 +24,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import kotlinx.coroutines.launch
 import net.shugo.medicineshield.data.database.AppDatabase
 import net.shugo.medicineshield.data.repository.MedicationRepository
+import net.shugo.medicineshield.notification.NotificationHelper
+import net.shugo.medicineshield.notification.NotificationScheduler
 import net.shugo.medicineshield.ui.screen.MedicationFormScreen
 import net.shugo.medicineshield.ui.screen.MedicationListScreen
 import net.shugo.medicineshield.ui.screen.DailyMedicationScreen
@@ -27,6 +38,15 @@ import net.shugo.medicineshield.viewmodel.DailyMedicationViewModel
 
 class MainActivity : ComponentActivity() {
     private lateinit var repository: MedicationRepository
+
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            // 権限が許可された場合、通知をスケジュール
+            setupNotifications()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,6 +58,13 @@ class MainActivity : ComponentActivity() {
             database.medicationIntakeDao()
         )
 
+        // 通知チャネルを作成
+        val notificationHelper = NotificationHelper(this)
+        notificationHelper.createNotificationChannel()
+
+        // 通知権限をリクエスト
+        requestNotificationPermission()
+
         setContent {
             MedicineShieldTheme {
                 Surface(
@@ -47,6 +74,34 @@ class MainActivity : ComponentActivity() {
                     MedicineShieldApp(repository)
                 }
             }
+        }
+    }
+
+    private fun requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            when {
+                ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) == PackageManager.PERMISSION_GRANTED -> {
+                    // 権限が既に許可されている場合
+                    setupNotifications()
+                }
+                else -> {
+                    // 権限をリクエスト
+                    requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                }
+            }
+        } else {
+            // Android 13未満では権限不要
+            setupNotifications()
+        }
+    }
+
+    private fun setupNotifications() {
+        lifecycleScope.launch {
+            val scheduler = NotificationScheduler(applicationContext, repository)
+            scheduler.rescheduleAllNotifications()
         }
     }
 }
@@ -61,6 +116,7 @@ fun MedicineShieldTheme(content: @Composable () -> Unit) {
 @Composable
 fun MedicineShieldApp(repository: MedicationRepository) {
     val navController = rememberNavController()
+    val context = LocalContext.current
 
     NavHost(
         navController = navController,
@@ -80,7 +136,7 @@ fun MedicineShieldApp(repository: MedicationRepository) {
 
         composable("medication_list") {
             val viewModel: MedicationListViewModel = viewModel(
-                factory = MedicationListViewModelFactory(repository)
+                factory = MedicationListViewModelFactory(repository, context)
             )
             MedicationListScreen(
                 viewModel = viewModel,
@@ -95,7 +151,7 @@ fun MedicineShieldApp(repository: MedicationRepository) {
 
         composable("add_medication") {
             val viewModel: MedicationFormViewModel = viewModel(
-                factory = MedicationFormViewModelFactory(repository)
+                factory = MedicationFormViewModelFactory(repository, context)
             )
             MedicationFormScreen(
                 viewModel = viewModel,
@@ -112,7 +168,7 @@ fun MedicineShieldApp(repository: MedicationRepository) {
         ) { backStackEntry ->
             val medicationId = backStackEntry.arguments?.getLong("medicationId") ?: 0L
             val viewModel: MedicationFormViewModel = viewModel(
-                factory = MedicationFormViewModelFactory(repository)
+                factory = MedicationFormViewModelFactory(repository, context)
             )
             viewModel.loadMedication(medicationId)
             MedicationFormScreen(
@@ -127,24 +183,26 @@ fun MedicineShieldApp(repository: MedicationRepository) {
 }
 
 class MedicationListViewModelFactory(
-    private val repository: MedicationRepository
+    private val repository: MedicationRepository,
+    private val context: Context
 ) : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
     override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(MedicationListViewModel::class.java)) {
-            return MedicationListViewModel(repository) as T
+            return MedicationListViewModel(repository, context) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
 
 class MedicationFormViewModelFactory(
-    private val repository: MedicationRepository
+    private val repository: MedicationRepository,
+    private val context: Context
 ) : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
     override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(MedicationFormViewModel::class.java)) {
-            return MedicationFormViewModel(repository) as T
+            return MedicationFormViewModel(repository, context) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }
