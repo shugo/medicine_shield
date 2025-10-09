@@ -145,9 +145,14 @@ class MedicationRepository(
         val calendar = Calendar.getInstance()
         calendar.timeInMillis = targetDate
 
+        // 日付のみで比較するため、時刻を00:00:00にリセット
+        val normalizedTargetDate = normalizeToStartOfDay(targetDate)
+        val normalizedStartDate = normalizeToStartOfDay(medication.startDate)
+        val normalizedEndDate = medication.endDate?.let { normalizeToStartOfDay(it) }
+
         // 期間チェック
-        if (targetDate < medication.startDate) return false
-        if (medication.endDate != null && targetDate > medication.endDate) return false
+        if (normalizedTargetDate < normalizedStartDate) return false
+        if (normalizedEndDate != null && normalizedTargetDate > normalizedEndDate) return false
 
         return when (medication.cycleType) {
             CycleType.DAILY -> true
@@ -162,7 +167,7 @@ class MedicationRepository(
             CycleType.INTERVAL -> {
                 // N日ごとチェック
                 val intervalDays = medication.cycleValue?.toIntOrNull() ?: return false
-                val daysSinceStart = ((targetDate - medication.startDate) / (1000 * 60 * 60 * 24)).toInt()
+                val daysSinceStart = ((normalizedTargetDate - normalizedStartDate) / (1000 * 60 * 60 * 24)).toInt()
                 daysSinceStart % intervalDays == 0
             }
         }
@@ -193,6 +198,19 @@ class MedicationRepository(
         } catch (e: Exception) {
             System.currentTimeMillis()
         }
+    }
+
+    /**
+     * タイムスタンプを日付の開始時刻(00:00:00.000)に正規化
+     */
+    private fun normalizeToStartOfDay(timestamp: Long): Long {
+        val calendar = Calendar.getInstance()
+        calendar.timeInMillis = timestamp
+        calendar.set(Calendar.HOUR_OF_DAY, 0)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+        return calendar.timeInMillis
     }
 
     /**
