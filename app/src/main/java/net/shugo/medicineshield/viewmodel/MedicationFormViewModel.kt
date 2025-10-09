@@ -1,10 +1,12 @@
 package net.shugo.medicineshield.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import net.shugo.medicineshield.data.model.CycleType
 import net.shugo.medicineshield.data.model.Medication
 import net.shugo.medicineshield.data.repository.MedicationRepository
+import net.shugo.medicineshield.notification.NotificationScheduler
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -26,11 +28,16 @@ data class MedicationFormState(
 )
 
 class MedicationFormViewModel(
-    private val repository: MedicationRepository
+    private val repository: MedicationRepository,
+    private val context: Context
 ) : ViewModel() {
 
     private val _formState = MutableStateFlow(MedicationFormState())
     val formState: StateFlow<MedicationFormState> = _formState.asStateFlow()
+
+    private val notificationScheduler by lazy {
+        NotificationScheduler(context, repository)
+    }
 
     fun loadMedication(medicationId: Long) {
         viewModelScope.launch {
@@ -110,6 +117,11 @@ class MedicationFormViewModel(
                     repository.insertMedicationWithTimes(medication, state.times)
                 } else {
                     repository.updateMedicationWithTimes(medication, state.times)
+                }
+
+                // 通知をスケジュール
+                state.times.forEach { time ->
+                    notificationScheduler.scheduleNextNotificationForTime(time)
                 }
 
                 onSuccess()
