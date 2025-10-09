@@ -1,37 +1,42 @@
 package com.example.medicineshield.ui.screen
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.medicineshield.data.model.TodayMedicationItem
-import com.example.medicineshield.viewmodel.TodayMedicationViewModel
+import com.example.medicineshield.data.model.DailyMedicationItem
+import com.example.medicineshield.viewmodel.DailyMedicationViewModel
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TodayMedicationScreen(
-    viewModel: TodayMedicationViewModel,
+fun DailyMedicationScreen(
+    viewModel: DailyMedicationViewModel,
     onNavigateToMedicationList: () -> Unit
 ) {
-    val todayMedications by viewModel.todayMedications.collectAsState()
-    val todayDate by viewModel.todayDate.collectAsState()
+    val dailyMedications by viewModel.dailyMedications.collectAsState()
+    val displayDateText by viewModel.displayDateText.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    val selectedDate by viewModel.selectedDate.collectAsState()
+
+    var showDatePicker by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("今日飲む薬") },
+                title = { Text("飲む薬") },
                 actions = {
                     IconButton(onClick = onNavigateToMedicationList) {
                         Icon(
@@ -48,12 +53,12 @@ fun TodayMedicationScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // 日付表示
-            Text(
-                text = todayDate,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(16.dp)
+            // 日付ナビゲーションバー
+            DateNavigationBar(
+                displayDateText = displayDateText,
+                onPreviousDay = { viewModel.onPreviousDay() },
+                onNextDay = { viewModel.onNextDay() },
+                onDateClick = { showDatePicker = true }
             )
 
             when {
@@ -66,13 +71,13 @@ fun TodayMedicationScreen(
                     }
                 }
 
-                todayMedications.isEmpty() -> {
+                dailyMedications.isEmpty() -> {
                     EmptyMedicationState(onNavigateToMedicationList)
                 }
 
                 else -> {
                     MedicationList(
-                        medications = todayMedications,
+                        medications = dailyMedications,
                         onToggleTaken = { medicationId, scheduledTime, isTaken ->
                             viewModel.toggleMedicationTaken(medicationId, scheduledTime, isTaken)
                         }
@@ -80,7 +85,112 @@ fun TodayMedicationScreen(
                 }
             }
         }
+
+        // DatePickerダイアログ
+        if (showDatePicker) {
+            DatePickerDialog(
+                selectedDate = selectedDate,
+                onDateSelected = { year, month, dayOfMonth ->
+                    viewModel.onDateSelected(year, month, dayOfMonth)
+                    showDatePicker = false
+                },
+                onDismiss = { showDatePicker = false }
+            )
+        }
     }
+}
+
+@Composable
+fun DateNavigationBar(
+    displayDateText: String,
+    onPreviousDay: () -> Unit,
+    onNextDay: () -> Unit,
+    onDateClick: () -> Unit
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.surfaceVariant
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // 前日ボタン
+            IconButton(onClick = onPreviousDay) {
+                Icon(
+                    imageVector = Icons.Default.KeyboardArrowLeft,
+                    contentDescription = "前日",
+                    modifier = Modifier.size(32.dp)
+                )
+            }
+
+            // 日付表示（タップ可能）
+            Text(
+                text = displayDateText,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .clickable(onClick = onDateClick)
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            )
+
+            // 翌日ボタン
+            IconButton(onClick = onNextDay) {
+                Icon(
+                    imageVector = Icons.Default.KeyboardArrowRight,
+                    contentDescription = "翌日",
+                    modifier = Modifier.size(32.dp)
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DatePickerDialog(
+    selectedDate: Calendar,
+    onDateSelected: (year: Int, month: Int, dayOfMonth: Int) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = selectedDate.timeInMillis
+    )
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    datePickerState.selectedDateMillis?.let { millis ->
+                        val calendar = Calendar.getInstance()
+                        calendar.timeInMillis = millis
+                        onDateSelected(
+                            calendar.get(Calendar.YEAR),
+                            calendar.get(Calendar.MONTH),
+                            calendar.get(Calendar.DAY_OF_MONTH)
+                        )
+                    }
+                }
+            ) {
+                Text("決定")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("キャンセル")
+            }
+        },
+        text = {
+            DatePicker(
+                state = datePickerState,
+                showModeToggle = false
+            )
+        }
+    )
 }
 
 @Composable
@@ -116,7 +226,7 @@ fun EmptyMedicationState(onNavigateToMedicationList: () -> Unit) {
 
 @Composable
 fun MedicationList(
-    medications: List<TodayMedicationItem>,
+    medications: List<DailyMedicationItem>,
     onToggleTaken: (Long, String, Boolean) -> Unit
 ) {
     // 時刻でグループ化
@@ -158,7 +268,7 @@ fun TimeHeader(time: String) {
 
 @Composable
 fun MedicationItem(
-    medication: TodayMedicationItem,
+    medication: DailyMedicationItem,
     onToggleTaken: (Long, String, Boolean) -> Unit
 ) {
     Card(

@@ -20,10 +20,10 @@ import com.example.medicineshield.data.database.AppDatabase
 import com.example.medicineshield.data.repository.MedicationRepository
 import com.example.medicineshield.ui.screen.MedicationFormScreen
 import com.example.medicineshield.ui.screen.MedicationListScreen
-import com.example.medicineshield.ui.screen.TodayMedicationScreen
+import com.example.medicineshield.ui.screen.DailyMedicationScreen
 import com.example.medicineshield.viewmodel.MedicationFormViewModel
 import com.example.medicineshield.viewmodel.MedicationListViewModel
-import com.example.medicineshield.viewmodel.TodayMedicationViewModel
+import com.example.medicineshield.viewmodel.DailyMedicationViewModel
 
 class MainActivity : ComponentActivity() {
     private lateinit var repository: MedicationRepository
@@ -64,13 +64,13 @@ fun MedicineShieldApp(repository: MedicationRepository) {
 
     NavHost(
         navController = navController,
-        startDestination = "today_medication"
+        startDestination = "daily_medication"
     ) {
-        composable("today_medication") {
-            val viewModel: TodayMedicationViewModel = viewModel(
-                factory = TodayMedicationViewModelFactory(repository)
+        composable("daily_medication") {
+            val viewModel: DailyMedicationViewModel = viewModel(
+                factory = DailyMedicationViewModelFactory(repository)
             )
-            TodayMedicationScreen(
+            DailyMedicationScreen(
                 viewModel = viewModel,
                 onNavigateToMedicationList = {
                     navController.navigate("medication_list")
@@ -150,13 +150,13 @@ class MedicationFormViewModelFactory(
     }
 }
 
-class TodayMedicationViewModelFactory(
+class DailyMedicationViewModelFactory(
     private val repository: MedicationRepository
 ) : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
     override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(TodayMedicationViewModel::class.java)) {
-            return TodayMedicationViewModel(repository) as T
+        if (modelClass.isAssignableFrom(DailyMedicationViewModel::class.java)) {
+            return DailyMedicationViewModel(repository) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }
