@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import net.shugo.medicineshield.data.model.DailyMedicationItem
 import net.shugo.medicineshield.data.repository.MedicationRepository
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -27,13 +28,18 @@ class DailyMedicationViewModel(
     private val _displayDateText = MutableStateFlow("")
     val displayDateText: StateFlow<String> = _displayDateText.asStateFlow()
 
+    private var loadJob: Job? = null
+
     init {
         loadMedicationsForSelectedDate()
         updateDisplayDate()
     }
 
     private fun loadMedicationsForSelectedDate() {
-        viewModelScope.launch {
+        // 前回のloadJobをキャンセル
+        loadJob?.cancel()
+
+        loadJob = viewModelScope.launch {
             _isLoading.value = true
             val dateString = formatDateToString(_selectedDate.value)
             repository.getMedications(dateString).collect { medications ->
