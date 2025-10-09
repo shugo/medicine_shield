@@ -35,7 +35,7 @@ fun MedicationFormScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (isEdit) "薬を編集" else "薬を追加") },
+                title = { Text(if (isEdit) "お薬を編集" else "お薬を追加") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "戻る")
@@ -56,7 +56,7 @@ fun MedicationFormScreen(
                 OutlinedTextField(
                     value = formState.name,
                     onValueChange = { viewModel.updateName(it) },
-                    label = { Text("薬の名前") },
+                    label = { Text("お薬の名前") },
                     isError = formState.nameError != null,
                     supportingText = formState.nameError?.let { { Text(it) } },
                     modifier = Modifier.fillMaxWidth()
@@ -183,7 +183,7 @@ fun MedicationFormScreen(
                         modifier = Modifier.weight(1f)
                     ) {
                         Text(
-                            formState.endDate?.let { "終了日: ${formatDate(it)}" } ?: "終了日（省略可能）"
+                            formState.endDate?.let { "終了日: ${formatDate(it)}" } ?: "終了日: なし"
                         )
                     }
                     if (formState.endDate != null) {

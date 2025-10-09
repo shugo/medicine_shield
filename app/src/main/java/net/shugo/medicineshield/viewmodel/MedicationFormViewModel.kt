@@ -46,7 +46,7 @@ class MedicationFormViewModel(
                 _formState.value = _formState.value.copy(
                     medicationId = mwt.medication.id,
                     name = mwt.medication.name,
-                    times = mwt.times.map { it.time },
+                    times = mwt.times.map { it.time }.sorted(),
                     cycleType = mwt.medication.cycleType,
                     cycleValue = mwt.medication.cycleValue,
                     startDate = mwt.medication.startDate,
@@ -63,6 +63,7 @@ class MedicationFormViewModel(
     fun addTime(time: String) {
         val currentTimes = _formState.value.times.toMutableList()
         currentTimes.add(time)
+        currentTimes.sort()
         _formState.value = _formState.value.copy(times = currentTimes, timesError = null)
     }
 
