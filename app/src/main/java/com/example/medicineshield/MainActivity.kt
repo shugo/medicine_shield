@@ -20,8 +20,10 @@ import com.example.medicineshield.data.database.AppDatabase
 import com.example.medicineshield.data.repository.MedicationRepository
 import com.example.medicineshield.ui.screen.MedicationFormScreen
 import com.example.medicineshield.ui.screen.MedicationListScreen
+import com.example.medicineshield.ui.screen.TodayMedicationScreen
 import com.example.medicineshield.viewmodel.MedicationFormViewModel
 import com.example.medicineshield.viewmodel.MedicationListViewModel
+import com.example.medicineshield.viewmodel.TodayMedicationViewModel
 
 class MainActivity : ComponentActivity() {
     private lateinit var repository: MedicationRepository
@@ -32,7 +34,8 @@ class MainActivity : ComponentActivity() {
         val database = AppDatabase.getDatabase(applicationContext)
         repository = MedicationRepository(
             database.medicationDao(),
-            database.medicationTimeDao()
+            database.medicationTimeDao(),
+            database.medicationIntakeDao()
         )
 
         setContent {
@@ -61,8 +64,20 @@ fun MedicineShieldApp(repository: MedicationRepository) {
 
     NavHost(
         navController = navController,
-        startDestination = "medication_list"
+        startDestination = "today_medication"
     ) {
+        composable("today_medication") {
+            val viewModel: TodayMedicationViewModel = viewModel(
+                factory = TodayMedicationViewModelFactory(repository)
+            )
+            TodayMedicationScreen(
+                viewModel = viewModel,
+                onNavigateToMedicationList = {
+                    navController.navigate("medication_list")
+                }
+            )
+        }
+
         composable("medication_list") {
             val viewModel: MedicationListViewModel = viewModel(
                 factory = MedicationListViewModelFactory(repository)
@@ -130,6 +145,18 @@ class MedicationFormViewModelFactory(
     override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(MedicationFormViewModel::class.java)) {
             return MedicationFormViewModel(repository) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
+    }
+}
+
+class TodayMedicationViewModelFactory(
+    private val repository: MedicationRepository
+) : ViewModelProvider.Factory {
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(TodayMedicationViewModel::class.java)) {
+            return TodayMedicationViewModel(repository) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }
