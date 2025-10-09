@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Medicine Shield</string>
+    <string name="medication_list_title">薬一覧</string>
+    <string name="add_medication">薬を追加</string>
+    <string name="edit_medication">薬を編集</string>
+    <string name="medication_name">薬の名前</string>
+    <string name="medication_name_hint">薬の名前を入力</string>
+    <string name="start_date">開始日</string>
+    <string name="end_date">終了日</string>
+    <string name="end_date_optional">終了日（省略可能）</string>
+    <string name="cycle_type">服用サイクル</string>
+    <string name="cycle_daily">毎日</string>
+    <string name="cycle_weekly">毎週</string>
+    <string name="cycle_interval">N日ごと</string>
+    <string name="select_days">曜日を選択</string>
+    <string name="sunday">日</string>
+    <string name="monday">月</string>
+    <string name="tuesday">火</string>
+    <string name="wednesday">水</string>
+    <string name="thursday">木</string>
+    <string name="friday">金</string>
+    <string name="saturday">土</string>
+    <string name="interval_days">日数</string>
+    <string name="medication_times">服用時間</string>
+    <string name="add_time">時間を追加</string>
+    <string name="save">保存</string>
+    <string name="cancel">キャンセル</string>
+    <string name="delete">削除</string>
+    <string name="delete_confirmation">この薬を削除しますか?</string>
+    <string name="yes">はい</string>
+    <string name="no">いいえ</string>
+    <string name="no_medications">登録されている薬はありません</string>
+    <string name="next_dose">次回服用: %s</string>
+    <string name="error_empty_name">薬の名前を入力してください</string>
+    <string name="error_no_times">少なくとも1つの服用時間を設定してください</string>
+    <string name="error_invalid_end_date">終了日は開始日より後に設定してください</string>
+    <string name="error_no_days_selected">少なくとも1つの曜日を選択してください</string>
+    <string name="error_invalid_interval">1以上の日数を入力してください</string>
+</resources>
