@@ -70,7 +70,7 @@ class MedicationRepository(
             val targetDate = parseDateString(dateString)
 
             for (medWithTimes in medList) {
-                if (shouldTakeMedicationOnDate(medWithTimes.medication, targetDate)) {
+                if (shouldTakeMedication(medWithTimes.medication, targetDate)) {
                     for (medTime in medWithTimes.times) {
                         val key = "${medWithTimes.medication.id}_${medTime.time}"
                         val intake = intakeMap[key]
@@ -139,17 +139,9 @@ class MedicationRepository(
     }
 
     /**
-     * 今日その薬を飲むべきかどうかを判定する（後方互換性のため残す）
-     */
-    private fun shouldTakeMedicationToday(medication: Medication): Boolean {
-        val calendar = Calendar.getInstance()
-        return shouldTakeMedicationOnDate(medication, calendar.timeInMillis)
-    }
-
-    /**
      * 指定された日付にその薬を飲むべきかどうかを判定する
      */
-    private fun shouldTakeMedicationOnDate(medication: Medication, targetDate: Long): Boolean {
+    private fun shouldTakeMedication(medication: Medication, targetDate: Long): Boolean {
         val calendar = Calendar.getInstance()
         calendar.timeInMillis = targetDate
 
