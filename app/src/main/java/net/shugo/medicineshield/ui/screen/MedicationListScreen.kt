@@ -32,12 +32,12 @@ fun MedicationListScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("薬一覧") }
+                title = { Text("お薬一覧") }
             )
         },
         floatingActionButton = {
             FloatingActionButton(onClick = onAddMedication) {
-                Icon(Icons.Default.Add, contentDescription = "薬を追加")
+                Icon(Icons.Default.Add, contentDescription = "お薬を追加")
             }
         }
     ) { padding ->
@@ -49,7 +49,7 @@ fun MedicationListScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    "登録されている薬はありません",
+                    "登録されているお薬はありません",
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -78,7 +78,7 @@ fun MedicationListScreen(
         AlertDialog(
             onDismissRequest = { medicationToDelete = null },
             title = { Text("確認") },
-            text = { Text("この薬を削除しますか?") },
+            text = { Text("このお薬を削除しますか?") },
             confirmButton = {
                 TextButton(
                     onClick = {

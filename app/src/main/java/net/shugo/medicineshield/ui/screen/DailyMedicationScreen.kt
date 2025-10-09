@@ -36,12 +36,12 @@ fun DailyMedicationScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("飲む薬") },
+                title = { Text("お薬カレンダー") },
                 actions = {
                     IconButton(onClick = onNavigateToMedicationList) {
                         Icon(
                             imageVector = Icons.Default.List,
-                            contentDescription = "薬一覧"
+                            contentDescription = "お薬一覧"
                         )
                     }
                 }
@@ -72,7 +72,7 @@ fun DailyMedicationScreen(
                 }
 
                 dailyMedications.isEmpty() -> {
-                    EmptyMedicationState(onNavigateToMedicationList)
+                    EmptyMedicationState(selectedDate, onNavigateToMedicationList)
                 }
 
                 else -> {
@@ -194,7 +194,19 @@ fun DatePickerDialog(
 }
 
 @Composable
-fun EmptyMedicationState(onNavigateToMedicationList: () -> Unit) {
+fun EmptyMedicationState(selectedDate: Calendar, onNavigateToMedicationList: () -> Unit) {
+    // 今日かどうか判定
+    val today = Calendar.getInstance()
+    val isToday = selectedDate.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
+                  selectedDate.get(Calendar.DAY_OF_YEAR) == today.get(Calendar.DAY_OF_YEAR)
+    val isFuture = selectedDate.timeInMillis > today.timeInMillis
+
+    val message = when {
+        isToday -> "今日飲むお薬はありません"
+        isFuture -> "この日に飲むお薬はありません"
+        else -> "この日に飲んだお薬はありません"
+    }
+
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
@@ -204,7 +216,7 @@ fun EmptyMedicationState(onNavigateToMedicationList: () -> Unit) {
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "今日飲む薬はありません",
+                text = message,
                 fontSize = 18.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -218,7 +230,7 @@ fun EmptyMedicationState(onNavigateToMedicationList: () -> Unit) {
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("薬を追加する")
+                Text("お薬を追加する")
             }
         }
     }
