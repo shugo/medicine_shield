@@ -56,23 +56,9 @@ class MedicationRepository(
     // ========== Daily Medication Functions ==========
 
     /**
-     * 今日の薬リストを取得する（後方互換性のため残す）
-     */
-    fun getTodayMedications(): Flow<List<DailyMedicationItem>> {
-        return getDailyMedications()
-    }
-
-    /**
-     * 今日の薬リストを取得する
-     */
-    fun getDailyMedications(): Flow<List<DailyMedicationItem>> {
-        return getMedicationsForDate(getCurrentDateString())
-    }
-
-    /**
      * 指定された日付の薬リストを取得する
      */
-    fun getMedicationsForDate(dateString: String): Flow<List<DailyMedicationItem>> {
+    fun getMedications(dateString: String): Flow<List<DailyMedicationItem>> {
         val medications = medicationDao.getAllMedicationsWithTimes()
         val intakes = medicationIntakeDao.getIntakesByDate(dateString)
 

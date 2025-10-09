@@ -36,7 +36,7 @@ class DailyMedicationViewModel(
         viewModelScope.launch {
             _isLoading.value = true
             val dateString = formatDateToString(_selectedDate.value)
-            repository.getMedicationsForDate(dateString).collect { medications ->
+            repository.getMedications(dateString).collect { medications ->
                 _dailyMedications.value = medications
                 _isLoading.value = false
             }
