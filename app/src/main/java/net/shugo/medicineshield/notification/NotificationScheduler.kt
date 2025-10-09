@@ -127,7 +127,11 @@ class NotificationScheduler(
      */
     fun scheduleDailyRefreshJob() {
         val calendar = Calendar.getInstance().apply {
-            if (get(Calendar.HOUR_OF_DAY) >= 0) {
+            // 現在時刻が00:00:00.000より後であれば翌日に設定
+            if (get(Calendar.HOUR_OF_DAY) > 0 ||
+                get(Calendar.MINUTE) > 0 ||
+                get(Calendar.SECOND) > 0 ||
+                get(Calendar.MILLISECOND) > 0) {
                 add(Calendar.DAY_OF_YEAR, 1)
             }
             set(Calendar.HOUR_OF_DAY, 0)
