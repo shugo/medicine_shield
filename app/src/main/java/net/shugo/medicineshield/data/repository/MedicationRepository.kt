@@ -33,7 +33,9 @@ class MedicationRepository(
     suspend fun getMedicationWithCurrentTimesById(medicationId: Long): MedicationWithTimes? {
         val medication = medicationDao.getMedicationById(medicationId) ?: return null
         val currentTimes = medicationTimeDao.getCurrentTimesForMedication(medicationId)
-        return MedicationWithTimes(medication, currentTimes)
+        val currentConfig = medicationConfigDao.getCurrentConfigForMedication(medicationId)
+        val configs = if (currentConfig != null) listOf(currentConfig) else emptyList()
+        return MedicationWithTimes(medication, currentTimes, configs)
     }
 
     suspend fun insertMedicationWithTimes(
