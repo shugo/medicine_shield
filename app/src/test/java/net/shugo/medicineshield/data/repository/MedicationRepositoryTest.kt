@@ -406,10 +406,8 @@ class MedicationRepositoryTest {
     }
 
     private fun parseDate(dateString: String): Long {
-        val calendar = Calendar.getInstance()
-        val parts = dateString.split("-")
-        calendar.set(parts[0].toInt(), parts[1].toInt() - 1, parts[2].toInt(), 0, 0, 0)
-        calendar.set(Calendar.MILLISECOND, 0)
-        return calendar.timeInMillis
+        val sdf = java.text.SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        sdf.isLenient = false
+        return sdf.parse(dateString)?.time ?: throw IllegalArgumentException("Invalid date format: $dateString")
     }
 }
