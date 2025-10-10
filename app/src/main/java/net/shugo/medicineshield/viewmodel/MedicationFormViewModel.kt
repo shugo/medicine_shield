@@ -75,6 +75,15 @@ class MedicationFormViewModel(
         }
     }
 
+    fun updateTime(index: Int, newTime: String) {
+        val currentTimes = _formState.value.times.toMutableList()
+        if (index in currentTimes.indices) {
+            currentTimes[index] = newTime
+            currentTimes.sort()
+            _formState.value = _formState.value.copy(times = currentTimes, timesError = null)
+        }
+    }
+
     fun updateCycleType(cycleType: CycleType) {
         _formState.value = _formState.value.copy(
             cycleType = cycleType,
