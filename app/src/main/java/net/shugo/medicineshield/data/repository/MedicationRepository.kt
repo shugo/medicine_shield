@@ -66,30 +66,30 @@ class MedicationRepository(
         endDate: Long?,
         times: List<String>
     ): Long {
-        val today = DateUtils.normalizeToStartOfDay(System.currentTimeMillis())
-
         // 1. Medicationを作成
         val medication = Medication(name = name)
         val medicationId = medicationDao.insert(medication)
 
         // 2. MedicationConfigを作成
+        // 初期登録時はvalidFrom = 0（過去すべての日付で有効）
         val config = MedicationConfig(
             medicationId = medicationId,
             cycleType = cycleType,
             cycleValue = cycleValue,
             medicationStartDate = startDate,
             medicationEndDate = endDate,
-            validFrom = today,
+            validFrom = 0,
             validTo = null
         )
         medicationConfigDao.insert(config)
 
         // 3. MedicationTimeを作成
+        // 初期登録時はvalidFrom = 0（過去すべての日付で有効）
         val medicationTimes = times.map { time ->
             MedicationTime(
                 medicationId = medicationId,
                 time = time,
-                validFrom = today,
+                validFrom = 0,
                 validTo = null
             )
         }
