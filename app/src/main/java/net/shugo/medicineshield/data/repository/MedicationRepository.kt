@@ -149,14 +149,15 @@ class MedicationRepository(
                 medicationConfigDao.insert(newConfig)
             }
         } else {
-            // 存在しない場合は新規作成
+            // 存在しない場合は新規作成（最初のConfigとして）
+            // validFrom = 0にすることで過去すべての日付で有効
             val newConfig = MedicationConfig(
                 medicationId = medicationId,
                 cycleType = cycleType,
                 cycleValue = cycleValue,
                 medicationStartDate = startDate,
                 medicationEndDate = endDate,
-                validFrom = today,
+                validFrom = 0,
                 validTo = null
             )
             medicationConfigDao.insert(newConfig)
