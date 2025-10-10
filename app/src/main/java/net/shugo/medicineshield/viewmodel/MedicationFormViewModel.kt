@@ -51,7 +51,7 @@ class MedicationFormViewModel(
                 _formState.value = _formState.value.copy(
                     medicationId = mwt.medication.id,
                     name = mwt.medication.name,
-                    times = mwt.times.map { it.time }.sorted(),
+                    times = mwt.times.map { it.time },
                     cycleType = currentConfig?.cycleType ?: CycleType.DAILY,
                     cycleValue = currentConfig?.cycleValue,
                     startDate = originalStartDate,
