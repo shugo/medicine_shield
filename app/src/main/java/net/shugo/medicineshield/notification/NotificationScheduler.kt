@@ -41,10 +41,10 @@ class NotificationScheduler(
         // すべての薬を取得
         val medications = repository.getAllMedicationsWithTimes().first()
 
-        // すべての時刻を収集
+        // すべての時刻を収集（現在有効なもののみ）
         val allTimes = mutableSetOf<String>()
         medications.forEach { med ->
-            med.times.forEach { time ->
+            med.getCurrentTimes().forEach { time ->
                 allTimes.add(time.time)
             }
         }
@@ -212,11 +212,8 @@ class NotificationScheduler(
 
         return medications.filter { medWithTimes ->
             // この薬がその時刻を持っているか（その日に有効な時刻）
-            val hasTime = medWithTimes.times.any { medTime ->
-                medTime.time == time &&
-                medTime.validFrom <= normalizedDateTime &&
-                (medTime.validTo == null || medTime.validTo > normalizedDateTime)
-            }
+            val validTimes = medWithTimes.getTimesForDate(normalizedDateTime)
+            val hasTime = validTimes.any { it.time == time }
             if (!hasTime) return@filter false
 
             // その日に有効なConfigを取得

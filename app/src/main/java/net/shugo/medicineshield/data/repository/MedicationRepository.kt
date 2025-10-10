@@ -199,16 +199,19 @@ class MedicationRepository(
             val configsByMedicationId = allConfigs.groupBy { it.medicationId }
 
             for (medication in medList) {
+                // MedicationWithTimesオブジェクトを構築
+                val medicationWithTimes = MedicationWithTimes(
+                    medication = medication,
+                    times = timesByMedicationId[medication.id] ?: emptyList(),
+                    configs = configsByMedicationId[medication.id] ?: emptyList()
+                )
+
                 // 対象日に有効なConfigを取得
-                val validConfig = getValidConfigForDate(configsByMedicationId[medication.id] ?: emptyList(), targetDate)
+                val validConfig = medicationWithTimes.getConfigForDate(targetDate)
 
                 if (validConfig != null && shouldTakeMedication(validConfig, targetDate)) {
                     // 対象日に有効な時刻を取得
-                    val allTimesForMed = timesByMedicationId[medication.id] ?: emptyList()
-                    val validTimes = allTimesForMed.filter { medTime ->
-                        medTime.validFrom <= targetDate &&
-                        (medTime.validTo == null || medTime.validTo > targetDate)
-                    }
+                    val validTimes = medicationWithTimes.getTimesForDate(targetDate)
 
                     for (medTime in validTimes) {
                         val key = "${medication.id}_${medTime.time}"
@@ -229,15 +232,6 @@ class MedicationRepository(
 
             dailyItems.sortedBy { it.scheduledTime }
         }
-    }
-
-    /**
-     * 指定された日付に有効なConfigを取得
-     */
-    private fun getValidConfigForDate(configs: List<MedicationConfig>, targetDate: Long): MedicationConfig? {
-        return configs
-            .filter { it.validFrom <= targetDate && (it.validTo == null || it.validTo > targetDate) }
-            .maxByOrNull { it.validFrom }
     }
 
     /**
