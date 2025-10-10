@@ -200,7 +200,7 @@ class MedicationFormViewModel(
 
             // 開始日が変更されている場合のみチェック
             if (normalizedStartDate != normalizedOriginalStartDate && normalizedStartDate < normalizedToday) {
-                _formState.value = _formState.value.copy(dateError = "編集時は開始日を今日より前の日付に変更できません")
+                _formState.value = _formState.value.copy(dateError = "編集時は開始日を過去の日付に変更できません")
                 isValid = false
             }
         }
