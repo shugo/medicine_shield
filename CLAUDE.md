@@ -36,11 +36,19 @@ MedicineShield is an Android medication management application built with Kotlin
 
 4. **Testing & Review**
    - Run appropriate tests (unit, instrumentation, lint)
+   - Ensure build succeeds (`./gradlew build`)
    - Create pull request when ready for review
-   - Merge PR to main after approval
+   - **WAIT for user approval before merging**
+   - **NEVER merge PR without explicit user approval**
 
-5. **Branch Cleanup**
+5. **Merge to Main**
+   - Only merge after receiving explicit user approval
+   - Use `/merge` command or `gh pr merge` to merge the PR
+   - Verify merge was successful
+
+6. **Branch Cleanup**
    - Delete feature branch after PR is merged
+   - Confirm you're back on main branch with latest changes
 
 ## Build Commands
 
