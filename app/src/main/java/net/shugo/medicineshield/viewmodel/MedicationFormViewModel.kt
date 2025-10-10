@@ -6,11 +6,11 @@ import androidx.lifecycle.viewModelScope
 import net.shugo.medicineshield.data.model.CycleType
 import net.shugo.medicineshield.data.repository.MedicationRepository
 import net.shugo.medicineshield.notification.NotificationScheduler
+import net.shugo.medicineshield.utils.DateUtils
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import java.util.Calendar
 
 data class MedicationFormState(
     val medicationId: Long? = null,
@@ -194,9 +194,9 @@ class MedicationFormViewModel(
 
         // 編集時：開始日が変更されており、かつ今日より前の日付に設定されている場合はエラー
         if (state.medicationId != null && state.originalStartDate != null) {
-            val normalizedStartDate = normalizeToStartOfDay(state.startDate)
-            val normalizedOriginalStartDate = normalizeToStartOfDay(state.originalStartDate)
-            val normalizedToday = normalizeToStartOfDay(System.currentTimeMillis())
+            val normalizedStartDate = DateUtils.normalizeToStartOfDay(state.startDate)
+            val normalizedOriginalStartDate = DateUtils.normalizeToStartOfDay(state.originalStartDate)
+            val normalizedToday = DateUtils.normalizeToStartOfDay(System.currentTimeMillis())
 
             // 開始日が変更されている場合のみチェック
             if (normalizedStartDate != normalizedOriginalStartDate && normalizedStartDate < normalizedToday) {
@@ -206,16 +206,6 @@ class MedicationFormViewModel(
         }
 
         return isValid
-    }
-
-    private fun normalizeToStartOfDay(timestamp: Long): Long {
-        val calendar = Calendar.getInstance()
-        calendar.timeInMillis = timestamp
-        calendar.set(Calendar.HOUR_OF_DAY, 0)
-        calendar.set(Calendar.MINUTE, 0)
-        calendar.set(Calendar.SECOND, 0)
-        calendar.set(Calendar.MILLISECOND, 0)
-        return calendar.timeInMillis
     }
 
     fun resetForm() {

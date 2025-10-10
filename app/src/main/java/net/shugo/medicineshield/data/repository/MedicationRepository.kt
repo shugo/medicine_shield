@@ -11,6 +11,7 @@ import net.shugo.medicineshield.data.model.MedicationTime
 import net.shugo.medicineshield.data.model.MedicationConfig
 import net.shugo.medicineshield.data.model.MedicationWithTimes
 import net.shugo.medicineshield.data.model.DailyMedicationItem
+import net.shugo.medicineshield.utils.DateUtils
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import java.text.SimpleDateFormat
@@ -46,7 +47,7 @@ class MedicationRepository(
         endDate: Long?,
         times: List<String>
     ): Long {
-        val today = normalizeToStartOfDay(System.currentTimeMillis())
+        val today = DateUtils.normalizeToStartOfDay(System.currentTimeMillis())
 
         // 1. Medicationを作成
         val medication = Medication(name = name)
@@ -87,7 +88,7 @@ class MedicationRepository(
         endDate: Long?,
         times: List<String>
     ) {
-        val today = normalizeToStartOfDay(System.currentTimeMillis())
+        val today = DateUtils.normalizeToStartOfDay(System.currentTimeMillis())
 
         // 1. Medicationの名前を更新
         val medication = medicationDao.getMedicationById(medicationId) ?: return
@@ -293,9 +294,9 @@ class MedicationRepository(
         calendar.timeInMillis = targetDate
 
         // 日付のみで比較するため、時刻を00:00:00にリセット
-        val normalizedTargetDate = normalizeToStartOfDay(targetDate)
-        val normalizedStartDate = normalizeToStartOfDay(config.medicationStartDate)
-        val normalizedEndDate = config.medicationEndDate?.let { normalizeToStartOfDay(it) }
+        val normalizedTargetDate = DateUtils.normalizeToStartOfDay(targetDate)
+        val normalizedStartDate = DateUtils.normalizeToStartOfDay(config.medicationStartDate)
+        val normalizedEndDate = config.medicationEndDate?.let { DateUtils.normalizeToStartOfDay(it) }
 
         // 期間チェック
         if (normalizedTargetDate < normalizedStartDate) return false
@@ -345,19 +346,6 @@ class MedicationRepository(
         } catch (e: Exception) {
             System.currentTimeMillis()
         }
-    }
-
-    /**
-     * タイムスタンプを日付の開始時刻(00:00:00.000)に正規化
-     */
-    private fun normalizeToStartOfDay(timestamp: Long): Long {
-        val calendar = Calendar.getInstance()
-        calendar.timeInMillis = timestamp
-        calendar.set(Calendar.HOUR_OF_DAY, 0)
-        calendar.set(Calendar.MINUTE, 0)
-        calendar.set(Calendar.SECOND, 0)
-        calendar.set(Calendar.MILLISECOND, 0)
-        return calendar.timeInMillis
     }
 
     /**

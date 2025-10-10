@@ -11,6 +11,7 @@ import kotlinx.coroutines.withContext
 import net.shugo.medicineshield.data.model.CycleType
 import net.shugo.medicineshield.data.model.MedicationWithTimes
 import net.shugo.medicineshield.data.repository.MedicationRepository
+import net.shugo.medicineshield.utils.DateUtils
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -207,7 +208,7 @@ class NotificationScheduler(
      */
     private suspend fun getMedicationsForTime(time: String, dateTime: Long): List<MedicationWithTimes> {
         val medications = repository.getAllMedicationsWithTimes().first()
-        val normalizedDateTime = normalizeToStartOfDay(dateTime)
+        val normalizedDateTime = DateUtils.normalizeToStartOfDay(dateTime)
 
         return medications.filter { medWithTimes ->
             // この薬がその時刻を持っているか（その日に有効な時刻）
@@ -234,9 +235,9 @@ class NotificationScheduler(
         calendar.timeInMillis = targetDate
 
         // 日付のみで比較するため、時刻を00:00:00にリセット
-        val normalizedTargetDate = normalizeToStartOfDay(targetDate)
-        val normalizedStartDate = normalizeToStartOfDay(config.medicationStartDate)
-        val normalizedEndDate = config.medicationEndDate?.let { normalizeToStartOfDay(it) }
+        val normalizedTargetDate = DateUtils.normalizeToStartOfDay(targetDate)
+        val normalizedStartDate = DateUtils.normalizeToStartOfDay(config.medicationStartDate)
+        val normalizedEndDate = config.medicationEndDate?.let { DateUtils.normalizeToStartOfDay(it) }
 
         // 期間チェック
         if (normalizedTargetDate < normalizedStartDate) return false
@@ -259,18 +260,5 @@ class NotificationScheduler(
                 daysSinceStart % intervalDays == 0
             }
         }
-    }
-
-    /**
-     * タイムスタンプを日付の開始時刻(00:00:00.000)に正規化
-     */
-    private fun normalizeToStartOfDay(timestamp: Long): Long {
-        val calendar = Calendar.getInstance()
-        calendar.timeInMillis = timestamp
-        calendar.set(Calendar.HOUR_OF_DAY, 0)
-        calendar.set(Calendar.MINUTE, 0)
-        calendar.set(Calendar.SECOND, 0)
-        calendar.set(Calendar.MILLISECOND, 0)
-        return calendar.timeInMillis
     }
 }
