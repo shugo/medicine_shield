@@ -12,6 +12,8 @@ import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
+import java.time.LocalDate
+import java.time.ZoneId
 import java.util.*
 
 class MedicationRepositoryTest {
@@ -406,8 +408,7 @@ class MedicationRepositoryTest {
     }
 
     private fun parseDate(dateString: String): Long {
-        val sdf = java.text.SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        sdf.isLenient = false
-        return sdf.parse(dateString)?.time ?: throw IllegalArgumentException("Invalid date format: $dateString")
+        val localDate = LocalDate.parse(dateString)
+        return localDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
     }
 }
