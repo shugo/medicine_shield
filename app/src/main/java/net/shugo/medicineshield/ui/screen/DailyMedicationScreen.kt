@@ -149,48 +149,35 @@ fun DateNavigationBar(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DatePickerDialog(
     selectedDate: Calendar,
     onDateSelected: (year: Int, month: Int, dayOfMonth: Int) -> Unit,
     onDismiss: () -> Unit
 ) {
-    val datePickerState = rememberDatePickerState(
-        initialSelectedDateMillis = selectedDate.timeInMillis
-    )
+    val context = androidx.compose.ui.platform.LocalContext.current
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    datePickerState.selectedDateMillis?.let { millis ->
-                        val calendar = Calendar.getInstance()
-                        calendar.timeInMillis = millis
-                        onDateSelected(
-                            calendar.get(Calendar.YEAR),
-                            calendar.get(Calendar.MONTH),
-                            calendar.get(Calendar.DAY_OF_MONTH)
-                        )
-                    }
-                }
-            ) {
-                Text("決定")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("キャンセル")
-            }
-        },
-        text = {
-            DatePicker(
-                state = datePickerState,
-                showModeToggle = false
-            )
+    DisposableEffect(Unit) {
+        val datePickerDialog = android.app.DatePickerDialog(
+            context,
+            { _, year, month, dayOfMonth ->
+                onDateSelected(year, month, dayOfMonth)
+            },
+            selectedDate.get(Calendar.YEAR),
+            selectedDate.get(Calendar.MONTH),
+            selectedDate.get(Calendar.DAY_OF_MONTH)
+        )
+
+        datePickerDialog.setOnCancelListener {
+            onDismiss()
         }
-    )
+
+        datePickerDialog.show()
+
+        onDispose {
+            datePickerDialog.dismiss()
+        }
+    }
 }
 
 @Composable
