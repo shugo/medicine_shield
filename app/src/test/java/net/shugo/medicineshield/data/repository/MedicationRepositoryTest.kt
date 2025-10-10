@@ -39,7 +39,7 @@ class MedicationRepositoryTest {
     // ========== CRUD Operations ==========
 
     @Test
-    fun `insertMedicationWithTimes should insert medication and times`() = runTest {
+    fun `insertMedicationWithTimes should insert medication and times with valid dates`() = runTest {
         // Given
         val medication = createSampleMedication(id = 0)
         val times = listOf("08:00", "20:00")
@@ -59,20 +59,27 @@ class MedicationRepositoryTest {
                 list.size == 2 &&
                 list[0].medicationId == medicationId &&
                 list[0].time == "08:00" &&
+                list[0].endDate == null &&
                 list[1].medicationId == medicationId &&
-                list[1].time == "20:00"
+                list[1].time == "20:00" &&
+                list[1].endDate == null
             })
         }
     }
 
     @Test
-    fun `updateMedicationWithTimes should update medication and replace times`() = runTest {
+    fun `updateMedicationWithTimes should set endDate for removed times`() = runTest {
         // Given
         val medication = createSampleMedication(id = 1)
+        val existingTimes = listOf(
+            MedicationTime(id = 1, medicationId = 1, time = "08:00", startDate = 0, endDate = null),
+            MedicationTime(id = 2, medicationId = 1, time = "20:00", startDate = 0, endDate = null)
+        )
         val newTimes = listOf("09:00", "21:00")
 
         coEvery { medicationDao.update(any()) } just Runs
-        coEvery { medicationTimeDao.deleteAllForMedication(medication.id) } just Runs
+        coEvery { medicationTimeDao.getCurrentTimesForMedication(medication.id) } returns existingTimes
+        coEvery { medicationTimeDao.update(any()) } just Runs
         coEvery { medicationTimeDao.insertAll(any()) } just Runs
 
         // When
@@ -80,8 +87,9 @@ class MedicationRepositoryTest {
 
         // Then
         coVerify { medicationDao.update(match { it.id == medication.id }) }
-        coVerify { medicationTimeDao.deleteAllForMedication(medication.id) }
-        coVerify { medicationTimeDao.insertAll(match { it.size == 2 }) }
+        coVerify { medicationTimeDao.getCurrentTimesForMedication(medication.id) }
+        coVerify(exactly = 2) { medicationTimeDao.update(match { it.endDate != null }) } // Set endDate for 08:00 and 20:00
+        coVerify { medicationTimeDao.insertAll(match { it.size == 2 }) } // Insert 09:00 and 21:00
     }
 
     @Test
@@ -116,16 +124,16 @@ class MedicationRepositoryTest {
     fun `getMedications should return sorted daily medication items for DAILY cycle`() = runTest {
         // Given
         val dateString = "2025-10-10"
+        val targetDate = parseDate(dateString)
         val medication = createSampleMedication(
             id = 1,
             cycleType = CycleType.DAILY,
             startDate = parseDate("2025-10-01")
         )
         val times = listOf(
-            MedicationTime(id = 1, medicationId = 1, time = "20:00"),
-            MedicationTime(id = 2, medicationId = 1, time = "08:00")
+            MedicationTime(id = 1, medicationId = 1, time = "20:00", startDate = 0, endDate = null),
+            MedicationTime(id = 2, medicationId = 1, time = "08:00", startDate = 0, endDate = null)
         )
-        val medWithTimes = MedicationWithTimes(medication, times)
         val intake = MedicationIntake(
             id = 1,
             medicationId = 1,
@@ -134,7 +142,8 @@ class MedicationRepositoryTest {
             takenAt = System.currentTimeMillis()
         )
 
-        every { medicationDao.getAllMedicationsWithTimes() } returns flowOf(listOf(medWithTimes))
+        every { medicationDao.getAllMedications() } returns flowOf(listOf(medication))
+        coEvery { medicationTimeDao.getTimesForMedicationOnDate(1, targetDate) } returns times
         every { medicationIntakeDao.getIntakesByDate(dateString) } returns flowOf(listOf(intake))
 
         // When & Then
@@ -156,6 +165,7 @@ class MedicationRepositoryTest {
     fun `getMedications should filter by WEEKLY cycle correctly`() = runTest {
         // Given - 2025-10-10 is Friday (day 5)
         val dateString = "2025-10-10"
+        val targetDate = parseDate(dateString)
         val fridayMedication = createSampleMedication(
             id = 1,
             name = "Friday Med",
@@ -171,16 +181,13 @@ class MedicationRepositoryTest {
             startDate = parseDate("2025-10-01")
         )
 
-        val medWithTimes1 = MedicationWithTimes(
-            fridayMedication,
-            listOf(MedicationTime(id = 1, medicationId = 1, time = "08:00"))
+        every { medicationDao.getAllMedications() } returns flowOf(listOf(fridayMedication, mondayMedication))
+        coEvery { medicationTimeDao.getTimesForMedicationOnDate(1, targetDate) } returns listOf(
+            MedicationTime(id = 1, medicationId = 1, time = "08:00", startDate = 0, endDate = null)
         )
-        val medWithTimes2 = MedicationWithTimes(
-            mondayMedication,
-            listOf(MedicationTime(id = 2, medicationId = 2, time = "08:00"))
+        coEvery { medicationTimeDao.getTimesForMedicationOnDate(2, targetDate) } returns listOf(
+            MedicationTime(id = 2, medicationId = 2, time = "08:00", startDate = 0, endDate = null)
         )
-
-        every { medicationDao.getAllMedicationsWithTimes() } returns flowOf(listOf(medWithTimes1, medWithTimes2))
         every { medicationIntakeDao.getIntakesByDate(dateString) } returns flowOf(emptyList())
 
         // When & Then
@@ -202,12 +209,12 @@ class MedicationRepositoryTest {
             cycleValue = "3",
             startDate = parseDate("2025-10-01")
         )
-        val medWithTimes = MedicationWithTimes(
-            medication,
-            listOf(MedicationTime(id = 1, medicationId = 1, time = "08:00"))
+        val times = listOf(
+            MedicationTime(id = 1, medicationId = 1, time = "08:00", startDate = 0, endDate = null)
         )
 
-        every { medicationDao.getAllMedicationsWithTimes() } returns flowOf(listOf(medWithTimes))
+        every { medicationDao.getAllMedications() } returns flowOf(listOf(medication))
+        coEvery { medicationTimeDao.getTimesForMedicationOnDate(1, any()) } returns times
         every { medicationIntakeDao.getIntakesByDate(any()) } returns flowOf(emptyList())
 
         // Test day 9 (should appear)
@@ -234,12 +241,12 @@ class MedicationRepositoryTest {
             startDate = parseDate("2025-10-05"),
             endDate = parseDate("2025-10-15")
         )
-        val medWithTimes = MedicationWithTimes(
-            medication,
-            listOf(MedicationTime(id = 1, medicationId = 1, time = "08:00"))
+        val times = listOf(
+            MedicationTime(id = 1, medicationId = 1, time = "08:00", startDate = 0, endDate = null)
         )
 
-        every { medicationDao.getAllMedicationsWithTimes() } returns flowOf(listOf(medWithTimes))
+        every { medicationDao.getAllMedications() } returns flowOf(listOf(medication))
+        coEvery { medicationTimeDao.getTimesForMedicationOnDate(1, any()) } returns times
         every { medicationIntakeDao.getIntakesByDate(any()) } returns flowOf(emptyList())
 
         // Before start date
@@ -257,6 +264,64 @@ class MedicationRepositoryTest {
         // After end date
         repository.getMedications("2025-10-16").test {
             assertEquals(0, awaitItem().size)
+            awaitComplete()
+        }
+    }
+
+    @Test
+    fun `getMedications should show past times even after deletion`() = runTest {
+        // Given: Yesterday was 2025-10-09, today is 2025-10-10
+        val yesterday = "2025-10-09"
+        val yesterdayDate = parseDate(yesterday)
+        val medication = createSampleMedication(
+            id = 1,
+            cycleType = CycleType.DAILY,
+            startDate = parseDate("2025-10-01")
+        )
+        // Times that were valid yesterday (including 08:00 which was deleted today)
+        val yesterdayTimes = listOf(
+            MedicationTime(id = 1, medicationId = 1, time = "08:00", startDate = 0, endDate = parseDate("2025-10-10")),
+            MedicationTime(id = 2, medicationId = 1, time = "20:00", startDate = 0, endDate = null)
+        )
+
+        every { medicationDao.getAllMedications() } returns flowOf(listOf(medication))
+        coEvery { medicationTimeDao.getTimesForMedicationOnDate(1, yesterdayDate) } returns yesterdayTimes
+        every { medicationIntakeDao.getIntakesByDate(yesterday) } returns flowOf(emptyList())
+
+        // When & Then
+        repository.getMedications(yesterday).test {
+            val items = awaitItem()
+            assertEquals(2, items.size)
+            assertEquals("08:00", items[0].scheduledTime)
+            assertEquals("20:00", items[1].scheduledTime)
+            awaitComplete()
+        }
+    }
+
+    @Test
+    fun `getMedications should not show newly added time in past dates`() = runTest {
+        // Given: Yesterday was 2025-10-09, 18:00 was added today (2025-10-10)
+        val yesterday = "2025-10-09"
+        val yesterdayDate = parseDate(yesterday)
+        val medication = createSampleMedication(
+            id = 1,
+            cycleType = CycleType.DAILY,
+            startDate = parseDate("2025-10-01")
+        )
+        // Only 08:00 was valid yesterday (18:00 starts from 2025-10-10)
+        val yesterdayTimes = listOf(
+            MedicationTime(id = 1, medicationId = 1, time = "08:00", startDate = 0, endDate = null)
+        )
+
+        every { medicationDao.getAllMedications() } returns flowOf(listOf(medication))
+        coEvery { medicationTimeDao.getTimesForMedicationOnDate(1, yesterdayDate) } returns yesterdayTimes
+        every { medicationIntakeDao.getIntakesByDate(yesterday) } returns flowOf(emptyList())
+
+        // When & Then
+        repository.getMedications(yesterday).test {
+            val items = awaitItem()
+            assertEquals(1, items.size)
+            assertEquals("08:00", items[0].scheduledTime)
             awaitComplete()
         }
     }
