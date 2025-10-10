@@ -26,8 +26,10 @@ fun MedicationListScreen(
     onAddMedication: () -> Unit,
     onEditMedication: (Long) -> Unit
 ) {
-    val medications by viewModel.medications.collectAsState()
+    val currentMedications by viewModel.currentMedications.collectAsState()
+    val pastMedications by viewModel.pastMedications.collectAsState()
     var medicationToDelete by remember { mutableStateOf<Long?>(null) }
+    var selectedTabIndex by remember { mutableStateOf(0) }
 
     Scaffold(
         topBar = {
@@ -41,33 +43,56 @@ fun MedicationListScreen(
             }
         }
     ) { padding ->
-        if (medications.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    "登録されているお薬はありません",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
+            TabRow(selectedTabIndex = selectedTabIndex) {
+                Tab(
+                    selected = selectedTabIndex == 0,
+                    onClick = { selectedTabIndex = 0 },
+                    text = { Text("服用中") }
+                )
+                Tab(
+                    selected = selectedTabIndex == 1,
+                    onClick = { selectedTabIndex = 1 },
+                    text = { Text("過去のお薬") }
                 )
             }
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(medications, key = { it.medication.id }) { medicationWithTimes ->
-                    MedicationCard(
-                        medicationWithTimes = medicationWithTimes,
-                        onEdit = { onEditMedication(medicationWithTimes.medication.id) },
-                        onDelete = { medicationToDelete = medicationWithTimes.medication.id }
+
+            val medications = if (selectedTabIndex == 0) currentMedications else pastMedications
+            val emptyMessage = if (selectedTabIndex == 0) {
+                "登録されているお薬はありません"
+            } else {
+                "過去のお薬はありません"
+            }
+
+            if (medications.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        emptyMessage,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(medications, key = { it.medication.id }) { medicationWithTimes ->
+                        MedicationCard(
+                            medicationWithTimes = medicationWithTimes,
+                            onEdit = { onEditMedication(medicationWithTimes.medication.id) },
+                            onDelete = { medicationToDelete = medicationWithTimes.medication.id }
+                        )
+                    }
                 }
             }
         }
