@@ -29,6 +29,7 @@ fun MedicationFormScreen(
 ) {
     val formState by viewModel.formState.collectAsState()
     var showTimePicker by remember { mutableStateOf(false) }
+    var editingTimeIndex by remember { mutableStateOf<Int?>(null) }
     var showStartDatePicker by remember { mutableStateOf(false) }
     var showEndDatePicker by remember { mutableStateOf(false) }
 
@@ -77,11 +78,22 @@ fun MedicationFormScreen(
 
             itemsIndexed(formState.times) { index, time ->
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            editingTimeIndex = index
+                            showTimePicker = true
+                        },
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(time, style = MaterialTheme.typography.bodyLarge)
+                    Text(
+                        time,
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier
+                            .padding(vertical = 12.dp)
+                            .weight(1f)
+                    )
                     IconButton(onClick = { viewModel.removeTime(index) }) {
                         Icon(Icons.Default.Delete, contentDescription = "削除")
                     }
@@ -90,7 +102,10 @@ fun MedicationFormScreen(
 
             item {
                 OutlinedButton(
-                    onClick = { showTimePicker = true },
+                    onClick = {
+                        editingTimeIndex = null
+                        showTimePicker = true
+                    },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Icon(Icons.Default.Add, contentDescription = null)
@@ -218,11 +233,22 @@ fun MedicationFormScreen(
 
     // Time Picker Dialog
     if (showTimePicker) {
+        val currentEditingTime = editingTimeIndex?.let { formState.times.getOrNull(it) }
         TimePickerDialog(
-            onDismiss = { showTimePicker = false },
-            onConfirm = { hour, minute ->
-                viewModel.addTime(String.format("%02d:%02d", hour, minute))
+            initialTime = currentEditingTime,
+            onDismiss = {
                 showTimePicker = false
+                editingTimeIndex = null
+            },
+            onConfirm = { hour, minute ->
+                val timeString = String.format("%02d:%02d", hour, minute)
+                if (editingTimeIndex != null) {
+                    viewModel.updateTime(editingTimeIndex!!, timeString)
+                } else {
+                    viewModel.addTime(timeString)
+                }
+                showTimePicker = false
+                editingTimeIndex = null
             }
         )
     }
@@ -295,14 +321,27 @@ fun WeekdaySelector(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TimePickerDialog(
+    initialTime: String? = null,
     onDismiss: () -> Unit,
     onConfirm: (hour: Int, minute: Int) -> Unit
 ) {
-    val timePickerState = rememberTimePickerState()
+    val (initialHour, initialMinute) = initialTime?.let {
+        val parts = it.split(":")
+        if (parts.size == 2) {
+            parts[0].toIntOrNull() to parts[1].toIntOrNull()
+        } else {
+            null to null
+        }
+    } ?: (0 to 0)
+
+    val timePickerState = rememberTimePickerState(
+        initialHour = initialHour ?: 0,
+        initialMinute = initialMinute ?: 0
+    )
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("時間を選択") },
+        title = { Text(if (initialTime != null) "時間を編集" else "時間を選択") },
         text = {
             TimePicker(state = timePickerState)
         },
