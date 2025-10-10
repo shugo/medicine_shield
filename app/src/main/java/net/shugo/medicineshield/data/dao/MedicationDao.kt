@@ -7,6 +7,9 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface MedicationDao {
+    @Query("SELECT * FROM medications ORDER BY createdAt DESC")
+    fun getAllMedications(): Flow<List<Medication>>
+
     @Transaction
     @Query("SELECT * FROM medications ORDER BY createdAt DESC")
     fun getAllMedicationsWithTimes(): Flow<List<MedicationWithTimes>>

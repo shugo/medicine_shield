@@ -41,7 +41,7 @@ class MedicationFormViewModel(
 
     fun loadMedication(medicationId: Long) {
         viewModelScope.launch {
-            val medicationWithTimes = repository.getMedicationWithTimesById(medicationId)
+            val medicationWithTimes = repository.getMedicationWithCurrentTimesById(medicationId)
             medicationWithTimes?.let { mwt ->
                 _formState.value = _formState.value.copy(
                     medicationId = mwt.medication.id,

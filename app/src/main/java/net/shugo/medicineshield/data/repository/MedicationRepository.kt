@@ -27,22 +27,62 @@ class MedicationRepository(
         return medicationDao.getMedicationWithTimesById(medicationId)
     }
 
+    suspend fun getMedicationWithCurrentTimesById(medicationId: Long): MedicationWithTimes? {
+        val medication = medicationDao.getMedicationById(medicationId) ?: return null
+        val currentTimes = medicationTimeDao.getCurrentTimesForMedication(medicationId)
+        return MedicationWithTimes(medication, currentTimes)
+    }
+
     suspend fun insertMedicationWithTimes(medication: Medication, times: List<String>): Long {
         val medicationId = medicationDao.insert(medication)
+        val today = normalizeToStartOfDay(System.currentTimeMillis())
         val medicationTimes = times.map { time ->
-            MedicationTime(medicationId = medicationId, time = time)
+            MedicationTime(
+                medicationId = medicationId,
+                time = time,
+                startDate = today,
+                endDate = null
+            )
         }
         medicationTimeDao.insertAll(medicationTimes)
         return medicationId
     }
 
     suspend fun updateMedicationWithTimes(medication: Medication, times: List<String>) {
+        // 1. 薬情報を更新
         medicationDao.update(medication.copy(updatedAt = System.currentTimeMillis()))
-        medicationTimeDao.deleteAllForMedication(medication.id)
-        val medicationTimes = times.map { time ->
-            MedicationTime(medicationId = medication.id, time = time)
+
+        // 2. 現在有効な時刻を取得（endDate = null）
+        val currentTimes = medicationTimeDao.getCurrentTimesForMedication(medication.id)
+        val currentTimeStrings = currentTimes.map { it.time }.toSet()
+        val newTimeStrings = times.toSet()
+
+        val today = normalizeToStartOfDay(System.currentTimeMillis())
+
+        // 3. 削除する時刻（endDateを設定）
+        val timesToEnd = currentTimes.filter { it.time !in newTimeStrings }
+        timesToEnd.forEach {
+            medicationTimeDao.update(
+                it.copy(
+                    endDate = today,
+                    updatedAt = System.currentTimeMillis()
+                )
+            )
         }
-        medicationTimeDao.insertAll(medicationTimes)
+
+        // 4. 追加する時刻
+        val timesToAdd = newTimeStrings.filter { it !in currentTimeStrings }
+        val newMedicationTimes = timesToAdd.map { time ->
+            MedicationTime(
+                medicationId = medication.id,
+                time = time,
+                startDate = today,
+                endDate = null
+            )
+        }
+        if (newMedicationTimes.isNotEmpty()) {
+            medicationTimeDao.insertAll(newMedicationTimes)
+        }
     }
 
     suspend fun deleteMedication(medication: Medication) {
@@ -59,26 +99,37 @@ class MedicationRepository(
      * 指定された日付の薬リストを取得する
      */
     fun getMedications(dateString: String): Flow<List<DailyMedicationItem>> {
-        val medications = medicationDao.getAllMedicationsWithTimes()
+        val medications = medicationDao.getAllMedications()
+        val medicationTimes = medicationTimeDao.getAllTimesFlow()
         val intakes = medicationIntakeDao.getIntakesByDate(dateString)
 
-        return combine(medications, intakes) { medList, intakeList ->
+        return combine(medications, medicationTimes, intakes) { medList, allTimes, intakeList ->
             val dailyItems = mutableListOf<DailyMedicationItem>()
             val intakeMap = intakeList.associateBy { "${it.medicationId}_${it.scheduledTime}" }
 
             // dateStringをタイムスタンプに変換
             val targetDate = parseDateString(dateString)
 
-            for (medWithTimes in medList) {
-                if (shouldTakeMedication(medWithTimes.medication, targetDate)) {
-                    for (medTime in medWithTimes.times) {
-                        val key = "${medWithTimes.medication.id}_${medTime.time}"
+            // 薬IDごとに時刻をグループ化
+            val timesByMedicationId = allTimes.groupBy { it.medicationId }
+
+            for (medication in medList) {
+                if (shouldTakeMedication(medication, targetDate)) {
+                    // 対象日に有効な時刻を取得
+                    val allTimesForMed = timesByMedicationId[medication.id] ?: emptyList()
+                    val validTimes = allTimesForMed.filter { medTime ->
+                        medTime.startDate <= targetDate &&
+                        (medTime.endDate == null || medTime.endDate > targetDate)
+                    }
+
+                    for (medTime in validTimes) {
+                        val key = "${medication.id}_${medTime.time}"
                         val intake = intakeMap[key]
 
                         dailyItems.add(
                             DailyMedicationItem(
-                                medicationId = medWithTimes.medication.id,
-                                medicationName = medWithTimes.medication.name,
+                                medicationId = medication.id,
+                                medicationName = medication.name,
                                 scheduledTime = medTime.time,
                                 isTaken = intake?.takenAt != null,
                                 takenAt = intake?.takenAt
