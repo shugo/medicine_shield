@@ -20,6 +20,7 @@ data class MedicationFormState(
     val cycleValue: String? = null,  // 曜日リスト or 日数
     val startDate: Long = System.currentTimeMillis(),
     val endDate: Long? = null,
+    val originalStartDate: Long? = null,  // 編集時の元の開始日（変更検出用）
     val nameError: String? = null,
     val timesError: String? = null,
     val cycleError: String? = null,
@@ -45,6 +46,7 @@ class MedicationFormViewModel(
             medicationWithTimes?.let { mwt ->
                 // 現在有効なConfigを取得
                 val currentConfig = mwt.getCurrentConfig()
+                val originalStartDate = currentConfig?.medicationStartDate ?: System.currentTimeMillis()
 
                 _formState.value = _formState.value.copy(
                     medicationId = mwt.medication.id,
@@ -52,8 +54,9 @@ class MedicationFormViewModel(
                     times = mwt.times.map { it.time }.sorted(),
                     cycleType = currentConfig?.cycleType ?: CycleType.DAILY,
                     cycleValue = currentConfig?.cycleValue,
-                    startDate = currentConfig?.medicationStartDate ?: System.currentTimeMillis(),
-                    endDate = currentConfig?.medicationEndDate
+                    startDate = originalStartDate,
+                    endDate = currentConfig?.medicationEndDate,
+                    originalStartDate = originalStartDate
                 )
             }
         }
@@ -189,13 +192,15 @@ class MedicationFormViewModel(
             isValid = false
         }
 
-        // 編集時：開始日を今日より前の日付に設定できない
-        if (state.medicationId != null) {
+        // 編集時：開始日が変更されており、かつ今日より前の日付に設定されている場合はエラー
+        if (state.medicationId != null && state.originalStartDate != null) {
             val normalizedStartDate = normalizeToStartOfDay(state.startDate)
+            val normalizedOriginalStartDate = normalizeToStartOfDay(state.originalStartDate)
             val normalizedToday = normalizeToStartOfDay(System.currentTimeMillis())
 
-            if (normalizedStartDate < normalizedToday) {
-                _formState.value = _formState.value.copy(dateError = "編集時は開始日を今日より前の日付に設定できません")
+            // 開始日が変更されている場合のみチェック
+            if (normalizedStartDate != normalizedOriginalStartDate && normalizedStartDate < normalizedToday) {
+                _formState.value = _formState.value.copy(dateError = "編集時は開始日を今日より前の日付に変更できません")
                 isValid = false
             }
         }
