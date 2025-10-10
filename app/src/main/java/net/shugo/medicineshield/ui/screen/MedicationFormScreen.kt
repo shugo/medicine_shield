@@ -360,34 +360,47 @@ fun TimePickerDialog(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DatePickerDialog(
     initialDate: Long,
     onDismiss: () -> Unit,
     onConfirm: (Long) -> Unit
 ) {
-    val datePickerState = rememberDatePickerState(initialSelectedDateMillis = initialDate)
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val calendar = Calendar.getInstance().apply {
+        timeInMillis = initialDate
+    }
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("日付を選択") },
-        text = {
-            DatePicker(state = datePickerState)
-        },
-        confirmButton = {
-            TextButton(onClick = {
-                datePickerState.selectedDateMillis?.let { onConfirm(it) }
-            }) {
-                Text("OK")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("キャンセル")
-            }
+    DisposableEffect(Unit) {
+        val datePickerDialog = android.app.DatePickerDialog(
+            context,
+            { _, year, month, dayOfMonth ->
+                val selectedCalendar = Calendar.getInstance().apply {
+                    set(Calendar.YEAR, year)
+                    set(Calendar.MONTH, month)
+                    set(Calendar.DAY_OF_MONTH, dayOfMonth)
+                    set(Calendar.HOUR_OF_DAY, 0)
+                    set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }
+                onConfirm(selectedCalendar.timeInMillis)
+            },
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        )
+
+        datePickerDialog.setOnCancelListener {
+            onDismiss()
         }
-    )
+
+        datePickerDialog.show()
+
+        onDispose {
+            datePickerDialog.dismiss()
+        }
+    }
 }
 
 private fun formatDate(timestamp: Long): String {
