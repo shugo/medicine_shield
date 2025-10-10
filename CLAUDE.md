@@ -10,6 +10,32 @@ MedicineShield is an Android medication management application built with Kotlin
 **Min SDK**: 24
 **Target SDK**: 34
 
+## Development Workflow
+
+**IMPORTANT**: Follow this workflow for all feature development and bug fixes:
+
+1. **Create SOW (Statement of Work)**
+   - Before starting any implementation, create a SOW document in `./tmp/SOW_<feature-name>.md`
+   - Include:
+     - Feature/fix description
+     - Implementation plan
+     - Affected files
+     - Testing strategy
+   - Wait for user approval before proceeding
+
+2. **Create Feature Branch**
+   - After SOW approval, create a new branch: `git checkout -b feature/<feature-name>` or `git checkout -b fix/<issue-name>`
+   - Never work directly on main branch
+
+3. **Implementation**
+   - Proceed with implementation according to approved SOW
+   - Commit changes with descriptive messages
+   - Follow architecture and coding standards defined in this document
+
+4. **Testing & Review**
+   - Run appropriate tests (unit, instrumentation, lint)
+   - Create pull request when ready for review
+
 ## Build Commands
 
 ```bash
