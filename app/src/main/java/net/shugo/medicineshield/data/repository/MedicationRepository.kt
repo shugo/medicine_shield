@@ -14,6 +14,7 @@ import net.shugo.medicineshield.data.model.DailyMedicationItem
 import net.shugo.medicineshield.utils.DateUtils
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -24,19 +25,24 @@ class MedicationRepository(
     private val medicationConfigDao: MedicationConfigDao
 ) {
     fun getAllMedicationsWithTimes(): Flow<List<MedicationWithTimes>> {
-        return medicationDao.getAllMedicationsWithTimes()
+        return medicationDao.getAllMedicationsWithTimes().map { list ->
+            list.map { mwt ->
+                MedicationWithTimes(
+                    medication = mwt.medication,
+                    times = mwt.getCurrentTimes(),
+                    configs = mwt.configs.filter { it.validTo == null }
+                )
+            }
+        }
     }
 
     suspend fun getMedicationWithTimesById(medicationId: Long): MedicationWithTimes? {
-        return medicationDao.getMedicationWithTimesById(medicationId)
-    }
-
-    suspend fun getMedicationWithCurrentTimesById(medicationId: Long): MedicationWithTimes? {
-        val medication = medicationDao.getMedicationById(medicationId) ?: return null
-        val currentTimes = medicationTimeDao.getCurrentTimesForMedication(medicationId)
-        val currentConfig = medicationConfigDao.getCurrentConfigForMedication(medicationId)
-        val configs = if (currentConfig != null) listOf(currentConfig) else emptyList()
-        return MedicationWithTimes(medication, currentTimes, configs)
+        val mwt = medicationDao.getMedicationWithTimesById(medicationId) ?: return null
+        return MedicationWithTimes(
+            medication = mwt.medication,
+            times = mwt.getCurrentTimes(),
+            configs = mwt.configs.filter { it.validTo == null }
+        )
     }
 
     suspend fun insertMedicationWithTimes(

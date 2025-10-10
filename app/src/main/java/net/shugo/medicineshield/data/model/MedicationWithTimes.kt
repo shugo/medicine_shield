@@ -17,6 +17,13 @@ data class MedicationWithTimes(
     val configs: List<MedicationConfig> = emptyList()
 ) {
     /**
+     * 現在有効な設定（単一値としてアクセス）
+     * Repositoryが既にフィルタリング済みの場合、configs.firstOrNull()と同等
+     */
+    val config: MedicationConfig?
+        get() = configs.firstOrNull()
+
+    /**
      * 現在有効な時刻を取得
      * @return 現在有効なMedicationTimeのリスト（時刻順にソート済み）
      */

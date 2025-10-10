@@ -44,7 +44,7 @@ class NotificationScheduler(
         // すべての時刻を収集（現在有効なもののみ）
         val allTimes = mutableSetOf<String>()
         medications.forEach { med ->
-            med.getCurrentTimes().forEach { time ->
+            med.times.forEach { time ->
                 allTimes.add(time.time)
             }
         }
