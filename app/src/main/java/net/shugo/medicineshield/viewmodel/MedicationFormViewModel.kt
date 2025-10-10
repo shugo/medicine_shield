@@ -42,10 +42,10 @@ class MedicationFormViewModel(
 
     fun loadMedication(medicationId: Long) {
         viewModelScope.launch {
-            val medicationWithTimes = repository.getMedicationWithCurrentTimesById(medicationId)
+            val medicationWithTimes = repository.getMedicationWithTimesById(medicationId)
             medicationWithTimes?.let { mwt ->
                 // 現在有効なConfigを取得
-                val currentConfig = mwt.getCurrentConfig()
+                val currentConfig = mwt.config
                 val originalStartDate = currentConfig?.medicationStartDate ?: System.currentTimeMillis()
 
                 _formState.value = _formState.value.copy(

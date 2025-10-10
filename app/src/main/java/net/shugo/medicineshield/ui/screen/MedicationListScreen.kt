@@ -165,16 +165,15 @@ fun MedicationCard(
             Spacer(Modifier.height(8.dp))
 
             // 服用時間（現在有効なもののみ）
-            val activeTimes = medicationWithTimes.getCurrentTimes()
             Text(
-                "服用時間: ${activeTimes.joinToString(", ") { it.time }}",
+                "服用時間: ${times.joinToString(", ") { it.time }}",
                 style = MaterialTheme.typography.bodyMedium
             )
 
             Spacer(Modifier.height(4.dp))
 
             // 現在有効なConfigを取得
-            val currentConfig = medicationWithTimes.getCurrentConfig()
+            val currentConfig = medicationWithTimes.config
 
             currentConfig?.let { config ->
                 // サイクル

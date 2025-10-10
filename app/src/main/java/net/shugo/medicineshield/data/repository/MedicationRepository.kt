@@ -14,6 +14,7 @@ import net.shugo.medicineshield.data.model.DailyMedicationItem
 import net.shugo.medicineshield.utils.DateUtils
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -23,20 +24,38 @@ class MedicationRepository(
     private val medicationIntakeDao: MedicationIntakeDao,
     private val medicationConfigDao: MedicationConfigDao
 ) {
+    /**
+     * すべてのMedicationとそのリレーションを取得（現在有効なもののみ）
+     *
+     * 注意: Roomの@Relationの制約により、完全にSQLレベルでフィルタリングすることができないため、
+     * DAOから全データを取得後、Flowのmap演算子を使ってメモリ上でフィルタリングしています。
+     * 削除されたレコード（validTo != null）は通常少数なので、パフォーマンスへの影響は限定的です。
+     */
     fun getAllMedicationsWithTimes(): Flow<List<MedicationWithTimes>> {
-        return medicationDao.getAllMedicationsWithTimes()
+        return medicationDao.getAllMedicationsWithTimes().map { list ->
+            list.map { mwt ->
+                MedicationWithTimes(
+                    medication = mwt.medication,
+                    times = mwt.getCurrentTimes(),
+                    configs = mwt.configs.filter { it.validTo == null }
+                )
+            }
+        }
     }
 
+    /**
+     * 指定IDのMedicationとそのリレーションを取得（現在有効なもののみ）
+     *
+     * 注意: Roomの@Relationの制約により、完全にSQLレベルでフィルタリングすることができないため、
+     * DAOから全データを取得後、メモリ上でフィルタリングしています。
+     */
     suspend fun getMedicationWithTimesById(medicationId: Long): MedicationWithTimes? {
-        return medicationDao.getMedicationWithTimesById(medicationId)
-    }
-
-    suspend fun getMedicationWithCurrentTimesById(medicationId: Long): MedicationWithTimes? {
-        val medication = medicationDao.getMedicationById(medicationId) ?: return null
-        val currentTimes = medicationTimeDao.getCurrentTimesForMedication(medicationId)
-        val currentConfig = medicationConfigDao.getCurrentConfigForMedication(medicationId)
-        val configs = if (currentConfig != null) listOf(currentConfig) else emptyList()
-        return MedicationWithTimes(medication, currentTimes, configs)
+        val mwt = medicationDao.getMedicationWithTimesById(medicationId) ?: return null
+        return MedicationWithTimes(
+            medication = mwt.medication,
+            times = mwt.getCurrentTimes(),
+            configs = mwt.configs.filter { it.validTo == null }
+        )
     }
 
     suspend fun insertMedicationWithTimes(
