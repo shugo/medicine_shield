@@ -103,7 +103,7 @@ fun MedicationListScreen(
         AlertDialog(
             onDismissRequest = { medicationToDelete = null },
             title = { Text("確認") },
-            text = { Text("このお薬を削除しますか?") },
+            text = { Text("服用履歴も削除されます。\n本当にこのお薬を削除しますか?") },
             confirmButton = {
                 TextButton(
                     onClick = {
