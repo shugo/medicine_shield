@@ -173,9 +173,7 @@ fun MedicationCard(
             Spacer(Modifier.height(4.dp))
 
             // 現在有効なConfigを取得
-            val currentConfig = medicationWithTimes.configs
-                .filter { it.validTo == null }
-                .maxByOrNull { it.validFrom }
+            val currentConfig = medicationWithTimes.getCurrentConfig()
 
             currentConfig?.let { config ->
                 // サイクル

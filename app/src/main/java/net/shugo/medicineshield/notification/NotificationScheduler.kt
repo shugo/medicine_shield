@@ -219,9 +219,7 @@ class NotificationScheduler(
             if (!hasTime) return@filter false
 
             // その日に有効なConfigを取得
-            val validConfig = medWithTimes.configs
-                .filter { it.validFrom <= normalizedDateTime && (it.validTo == null || it.validTo > normalizedDateTime) }
-                .maxByOrNull { it.validFrom }
+            val validConfig = medWithTimes.getConfigForDate(normalizedDateTime)
 
             // その日に服用すべきか判定
             validConfig?.let { shouldTakeMedication(it, dateTime) } ?: false

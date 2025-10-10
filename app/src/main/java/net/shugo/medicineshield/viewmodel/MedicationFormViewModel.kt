@@ -43,9 +43,7 @@ class MedicationFormViewModel(
             val medicationWithTimes = repository.getMedicationWithCurrentTimesById(medicationId)
             medicationWithTimes?.let { mwt ->
                 // 現在有効なConfigを取得
-                val currentConfig = mwt.configs
-                    .filter { it.validTo == null }
-                    .maxByOrNull { it.validFrom }
+                val currentConfig = mwt.getCurrentConfig()
 
                 _formState.value = _formState.value.copy(
                     medicationId = mwt.medication.id,

@@ -36,9 +36,7 @@ class MedicationListViewModel(
             val today = normalizeToStartOfDay(System.currentTimeMillis())
             list.filter { medWithTimes ->
                 // 現在有効なConfigを取得
-                val currentConfig = medWithTimes.configs
-                    .filter { it.validTo == null }
-                    .maxByOrNull { it.validFrom }
+                val currentConfig = medWithTimes.getCurrentConfig()
                 // endDateがnullまたは今日以降なら「服用中」
                 currentConfig?.let { config ->
                     config.medicationEndDate == null || config.medicationEndDate >= today
@@ -57,9 +55,7 @@ class MedicationListViewModel(
             val today = normalizeToStartOfDay(System.currentTimeMillis())
             list.filter { medWithTimes ->
                 // 現在有効なConfigを取得
-                val currentConfig = medWithTimes.configs
-                    .filter { it.validTo == null }
-                    .maxByOrNull { it.validFrom }
+                val currentConfig = medWithTimes.getCurrentConfig()
                 // endDateが存在し、今日より前なら「過去のお薬」
                 currentConfig?.let { config ->
                     config.medicationEndDate != null && config.medicationEndDate < today
