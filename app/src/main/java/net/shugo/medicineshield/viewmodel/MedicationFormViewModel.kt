@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.util.Calendar
 
 data class MedicationFormState(
     val medicationId: Long? = null,
@@ -188,7 +189,28 @@ class MedicationFormViewModel(
             isValid = false
         }
 
+        // 編集時：開始日を今日より前の日付に設定できない
+        if (state.medicationId != null) {
+            val normalizedStartDate = normalizeToStartOfDay(state.startDate)
+            val normalizedToday = normalizeToStartOfDay(System.currentTimeMillis())
+
+            if (normalizedStartDate < normalizedToday) {
+                _formState.value = _formState.value.copy(dateError = "編集時は開始日を今日より前の日付に設定できません")
+                isValid = false
+            }
+        }
+
         return isValid
+    }
+
+    private fun normalizeToStartOfDay(timestamp: Long): Long {
+        val calendar = Calendar.getInstance()
+        calendar.timeInMillis = timestamp
+        calendar.set(Calendar.HOUR_OF_DAY, 0)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+        return calendar.timeInMillis
     }
 
     fun resetForm() {
