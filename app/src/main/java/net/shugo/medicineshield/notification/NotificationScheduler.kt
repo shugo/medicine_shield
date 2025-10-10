@@ -207,46 +207,56 @@ class NotificationScheduler(
      */
     private suspend fun getMedicationsForTime(time: String, dateTime: Long): List<MedicationWithTimes> {
         val medications = repository.getAllMedicationsWithTimes().first()
+        val normalizedDateTime = normalizeToStartOfDay(dateTime)
 
         return medications.filter { medWithTimes ->
-            // この薬がその時刻を持っているか
-            val hasTime = medWithTimes.times.any { it.time == time }
+            // この薬がその時刻を持っているか（その日に有効な時刻）
+            val hasTime = medWithTimes.times.any { medTime ->
+                medTime.time == time &&
+                medTime.validFrom <= normalizedDateTime &&
+                (medTime.validTo == null || medTime.validTo > normalizedDateTime)
+            }
             if (!hasTime) return@filter false
 
+            // その日に有効なConfigを取得
+            val validConfig = medWithTimes.configs
+                .filter { it.validFrom <= normalizedDateTime && (it.validTo == null || it.validTo > normalizedDateTime) }
+                .maxByOrNull { it.validFrom }
+
             // その日に服用すべきか判定
-            shouldTakeMedication(medWithTimes.medication, dateTime)
+            validConfig?.let { shouldTakeMedication(it, dateTime) } ?: false
         }
     }
 
     /**
-     * 指定日にその薬を服用すべきかどうか判定
+     * 指定日にその薬を服用すべきかどうか判定（Configベース）
      */
-    private fun shouldTakeMedication(medication: net.shugo.medicineshield.data.model.Medication, targetDate: Long): Boolean {
+    private fun shouldTakeMedication(config: net.shugo.medicineshield.data.model.MedicationConfig, targetDate: Long): Boolean {
         val calendar = Calendar.getInstance()
         calendar.timeInMillis = targetDate
 
         // 日付のみで比較するため、時刻を00:00:00にリセット
         val normalizedTargetDate = normalizeToStartOfDay(targetDate)
-        val normalizedStartDate = normalizeToStartOfDay(medication.startDate)
-        val normalizedEndDate = medication.endDate?.let { normalizeToStartOfDay(it) }
+        val normalizedStartDate = normalizeToStartOfDay(config.medicationStartDate)
+        val normalizedEndDate = config.medicationEndDate?.let { normalizeToStartOfDay(it) }
 
         // 期間チェック
         if (normalizedTargetDate < normalizedStartDate) return false
         if (normalizedEndDate != null && normalizedTargetDate > normalizedEndDate) return false
 
-        return when (medication.cycleType) {
+        return when (config.cycleType) {
             CycleType.DAILY -> true
 
             CycleType.WEEKLY -> {
                 // 曜日チェック (0=日曜, 1=月曜, ..., 6=土曜)
                 val dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK) - 1
-                val allowedDays = medication.cycleValue?.split(",")?.mapNotNull { it.toIntOrNull() } ?: emptyList()
+                val allowedDays = config.cycleValue?.split(",")?.mapNotNull { it.toIntOrNull() } ?: emptyList()
                 dayOfWeek in allowedDays
             }
 
             CycleType.INTERVAL -> {
                 // N日ごとチェック
-                val intervalDays = medication.cycleValue?.toIntOrNull() ?: return false
+                val intervalDays = config.cycleValue?.toIntOrNull() ?: return false
                 val daysSinceStart = ((normalizedTargetDate - normalizedStartDate) / (1000 * 60 * 60 * 24)).toInt()
                 daysSinceStart % intervalDays == 0
             }
