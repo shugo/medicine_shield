@@ -318,13 +318,13 @@ fun WeekdaySelector(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TimePickerDialog(
     initialTime: String? = null,
     onDismiss: () -> Unit,
     onConfirm: (hour: Int, minute: Int) -> Unit
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     val (initialHour, initialMinute) = initialTime?.let {
         val parts = it.split(":")
         if (parts.size == 2) {
@@ -334,30 +334,27 @@ fun TimePickerDialog(
         }
     } ?: (0 to 0)
 
-    val timePickerState = rememberTimePickerState(
-        initialHour = initialHour ?: 0,
-        initialMinute = initialMinute ?: 0
-    )
+    DisposableEffect(Unit) {
+        val timePickerDialog = android.app.TimePickerDialog(
+            context,
+            { _, hourOfDay, minute ->
+                onConfirm(hourOfDay, minute)
+            },
+            initialHour ?: 0,
+            initialMinute ?: 0,
+            true  // true = 24時間表記
+        )
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(if (initialTime != null) "時間を編集" else "時間を選択") },
-        text = {
-            TimePicker(state = timePickerState)
-        },
-        confirmButton = {
-            TextButton(onClick = {
-                onConfirm(timePickerState.hour, timePickerState.minute)
-            }) {
-                Text("OK")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("キャンセル")
-            }
+        timePickerDialog.setOnCancelListener {
+            onDismiss()
         }
-    )
+
+        timePickerDialog.show()
+
+        onDispose {
+            timePickerDialog.dismiss()
+        }
+    }
 }
 
 @Composable
