@@ -174,8 +174,8 @@ class MedicationFormViewModel(
             }
         }
 
-        if (state.endDate != null && state.endDate <= state.startDate) {
-            _formState.value = _formState.value.copy(dateError = "終了日は開始日より後に設定してください")
+        if (state.endDate != null && state.endDate < state.startDate) {
+            _formState.value = _formState.value.copy(dateError = "終了日は開始日以降に設定してください")
             isValid = false
         }
 
