@@ -55,7 +55,8 @@ class MainActivity : ComponentActivity() {
         repository = MedicationRepository(
             database.medicationDao(),
             database.medicationTimeDao(),
-            database.medicationIntakeDao()
+            database.medicationIntakeDao(),
+            database.medicationConfigDao()
         )
 
         // 通知チャネルを作成

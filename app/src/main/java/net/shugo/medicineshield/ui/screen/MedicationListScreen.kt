@@ -172,37 +172,44 @@ fun MedicationCard(
 
             Spacer(Modifier.height(4.dp))
 
-            // サイクル
-            val cycleText = when (medication.cycleType) {
-                CycleType.DAILY -> "毎日"
-                CycleType.WEEKLY -> {
-                    val days = medication.cycleValue?.split(",")?.mapNotNull { it.toIntOrNull() } ?: emptyList()
-                    val dayNames = days.map { getDayName(it) }
-                    "毎週${dayNames.joinToString("・")}"
+            // 現在有効なConfigを取得
+            val currentConfig = medicationWithTimes.configs
+                .filter { it.validTo == null }
+                .maxByOrNull { it.validFrom }
+
+            currentConfig?.let { config ->
+                // サイクル
+                val cycleText = when (config.cycleType) {
+                    CycleType.DAILY -> "毎日"
+                    CycleType.WEEKLY -> {
+                        val days = config.cycleValue?.split(",")?.mapNotNull { it.toIntOrNull() } ?: emptyList()
+                        val dayNames = days.map { getDayName(it) }
+                        "毎週${dayNames.joinToString("・")}"
+                    }
+                    CycleType.INTERVAL -> "${config.cycleValue}日ごと"
                 }
-                CycleType.INTERVAL -> "${medication.cycleValue}日ごと"
-            }
-            Text(
-                "サイクル: $cycleText",
-                style = MaterialTheme.typography.bodyMedium
-            )
+                Text(
+                    "サイクル: $cycleText",
+                    style = MaterialTheme.typography.bodyMedium
+                )
 
-            Spacer(Modifier.height(4.dp))
+                Spacer(Modifier.height(4.dp))
 
-            // 期間
-            val dateFormat = SimpleDateFormat("yyyy/MM/dd", Locale.getDefault())
-            val startDateStr = dateFormat.format(Date(medication.startDate))
-            val endDateStr = medication.endDate?.let { dateFormat.format(Date(it)) }
-            val periodText = if (endDateStr != null) {
-                "$startDateStr 〜 $endDateStr"
-            } else {
-                "$startDateStr 〜"
+                // 期間
+                val dateFormat = SimpleDateFormat("yyyy/MM/dd", Locale.getDefault())
+                val startDateStr = dateFormat.format(Date(config.medicationStartDate))
+                val endDateStr = config.medicationEndDate?.let { dateFormat.format(Date(it)) }
+                val periodText = if (endDateStr != null) {
+                    "$startDateStr 〜 $endDateStr"
+                } else {
+                    "$startDateStr 〜"
+                }
+                Text(
+                    "期間: $periodText",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
-            Text(
-                "期間: $periodText",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
         }
     }
 }

@@ -7,6 +7,7 @@ import kotlinx.coroutines.test.runTest
 import net.shugo.medicineshield.data.dao.MedicationDao
 import net.shugo.medicineshield.data.dao.MedicationIntakeDao
 import net.shugo.medicineshield.data.dao.MedicationTimeDao
+import net.shugo.medicineshield.data.dao.MedicationConfigDao
 import net.shugo.medicineshield.data.model.*
 import org.junit.After
 import org.junit.Assert.*
@@ -21,6 +22,7 @@ class MedicationRepositoryTest {
     private lateinit var medicationDao: MedicationDao
     private lateinit var medicationTimeDao: MedicationTimeDao
     private lateinit var medicationIntakeDao: MedicationIntakeDao
+    private lateinit var medicationConfigDao: MedicationConfigDao
     private lateinit var repository: MedicationRepository
 
     @Before
@@ -28,7 +30,8 @@ class MedicationRepositoryTest {
         medicationDao = mockk()
         medicationTimeDao = mockk()
         medicationIntakeDao = mockk()
-        repository = MedicationRepository(medicationDao, medicationTimeDao, medicationIntakeDao)
+        medicationConfigDao = mockk()
+        repository = MedicationRepository(medicationDao, medicationTimeDao, medicationIntakeDao, medicationConfigDao)
     }
 
     @After
@@ -41,54 +44,77 @@ class MedicationRepositoryTest {
     @Test
     fun `insertMedicationWithTimes should insert medication and times with valid dates`() = runTest {
         // Given
-        val medication = createSampleMedication(id = 0)
+        val name = "Sample Med"
+        val cycleType = CycleType.DAILY
+        val cycleValue: String? = null
+        val startDate = parseDate("2025-10-01")
+        val endDate: Long? = null
         val times = listOf("08:00", "20:00")
         val medicationId = 1L
 
-        coEvery { medicationDao.insert(medication) } returns medicationId
+        coEvery { medicationDao.insert(any()) } returns medicationId
+        coEvery { medicationConfigDao.insert(any()) } returns 1L
         coEvery { medicationTimeDao.insertAll(any()) } just Runs
 
         // When
-        val result = repository.insertMedicationWithTimes(medication, times)
+        val result = repository.insertMedicationWithTimes(name, cycleType, cycleValue, startDate, endDate, times)
 
         // Then
         assertEquals(medicationId, result)
-        coVerify { medicationDao.insert(medication) }
+        coVerify { medicationDao.insert(match { it.name == name }) }
+        coVerify { medicationConfigDao.insert(match {
+            it.medicationId == medicationId &&
+            it.cycleType == cycleType &&
+            it.medicationStartDate == startDate &&
+            it.validTo == null
+        }) }
         coVerify {
             medicationTimeDao.insertAll(match { list ->
                 list.size == 2 &&
                 list[0].medicationId == medicationId &&
                 list[0].time == "08:00" &&
-                list[0].endDate == null &&
+                list[0].validTo == null &&
                 list[1].medicationId == medicationId &&
                 list[1].time == "20:00" &&
-                list[1].endDate == null
+                list[1].validTo == null
             })
         }
     }
 
     @Test
-    fun `updateMedicationWithTimes should set endDate for removed times`() = runTest {
+    fun `updateMedicationWithTimes should set validTo for removed times`() = runTest {
         // Given
-        val medication = createSampleMedication(id = 1)
+        val medicationId = 1L
+        val name = "Updated Med"
+        val cycleType = CycleType.DAILY
+        val cycleValue: String? = null
+        val startDate = parseDate("2025-10-01")
+        val endDate: Long? = null
+        val existingConfig = MedicationConfig(
+            id = 1, medicationId = medicationId, cycleType = CycleType.DAILY,
+            cycleValue = null, medicationStartDate = startDate, medicationEndDate = null,
+            validFrom = 0, validTo = null
+        )
         val existingTimes = listOf(
-            MedicationTime(id = 1, medicationId = 1, time = "08:00", startDate = 0, endDate = null),
-            MedicationTime(id = 2, medicationId = 1, time = "20:00", startDate = 0, endDate = null)
+            MedicationTime(id = 1, medicationId = medicationId, time = "08:00", validFrom = 0, validTo = null),
+            MedicationTime(id = 2, medicationId = medicationId, time = "20:00", validFrom = 0, validTo = null)
         )
         val newTimes = listOf("09:00", "21:00")
 
+        coEvery { medicationDao.getMedicationById(medicationId) } returns Medication(id = medicationId, name = "Old Med")
         coEvery { medicationDao.update(any()) } just Runs
-        coEvery { medicationTimeDao.getCurrentTimesForMedication(medication.id) } returns existingTimes
+        coEvery { medicationConfigDao.getCurrentConfigForMedication(medicationId) } returns existingConfig
+        coEvery { medicationTimeDao.getCurrentTimesForMedication(medicationId) } returns existingTimes
         coEvery { medicationTimeDao.update(any()) } just Runs
         coEvery { medicationTimeDao.insertAll(any()) } just Runs
 
         // When
-        repository.updateMedicationWithTimes(medication, newTimes)
+        repository.updateMedicationWithTimes(medicationId, name, cycleType, cycleValue, startDate, endDate, newTimes)
 
         // Then
-        coVerify { medicationDao.update(match { it.id == medication.id }) }
-        coVerify { medicationTimeDao.getCurrentTimesForMedication(medication.id) }
-        coVerify(exactly = 2) { medicationTimeDao.update(match { it.endDate != null }) } // Set endDate for 08:00 and 20:00
+        coVerify { medicationDao.update(match { it.id == medicationId && it.name == name }) }
+        coVerify { medicationTimeDao.getCurrentTimesForMedication(medicationId) }
+        coVerify(exactly = 2) { medicationTimeDao.update(match { it.validTo != null }) } // Set validTo for 08:00 and 20:00
         coVerify { medicationTimeDao.insertAll(match { it.size == 2 }) } // Insert 09:00 and 21:00
     }
 
@@ -454,19 +480,35 @@ class MedicationRepositoryTest {
 
     private fun createSampleMedication(
         id: Long,
-        name: String = "Sample Med",
-        cycleType: CycleType = CycleType.DAILY,
-        cycleValue: String? = null,
-        startDate: Long = System.currentTimeMillis(),
-        endDate: Long? = null
+        name: String = "Sample Med"
     ): Medication {
         return Medication(
             id = id,
             name = name,
+            createdAt = System.currentTimeMillis(),
+            updatedAt = System.currentTimeMillis()
+        )
+    }
+
+    private fun createSampleConfig(
+        id: Long,
+        medicationId: Long,
+        cycleType: CycleType = CycleType.DAILY,
+        cycleValue: String? = null,
+        medicationStartDate: Long = System.currentTimeMillis(),
+        medicationEndDate: Long? = null,
+        validFrom: Long = 0,
+        validTo: Long? = null
+    ): MedicationConfig {
+        return MedicationConfig(
+            id = id,
+            medicationId = medicationId,
             cycleType = cycleType,
             cycleValue = cycleValue,
-            startDate = startDate,
-            endDate = endDate,
+            medicationStartDate = medicationStartDate,
+            medicationEndDate = medicationEndDate,
+            validFrom = validFrom,
+            validTo = validTo,
             createdAt = System.currentTimeMillis(),
             updatedAt = System.currentTimeMillis()
         )

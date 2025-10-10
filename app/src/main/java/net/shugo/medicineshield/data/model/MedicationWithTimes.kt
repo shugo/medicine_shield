@@ -9,5 +9,10 @@ data class MedicationWithTimes(
         parentColumn = "id",
         entityColumn = "medicationId"
     )
-    val times: List<MedicationTime>
+    val times: List<MedicationTime>,
+    @Relation(
+        parentColumn = "id",
+        entityColumn = "medicationId"
+    )
+    val configs: List<MedicationConfig> = emptyList()
 )

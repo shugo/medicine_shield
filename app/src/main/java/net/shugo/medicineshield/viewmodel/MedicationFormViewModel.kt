@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import net.shugo.medicineshield.data.model.CycleType
-import net.shugo.medicineshield.data.model.Medication
 import net.shugo.medicineshield.data.repository.MedicationRepository
 import net.shugo.medicineshield.notification.NotificationScheduler
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -43,14 +42,19 @@ class MedicationFormViewModel(
         viewModelScope.launch {
             val medicationWithTimes = repository.getMedicationWithCurrentTimesById(medicationId)
             medicationWithTimes?.let { mwt ->
+                // 現在有効なConfigを取得
+                val currentConfig = mwt.configs
+                    .filter { it.validTo == null }
+                    .maxByOrNull { it.validFrom }
+
                 _formState.value = _formState.value.copy(
                     medicationId = mwt.medication.id,
                     name = mwt.medication.name,
                     times = mwt.times.map { it.time }.sorted(),
-                    cycleType = mwt.medication.cycleType,
-                    cycleValue = mwt.medication.cycleValue,
-                    startDate = mwt.medication.startDate,
-                    endDate = mwt.medication.endDate
+                    cycleType = currentConfig?.cycleType ?: CycleType.DAILY,
+                    cycleValue = currentConfig?.cycleValue,
+                    startDate = currentConfig?.medicationStartDate ?: System.currentTimeMillis(),
+                    endDate = currentConfig?.medicationEndDate
                 )
             }
         }
@@ -114,19 +118,26 @@ class MedicationFormViewModel(
         viewModelScope.launch {
             try {
                 val state = _formState.value
-                val medication = Medication(
-                    id = state.medicationId ?: 0,
-                    name = state.name,
-                    startDate = state.startDate,
-                    endDate = state.endDate,
-                    cycleType = state.cycleType,
-                    cycleValue = state.cycleValue
-                )
 
                 if (state.medicationId == null) {
-                    repository.insertMedicationWithTimes(medication, state.times)
+                    repository.insertMedicationWithTimes(
+                        name = state.name,
+                        cycleType = state.cycleType,
+                        cycleValue = state.cycleValue,
+                        startDate = state.startDate,
+                        endDate = state.endDate,
+                        times = state.times
+                    )
                 } else {
-                    repository.updateMedicationWithTimes(medication, state.times)
+                    repository.updateMedicationWithTimes(
+                        medicationId = state.medicationId,
+                        name = state.name,
+                        cycleType = state.cycleType,
+                        cycleValue = state.cycleValue,
+                        startDate = state.startDate,
+                        endDate = state.endDate,
+                        times = state.times
+                    )
                 }
 
                 // 通知をスケジュール
