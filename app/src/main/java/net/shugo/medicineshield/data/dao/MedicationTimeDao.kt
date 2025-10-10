@@ -17,24 +17,24 @@ interface MedicationTimeDao {
 
     /**
      * 指定された日付に有効な時刻を取得
-     * startDate <= targetDate AND (endDate IS NULL OR endDate > targetDate)
+     * validFrom <= targetDate AND (validTo IS NULL OR validTo > targetDate)
      */
     @Query("""
         SELECT * FROM medication_times
         WHERE medicationId = :medicationId
-        AND startDate <= :targetDate
-        AND (endDate IS NULL OR endDate > :targetDate)
+        AND validFrom <= :targetDate
+        AND (validTo IS NULL OR validTo > :targetDate)
         ORDER BY time ASC
     """)
     suspend fun getTimesForMedicationOnDate(medicationId: Long, targetDate: Long): List<MedicationTime>
 
     /**
-     * 現在有効な時刻を取得（endDate = null）
+     * 現在有効な時刻を取得（validTo = null）
      */
     @Query("""
         SELECT * FROM medication_times
         WHERE medicationId = :medicationId
-        AND endDate IS NULL
+        AND validTo IS NULL
         ORDER BY time ASC
     """)
     suspend fun getCurrentTimesForMedication(medicationId: Long): List<MedicationTime>

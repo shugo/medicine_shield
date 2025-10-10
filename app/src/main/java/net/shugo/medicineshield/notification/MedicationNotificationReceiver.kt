@@ -26,7 +26,8 @@ class MedicationNotificationReceiver : BroadcastReceiver() {
                 val repository = MedicationRepository(
                     database.medicationDao(),
                     database.medicationTimeDao(),
-                    database.medicationIntakeDao()
+                    database.medicationIntakeDao(),
+                    database.medicationConfigDao()
                 )
 
                 // 現在日時の薬リストを取得

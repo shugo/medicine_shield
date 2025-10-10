@@ -6,7 +6,7 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 
 @Entity(
-    tableName = "medication_times",
+    tableName = "medication_configs",
     foreignKeys = [
         ForeignKey(
             entity = Medication::class,
@@ -20,13 +20,16 @@ import androidx.room.PrimaryKey
         Index(value = ["medicationId", "validFrom", "validTo"])
     ]
 )
-data class MedicationTime(
+data class MedicationConfig(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     val medicationId: Long,
-    val time: String,  // HH:mm format (e.g., "09:00", "14:30")
-    val validFrom: Long,  // このレコードが有効になった日付（タイムスタンプ）
-    val validTo: Long? = null,  // このレコードが無効になった日付（null=現在も有効）
+    val cycleType: CycleType,
+    val cycleValue: String? = null,  // 曜日リスト (e.g., "0,2,4") or 日数 (e.g., "3")
+    val medicationStartDate: Long,  // 実際の服用開始日（INTERVAL計算の基準日）
+    val medicationEndDate: Long? = null,  // 実際の服用終了日
+    val validFrom: Long,  // この設定レコードが有効になった日付（履歴管理用）
+    val validTo: Long? = null,  // この設定レコードが無効になった日付（null=現在も有効）
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
 )

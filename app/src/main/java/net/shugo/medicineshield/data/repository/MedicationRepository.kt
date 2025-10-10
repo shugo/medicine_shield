@@ -3,10 +3,12 @@ package net.shugo.medicineshield.data.repository
 import net.shugo.medicineshield.data.dao.MedicationDao
 import net.shugo.medicineshield.data.dao.MedicationIntakeDao
 import net.shugo.medicineshield.data.dao.MedicationTimeDao
+import net.shugo.medicineshield.data.dao.MedicationConfigDao
 import net.shugo.medicineshield.data.model.CycleType
 import net.shugo.medicineshield.data.model.Medication
 import net.shugo.medicineshield.data.model.MedicationIntake
 import net.shugo.medicineshield.data.model.MedicationTime
+import net.shugo.medicineshield.data.model.MedicationConfig
 import net.shugo.medicineshield.data.model.MedicationWithTimes
 import net.shugo.medicineshield.data.model.DailyMedicationItem
 import kotlinx.coroutines.flow.Flow
@@ -17,7 +19,8 @@ import java.util.*
 class MedicationRepository(
     private val medicationDao: MedicationDao,
     private val medicationTimeDao: MedicationTimeDao,
-    private val medicationIntakeDao: MedicationIntakeDao
+    private val medicationIntakeDao: MedicationIntakeDao,
+    private val medicationConfigDao: MedicationConfigDao
 ) {
     fun getAllMedicationsWithTimes(): Flow<List<MedicationWithTimes>> {
         return medicationDao.getAllMedicationsWithTimes()
@@ -30,54 +33,133 @@ class MedicationRepository(
     suspend fun getMedicationWithCurrentTimesById(medicationId: Long): MedicationWithTimes? {
         val medication = medicationDao.getMedicationById(medicationId) ?: return null
         val currentTimes = medicationTimeDao.getCurrentTimesForMedication(medicationId)
-        return MedicationWithTimes(medication, currentTimes)
+        val currentConfig = medicationConfigDao.getCurrentConfigForMedication(medicationId)
+        val configs = if (currentConfig != null) listOf(currentConfig) else emptyList()
+        return MedicationWithTimes(medication, currentTimes, configs)
     }
 
-    suspend fun insertMedicationWithTimes(medication: Medication, times: List<String>): Long {
-        val medicationId = medicationDao.insert(medication)
+    suspend fun insertMedicationWithTimes(
+        name: String,
+        cycleType: CycleType,
+        cycleValue: String?,
+        startDate: Long,
+        endDate: Long?,
+        times: List<String>
+    ): Long {
         val today = normalizeToStartOfDay(System.currentTimeMillis())
+
+        // 1. Medicationを作成
+        val medication = Medication(name = name)
+        val medicationId = medicationDao.insert(medication)
+
+        // 2. MedicationConfigを作成
+        val config = MedicationConfig(
+            medicationId = medicationId,
+            cycleType = cycleType,
+            cycleValue = cycleValue,
+            medicationStartDate = startDate,
+            medicationEndDate = endDate,
+            validFrom = today,
+            validTo = null
+        )
+        medicationConfigDao.insert(config)
+
+        // 3. MedicationTimeを作成
         val medicationTimes = times.map { time ->
             MedicationTime(
                 medicationId = medicationId,
                 time = time,
-                startDate = today,
-                endDate = null
+                validFrom = today,
+                validTo = null
             )
         }
         medicationTimeDao.insertAll(medicationTimes)
+
         return medicationId
     }
 
-    suspend fun updateMedicationWithTimes(medication: Medication, times: List<String>) {
-        // 1. 薬情報を更新
-        medicationDao.update(medication.copy(updatedAt = System.currentTimeMillis()))
+    suspend fun updateMedicationWithTimes(
+        medicationId: Long,
+        name: String,
+        cycleType: CycleType,
+        cycleValue: String?,
+        startDate: Long,
+        endDate: Long?,
+        times: List<String>
+    ) {
+        val today = normalizeToStartOfDay(System.currentTimeMillis())
 
-        // 2. 現在有効な時刻を取得（endDate = null）
-        val currentTimes = medicationTimeDao.getCurrentTimesForMedication(medication.id)
+        // 1. Medicationの名前を更新
+        val medication = medicationDao.getMedicationById(medicationId) ?: return
+        medicationDao.update(medication.copy(name = name, updatedAt = System.currentTimeMillis()))
+
+        // 2. MedicationConfigの変更をチェック
+        val currentConfig = medicationConfigDao.getCurrentConfigForMedication(medicationId)
+        if (currentConfig != null) {
+            val configChanged = currentConfig.cycleType != cycleType ||
+                    currentConfig.cycleValue != cycleValue ||
+                    currentConfig.medicationStartDate != startDate ||
+                    currentConfig.medicationEndDate != endDate
+
+            if (configChanged) {
+                // 既存のConfigを無効化
+                medicationConfigDao.update(
+                    currentConfig.copy(
+                        validTo = today,
+                        updatedAt = System.currentTimeMillis()
+                    )
+                )
+
+                // 新しいConfigを作成
+                val newConfig = MedicationConfig(
+                    medicationId = medicationId,
+                    cycleType = cycleType,
+                    cycleValue = cycleValue,
+                    medicationStartDate = startDate,
+                    medicationEndDate = endDate,
+                    validFrom = today,
+                    validTo = null
+                )
+                medicationConfigDao.insert(newConfig)
+            }
+        } else {
+            // 存在しない場合は新規作成
+            val newConfig = MedicationConfig(
+                medicationId = medicationId,
+                cycleType = cycleType,
+                cycleValue = cycleValue,
+                medicationStartDate = startDate,
+                medicationEndDate = endDate,
+                validFrom = today,
+                validTo = null
+            )
+            medicationConfigDao.insert(newConfig)
+        }
+
+        // 3. MedicationTimeの変更をチェック
+        val currentTimes = medicationTimeDao.getCurrentTimesForMedication(medicationId)
         val currentTimeStrings = currentTimes.map { it.time }.toSet()
         val newTimeStrings = times.toSet()
 
-        val today = normalizeToStartOfDay(System.currentTimeMillis())
-
-        // 3. 削除する時刻（endDateを設定）
+        // 削除する時刻（validToを設定）
         val timesToEnd = currentTimes.filter { it.time !in newTimeStrings }
         timesToEnd.forEach {
             medicationTimeDao.update(
                 it.copy(
-                    endDate = today,
+                    validTo = today,
                     updatedAt = System.currentTimeMillis()
                 )
             )
         }
 
-        // 4. 追加する時刻
+        // 追加する時刻
         val timesToAdd = newTimeStrings.filter { it !in currentTimeStrings }
         val newMedicationTimes = timesToAdd.map { time ->
             MedicationTime(
-                medicationId = medication.id,
+                medicationId = medicationId,
                 time = time,
-                startDate = today,
-                endDate = null
+                validFrom = today,
+                validTo = null
             )
         }
         if (newMedicationTimes.isNotEmpty()) {
@@ -101,25 +183,30 @@ class MedicationRepository(
     fun getMedications(dateString: String): Flow<List<DailyMedicationItem>> {
         val medications = medicationDao.getAllMedications()
         val medicationTimes = medicationTimeDao.getAllTimesFlow()
+        val medicationConfigs = medicationConfigDao.getAllConfigsFlow()
         val intakes = medicationIntakeDao.getIntakesByDate(dateString)
 
-        return combine(medications, medicationTimes, intakes) { medList, allTimes, intakeList ->
+        return combine(medications, medicationTimes, medicationConfigs, intakes) { medList, allTimes, allConfigs, intakeList ->
             val dailyItems = mutableListOf<DailyMedicationItem>()
             val intakeMap = intakeList.associateBy { "${it.medicationId}_${it.scheduledTime}" }
 
             // dateStringをタイムスタンプに変換
             val targetDate = parseDateString(dateString)
 
-            // 薬IDごとに時刻をグループ化
+            // 薬IDごとに時刻とConfigをグループ化
             val timesByMedicationId = allTimes.groupBy { it.medicationId }
+            val configsByMedicationId = allConfigs.groupBy { it.medicationId }
 
             for (medication in medList) {
-                if (shouldTakeMedication(medication, targetDate)) {
+                // 対象日に有効なConfigを取得
+                val validConfig = getValidConfigForDate(configsByMedicationId[medication.id] ?: emptyList(), targetDate)
+
+                if (validConfig != null && shouldTakeMedication(validConfig, targetDate)) {
                     // 対象日に有効な時刻を取得
                     val allTimesForMed = timesByMedicationId[medication.id] ?: emptyList()
                     val validTimes = allTimesForMed.filter { medTime ->
-                        medTime.startDate <= targetDate &&
-                        (medTime.endDate == null || medTime.endDate > targetDate)
+                        medTime.validFrom <= targetDate &&
+                        (medTime.validTo == null || medTime.validTo > targetDate)
                     }
 
                     for (medTime in validTimes) {
@@ -141,6 +228,15 @@ class MedicationRepository(
 
             dailyItems.sortedBy { it.scheduledTime }
         }
+    }
+
+    /**
+     * 指定された日付に有効なConfigを取得
+     */
+    private fun getValidConfigForDate(configs: List<MedicationConfig>, targetDate: Long): MedicationConfig? {
+        return configs
+            .filter { it.validFrom <= targetDate && (it.validTo == null || it.validTo > targetDate) }
+            .maxByOrNull { it.validFrom }
     }
 
     /**
@@ -190,34 +286,34 @@ class MedicationRepository(
     }
 
     /**
-     * 指定された日付にその薬を飲むべきかどうかを判定する
+     * 指定された日付にその薬を飲むべきかどうかを判定する（Configベース）
      */
-    private fun shouldTakeMedication(medication: Medication, targetDate: Long): Boolean {
+    private fun shouldTakeMedication(config: MedicationConfig, targetDate: Long): Boolean {
         val calendar = Calendar.getInstance()
         calendar.timeInMillis = targetDate
 
         // 日付のみで比較するため、時刻を00:00:00にリセット
         val normalizedTargetDate = normalizeToStartOfDay(targetDate)
-        val normalizedStartDate = normalizeToStartOfDay(medication.startDate)
-        val normalizedEndDate = medication.endDate?.let { normalizeToStartOfDay(it) }
+        val normalizedStartDate = normalizeToStartOfDay(config.medicationStartDate)
+        val normalizedEndDate = config.medicationEndDate?.let { normalizeToStartOfDay(it) }
 
         // 期間チェック
         if (normalizedTargetDate < normalizedStartDate) return false
         if (normalizedEndDate != null && normalizedTargetDate > normalizedEndDate) return false
 
-        return when (medication.cycleType) {
+        return when (config.cycleType) {
             CycleType.DAILY -> true
 
             CycleType.WEEKLY -> {
                 // 曜日チェック (0=日曜, 1=月曜, ..., 6=土曜)
                 val dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK) - 1
-                val allowedDays = medication.cycleValue?.split(",")?.map { it.toIntOrNull() } ?: emptyList()
+                val allowedDays = config.cycleValue?.split(",")?.map { it.toIntOrNull() } ?: emptyList()
                 dayOfWeek in allowedDays
             }
 
             CycleType.INTERVAL -> {
                 // N日ごとチェック
-                val intervalDays = medication.cycleValue?.toIntOrNull() ?: return false
+                val intervalDays = config.cycleValue?.toIntOrNull() ?: return false
                 val daysSinceStart = ((normalizedTargetDate - normalizedStartDate) / (1000 * 60 * 60 * 24)).toInt()
                 daysSinceStart % intervalDays == 0
             }
