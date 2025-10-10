@@ -24,6 +24,13 @@ class MedicationRepository(
     private val medicationIntakeDao: MedicationIntakeDao,
     private val medicationConfigDao: MedicationConfigDao
 ) {
+    /**
+     * すべてのMedicationとそのリレーションを取得（現在有効なもののみ）
+     *
+     * 注意: Roomの@Relationの制約により、完全にSQLレベルでフィルタリングすることができないため、
+     * DAOから全データを取得後、Flowのmap演算子を使ってメモリ上でフィルタリングしています。
+     * 削除されたレコード（validTo != null）は通常少数なので、パフォーマンスへの影響は限定的です。
+     */
     fun getAllMedicationsWithTimes(): Flow<List<MedicationWithTimes>> {
         return medicationDao.getAllMedicationsWithTimes().map { list ->
             list.map { mwt ->
@@ -36,6 +43,12 @@ class MedicationRepository(
         }
     }
 
+    /**
+     * 指定IDのMedicationとそのリレーションを取得（現在有効なもののみ）
+     *
+     * 注意: Roomの@Relationの制約により、完全にSQLレベルでフィルタリングすることができないため、
+     * DAOから全データを取得後、メモリ上でフィルタリングしています。
+     */
     suspend fun getMedicationWithTimesById(medicationId: Long): MedicationWithTimes? {
         val mwt = medicationDao.getMedicationWithTimesById(medicationId) ?: return null
         return MedicationWithTimes(
