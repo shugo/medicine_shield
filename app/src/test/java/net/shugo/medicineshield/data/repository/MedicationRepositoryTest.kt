@@ -72,9 +72,11 @@ class MedicationRepositoryTest {
             medicationTimeDao.insertAll(match { list ->
                 list.size == 2 &&
                 list[0].medicationId == medicationId &&
+                list[0].sequenceNumber == 1 &&
                 list[0].time == "08:00" &&
                 list[0].validTo == null &&
                 list[1].medicationId == medicationId &&
+                list[1].sequenceNumber == 2 &&
                 list[1].time == "20:00" &&
                 list[1].validTo == null
             })
@@ -96,16 +98,19 @@ class MedicationRepositoryTest {
             validFrom = 0, validTo = null
         )
         val existingTimes = listOf(
-            MedicationTime(id = 1, medicationId = medicationId, time = "08:00", validFrom = 0, validTo = null),
-            MedicationTime(id = 2, medicationId = medicationId, time = "20:00", validFrom = 0, validTo = null)
+            MedicationTime(id = 1, medicationId = medicationId, sequenceNumber = 1, time = "08:00", validFrom = 0, validTo = null),
+            MedicationTime(id = 2, medicationId = medicationId, sequenceNumber = 2, time = "20:00", validFrom = 0, validTo = null)
         )
-        val newTimes = listOf("09:00", "21:00")
+        val newTimes = listOf(1 to "09:00", 2 to "21:00")
 
         coEvery { medicationDao.getMedicationById(medicationId) } returns Medication(id = medicationId, name = "Old Med")
         coEvery { medicationDao.update(any()) } just Runs
         coEvery { medicationConfigDao.getCurrentConfigForMedication(medicationId) } returns existingConfig
+        coEvery { medicationConfigDao.insert(any()) } returns 1L
+        coEvery { medicationConfigDao.update(any()) } just Runs
         coEvery { medicationTimeDao.getCurrentTimesForMedication(medicationId) } returns existingTimes
         coEvery { medicationTimeDao.update(any()) } just Runs
+        coEvery { medicationTimeDao.insert(any()) } returns 1L
         coEvery { medicationTimeDao.insertAll(any()) } just Runs
 
         // When
@@ -115,7 +120,7 @@ class MedicationRepositoryTest {
         coVerify { medicationDao.update(match { it.id == medicationId && it.name == name }) }
         coVerify { medicationTimeDao.getCurrentTimesForMedication(medicationId) }
         coVerify(exactly = 2) { medicationTimeDao.update(match { it.validTo != null }) } // Set validTo for 08:00 and 20:00
-        coVerify { medicationTimeDao.insertAll(match { it.size == 2 }) } // Insert 09:00 and 21:00
+        coVerify(exactly = 2) { medicationTimeDao.insert(any()) } // Insert 09:00 and 21:00
     }
 
     @Test
@@ -160,13 +165,13 @@ class MedicationRepositoryTest {
             validTo = null
         )
         val times = listOf(
-            MedicationTime(id = 1, medicationId = 1, time = "20:00", validFrom = 0, validTo = null),
-            MedicationTime(id = 2, medicationId = 1, time = "08:00", validFrom = 0, validTo = null)
+            MedicationTime(id = 1, medicationId = 1, sequenceNumber = 1, time = "20:00", validFrom = 0, validTo = null),
+            MedicationTime(id = 2, medicationId = 1, sequenceNumber = 2, time = "08:00", validFrom = 0, validTo = null)
         )
         val intake = MedicationIntake(
             id = 1,
             medicationId = 1,
-            scheduledTime = "08:00",
+            sequenceNumber = 2,
             scheduledDate = dateString,
             takenAt = System.currentTimeMillis()
         )
@@ -216,8 +221,8 @@ class MedicationRepositoryTest {
             validTo = null
         )
         val times = listOf(
-            MedicationTime(id = 1, medicationId = 1, time = "08:00", validFrom = 0, validTo = null),
-            MedicationTime(id = 2, medicationId = 2, time = "08:00", validFrom = 0, validTo = null)
+            MedicationTime(id = 1, medicationId = 1, sequenceNumber = 1, time = "08:00", validFrom = 0, validTo = null),
+            MedicationTime(id = 2, medicationId = 2, sequenceNumber = 1, time = "08:00", validFrom = 0, validTo = null)
         )
 
         every { medicationDao.getAllMedications() } returns flowOf(listOf(fridayMedication, mondayMedication))
@@ -249,7 +254,7 @@ class MedicationRepositoryTest {
             validTo = null
         )
         val times = listOf(
-            MedicationTime(id = 1, medicationId = 1, time = "08:00", validFrom = 0, validTo = null)
+            MedicationTime(id = 1, medicationId = 1, sequenceNumber = 1, time = "08:00", validFrom = 0, validTo = null)
         )
 
         every { medicationDao.getAllMedications() } returns flowOf(listOf(medication))
@@ -286,7 +291,7 @@ class MedicationRepositoryTest {
             validTo = null
         )
         val times = listOf(
-            MedicationTime(id = 1, medicationId = 1, time = "08:00", validFrom = 0, validTo = null)
+            MedicationTime(id = 1, medicationId = 1, sequenceNumber = 1, time = "08:00", validFrom = 0, validTo = null)
         )
 
         every { medicationDao.getAllMedications() } returns flowOf(listOf(medication))
@@ -328,8 +333,8 @@ class MedicationRepositoryTest {
         )
         // Times that were valid yesterday (including 08:00 which was deleted today)
         val times = listOf(
-            MedicationTime(id = 1, medicationId = 1, time = "08:00", validFrom = 0, validTo = parseDate("2025-10-10")),
-            MedicationTime(id = 2, medicationId = 1, time = "20:00", validFrom = 0, validTo = null)
+            MedicationTime(id = 1, medicationId = 1, sequenceNumber = 1, time = "08:00", validFrom = 0, validTo = parseDate("2025-10-10")),
+            MedicationTime(id = 2, medicationId = 1, sequenceNumber = 2, time = "20:00", validFrom = 0, validTo = null)
         )
 
         every { medicationDao.getAllMedications() } returns flowOf(listOf(medication))
@@ -362,8 +367,8 @@ class MedicationRepositoryTest {
         )
         // Only 08:00 was valid yesterday (18:00 starts from 2025-10-10)
         val times = listOf(
-            MedicationTime(id = 1, medicationId = 1, time = "08:00", validFrom = 0, validTo = null),
-            MedicationTime(id = 2, medicationId = 1, time = "18:00", validFrom = parseDate("2025-10-10"), validTo = null)
+            MedicationTime(id = 1, medicationId = 1, sequenceNumber = 1, time = "08:00", validFrom = 0, validTo = null),
+            MedicationTime(id = 2, medicationId = 1, sequenceNumber = 2, time = "18:00", validFrom = parseDate("2025-10-10"), validTo = null)
         )
 
         every { medicationDao.getAllMedications() } returns flowOf(listOf(medication))
@@ -386,22 +391,22 @@ class MedicationRepositoryTest {
     fun `updateIntakeStatus with isTaken true should create new intake when not exists`() = runTest {
         // Given
         val medicationId = 1L
-        val scheduledTime = "08:00"
+        val sequenceNumber = 1
         val scheduledDate = "2025-10-10"
 
         coEvery {
-            medicationIntakeDao.getIntakeByMedicationAndDateTime(medicationId, scheduledDate, scheduledTime)
+            medicationIntakeDao.getIntakeByMedicationAndDateTime(medicationId, scheduledDate, sequenceNumber)
         } returns null
         coEvery { medicationIntakeDao.insert(any()) } returns 1L
 
         // When
-        repository.updateIntakeStatus(medicationId, scheduledTime, true, scheduledDate)
+        repository.updateIntakeStatus(medicationId, sequenceNumber, true, scheduledDate)
 
         // Then
         coVerify {
             medicationIntakeDao.insert(match {
                 it.medicationId == medicationId &&
-                it.scheduledTime == scheduledTime &&
+                it.sequenceNumber == sequenceNumber &&
                 it.scheduledDate == scheduledDate &&
                 it.takenAt != null
             })
@@ -412,23 +417,23 @@ class MedicationRepositoryTest {
     fun `updateIntakeStatus with isTaken true should update existing intake`() = runTest {
         // Given
         val medicationId = 1L
-        val scheduledTime = "08:00"
+        val sequenceNumber = 1
         val scheduledDate = "2025-10-10"
         val existingIntake = MedicationIntake(
             id = 1,
             medicationId = medicationId,
-            scheduledTime = scheduledTime,
+            sequenceNumber = sequenceNumber,
             scheduledDate = scheduledDate,
             takenAt = null
         )
 
         coEvery {
-            medicationIntakeDao.getIntakeByMedicationAndDateTime(medicationId, scheduledDate, scheduledTime)
+            medicationIntakeDao.getIntakeByMedicationAndDateTime(medicationId, scheduledDate, sequenceNumber)
         } returns existingIntake
         coEvery { medicationIntakeDao.update(any()) } just Runs
 
         // When
-        repository.updateIntakeStatus(medicationId, scheduledTime, true, scheduledDate)
+        repository.updateIntakeStatus(medicationId, sequenceNumber, true, scheduledDate)
 
         // Then
         coVerify {
@@ -443,23 +448,23 @@ class MedicationRepositoryTest {
     fun `updateIntakeStatus with isTaken false should set takenAt to null`() = runTest {
         // Given
         val medicationId = 1L
-        val scheduledTime = "08:00"
+        val sequenceNumber = 1
         val scheduledDate = "2025-10-10"
         val existingIntake = MedicationIntake(
             id = 1,
             medicationId = medicationId,
-            scheduledTime = scheduledTime,
+            sequenceNumber = sequenceNumber,
             scheduledDate = scheduledDate,
             takenAt = System.currentTimeMillis()
         )
 
         coEvery {
-            medicationIntakeDao.getIntakeByMedicationAndDateTime(medicationId, scheduledDate, scheduledTime)
+            medicationIntakeDao.getIntakeByMedicationAndDateTime(medicationId, scheduledDate, sequenceNumber)
         } returns existingIntake
         coEvery { medicationIntakeDao.update(any()) } just Runs
 
         // When
-        repository.updateIntakeStatus(medicationId, scheduledTime, false, scheduledDate)
+        repository.updateIntakeStatus(medicationId, sequenceNumber, false, scheduledDate)
 
         // Then
         coVerify {
@@ -474,15 +479,15 @@ class MedicationRepositoryTest {
     fun `updateIntakeStatus with isTaken false should do nothing when intake not exists`() = runTest {
         // Given
         val medicationId = 1L
-        val scheduledTime = "08:00"
+        val sequenceNumber = 1
         val scheduledDate = "2025-10-10"
 
         coEvery {
-            medicationIntakeDao.getIntakeByMedicationAndDateTime(medicationId, scheduledDate, scheduledTime)
+            medicationIntakeDao.getIntakeByMedicationAndDateTime(medicationId, scheduledDate, sequenceNumber)
         } returns null
 
         // When
-        repository.updateIntakeStatus(medicationId, scheduledTime, false, scheduledDate)
+        repository.updateIntakeStatus(medicationId, sequenceNumber, false, scheduledDate)
 
         // Then
         coVerify(exactly = 0) { medicationIntakeDao.insert(any()) }
