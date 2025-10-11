@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="Theme.MedicineShield" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <!-- Material3スタイルのDatePicker/TimePickerテーマ -->
+    <style name="Theme.MedicineShield.DateTimePicker" parent="Theme.MedicineShield">
+        <!-- Material3のデフォルトカラーを使用 -->
+    </style>
 </resources>

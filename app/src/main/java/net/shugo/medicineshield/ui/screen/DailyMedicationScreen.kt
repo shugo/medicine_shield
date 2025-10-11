@@ -160,6 +160,7 @@ fun DatePickerDialog(
     DisposableEffect(Unit) {
         val datePickerDialog = android.app.DatePickerDialog(
             context,
+            net.shugo.medicineshield.R.style.Theme_MedicineShield_DateTimePicker,
             { _, year, month, dayOfMonth ->
                 onDateSelected(year, month, dayOfMonth)
             },

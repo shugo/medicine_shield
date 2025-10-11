@@ -337,6 +337,7 @@ fun TimePickerDialog(
     DisposableEffect(Unit) {
         val timePickerDialog = android.app.TimePickerDialog(
             context,
+            net.shugo.medicineshield.R.style.Theme_MedicineShield_DateTimePicker,
             { _, hourOfDay, minute ->
                 onConfirm(hourOfDay, minute)
             },
@@ -371,6 +372,7 @@ fun DatePickerDialog(
     DisposableEffect(Unit) {
         val datePickerDialog = android.app.DatePickerDialog(
             context,
+            net.shugo.medicineshield.R.style.Theme_MedicineShield_DateTimePicker,
             { _, year, month, dayOfMonth ->
                 val selectedCalendar = Calendar.getInstance().apply {
                     set(Calendar.YEAR, year)
