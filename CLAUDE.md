@@ -77,22 +77,34 @@ MedicineShield is an Android medication management application built with Kotlin
 The app follows a clean architecture pattern with clear separation of concerns:
 
 ### Data Layer
-- **Database**: Room database (`AppDatabase`) with version 2, includes migration from v1
+- **Database**: Room database (`AppDatabase`) with version 5, includes migrations from v1
   - Location: `data/database/AppDatabase.kt`
-  - Entities: `Medication`, `MedicationTime`, `MedicationIntake`
+  - Entities: `Medication`, `MedicationTime`, `MedicationIntake`, `MedicationConfig`
+  - Migrations: v1→v2 (add intakes), v2→v3 (temporal data), v3→v4 (config separation), v4→v5 (sequence numbers)
 - **DAOs**: Separate DAOs for each entity in `data/dao/`
+  - `MedicationDao`, `MedicationTimeDao`, `MedicationIntakeDao`, `MedicationConfigDao`
 - **Repository**: Single `MedicationRepository` coordinates all data operations
   - Location: `data/repository/MedicationRepository.kt`
   - Handles medication CRUD, intake tracking, and daily medication logic
 
 ### Domain Models
-- **Medication**: Core medication entity with cycle configuration
+- **Medication**: Core medication entity (name only)
+  - Cycle configuration moved to separate `MedicationConfig` entity
+- **MedicationConfig**: Stores medication scheduling configuration with temporal validity
   - `CycleType` enum: DAILY, WEEKLY (specific days), INTERVAL (every N days)
   - `cycleValue`: Stores comma-separated day indices (0=Sunday) for WEEKLY or interval days for INTERVAL
-- **MedicationTime**: Scheduled times for each medication (one-to-many relationship)
-- **MedicationIntake**: Records actual intake events (timestamped)
+  - `validFrom`/`validTo`: Temporal validity for configuration changes
+- **MedicationTime**: Scheduled times for each medication with temporal validity
+  - `sequenceNumber`: Per-medication sequence number (1, 2, 3...) for stable time identification
+  - `validFrom`/`validTo`: Tracks when each time is valid (supports time changes over time)
+  - One-to-many relationship with Medication
+- **MedicationIntake**: Records actual intake events
+  - Links to medication via `medicationId` and `sequenceNumber` (not time string)
+  - `scheduledDate`: Date string (YYYY-MM-DD)
+  - `takenAt`: Timestamp when taken (null = not taken)
+  - Unique index on `(medicationId, scheduledDate, sequenceNumber)`
 - **DailyMedicationItem**: View model for displaying daily medication status
-- **MedicationWithTimes**: Relationship entity combining Medication with its MedicationTimes
+- **MedicationWithTimes**: Relationship entity combining Medication with its MedicationTimes and MedicationConfigs
 
 ### UI Layer
 - **Navigation**: Single-activity architecture with Jetpack Navigation Compose
@@ -107,25 +119,39 @@ The app follows a clean architecture pattern with clear separation of concerns:
   - Repository passed via factory pattern
 
 ### Key Logic
-- **Medication Scheduling** (`MedicationRepository:144-169`):
-  - `shouldTakeMedication()` determines if a medication should appear on a given date
+- **Temporal Data Management**:
+  - Both `MedicationConfig` and `MedicationTime` use `validFrom`/`validTo` for temporal validity
+  - Enables tracking configuration and time changes over time
+  - Past dates see historical data; future dates see current data
+- **Sequence Number System**:
+  - Each medication time has a stable `sequenceNumber` (1, 2, 3...)
+  - Intake records link via `sequenceNumber` instead of time string
+  - Allows time changes without breaking intake history
+  - When time changes, old record gets `validTo=today`, new record created with same `sequenceNumber`
+- **Medication Scheduling** (`MedicationRepository:shouldTakeMedication()`):
+  - Determines if a medication should appear on a given date
   - Handles date range checks and cycle type logic (daily, weekly days, interval days)
-- **Intake Tracking** (`MedicationRepository:98-139`):
-  - `updateIntakeStatus()` creates or updates intake records
+- **Intake Tracking** (`MedicationRepository:updateIntakeStatus()`):
+  - Creates or updates intake records
+  - Uses compound key: `(medicationId, scheduledDate, sequenceNumber)`
   - Supports checking/unchecking medications
-  - Uses compound key: `medicationId_scheduledTime_scheduledDate`
 
 ## Development Notes
 
 ### Database Migrations
-- Current version: 2
-- Migration 1→2 adds `medication_intakes` table
+- Current version: 5
+- Migration history:
+  - v1→v2: Add `medication_intakes` table
+  - v2→v3: Add temporal validity (`startDate`/`endDate`) to `medication_times`
+  - v3→v4: Separate configuration into `medication_configs` table, rename to `validFrom`/`validTo`
+  - v4→v5: Add `sequenceNumber` to `medication_times`, update `medication_intakes` to use `sequenceNumber`
 - Add new migrations to `AppDatabase.companion.object` when schema changes
+- **Important**: Migration v4→v5 deletes all `medication_intakes` records (history migration too complex)
 
 ### Dependency Injection
 - Currently uses manual DI via ViewModelFactory classes in `MainActivity.kt`
 - Repository instantiated in `MainActivity.onCreate()` and passed to screens
-- All three DAOs injected into MedicationRepository constructor
+- All four DAOs (`MedicationDao`, `MedicationTimeDao`, `MedicationIntakeDao`, `MedicationConfigDao`) injected into MedicationRepository constructor
 
 ### Date Handling
 - All dates stored as timestamps (Long, milliseconds since epoch)
