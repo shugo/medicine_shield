@@ -36,7 +36,7 @@ fun DailyMedicationScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("お薬カレンダー") },
+                title = { Text("日々の服薬") },
                 actions = {
                     IconButton(onClick = onNavigateToMedicationList) {
                         Icon(
