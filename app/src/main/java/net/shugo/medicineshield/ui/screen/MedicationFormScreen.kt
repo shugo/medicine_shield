@@ -306,7 +306,7 @@ fun WeekdaySelector(
         Spacer(Modifier.height(8.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             weekdays.forEach { (dayIndex, dayName) ->
                 FilterChip(
@@ -320,7 +320,8 @@ fun WeekdaySelector(
                         }
                         onDaysChanged(newDays)
                     },
-                    label = { Text(dayName) }
+                    label = { Text(dayName) },
+                    modifier = Modifier.weight(1f)
                 )
             }
         }
