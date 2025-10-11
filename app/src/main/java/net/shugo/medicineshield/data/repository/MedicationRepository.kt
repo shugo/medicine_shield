@@ -166,10 +166,23 @@ class MedicationRepository(
 
         // 削除する時刻（sequenceNumberが新しいリストにない）
         val timesToEnd = currentTimes.filter { it.sequenceNumber !in newMap }
+        val todayString = getDateString(today)
         timesToEnd.forEach { oldTime ->
+            // 今日のMedicationIntakeが存在するかチェック
+            val todayIntake = medicationIntakeDao.getIntakeByMedicationAndDateTime(
+                medicationId, todayString, oldTime.sequenceNumber
+            )
+
+            // Intakeが存在する場合は翌日の00:00:00、存在しない場合は今日の00:00:00
+            val validToDate = if (todayIntake != null) {
+                today + (24 * 60 * 60 * 1000)  // 翌日の00:00:00
+            } else {
+                today  // 今日の00:00:00
+            }
+
             medicationTimeDao.update(
                 oldTime.copy(
-                    validTo = today,  // 今日から無効（過去/未来の判定なし）
+                    validTo = validToDate,
                     updatedAt = now
                 )
             )
