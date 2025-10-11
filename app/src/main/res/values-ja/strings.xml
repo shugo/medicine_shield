@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Medicine Shield</string>
+
+    <!-- Daily Medication Screen -->
+    <string name="daily_medication_title">日々の服薬</string>
+    <string name="medication_list">お薬一覧</string>
+    <string name="previous_day">前日</string>
+    <string name="next_day">翌日</string>
+    <string name="ok">OK</string>
+    <string name="cancel">キャンセル</string>
+    <string name="no_medication_today">今日飲むお薬はありません</string>
+    <string name="no_medication_future">この日に飲むお薬はありません</string>
+    <string name="no_medication_past">この日に飲んだお薬はありません</string>
+    <string name="add_medication_button">お薬を追加する</string>
+    <string name="taken_at" formatted="false">服用済み %02d:%02d</string>
+    <string name="today">今日</string>
+    <string name="today_with_date">今日 %s</string>
+
+    <!-- Medication List Screen -->
+    <string name="medication_list_title">お薬一覧</string>
+    <string name="add_medication">お薬を追加</string>
+    <string name="current_medications">服用中</string>
+    <string name="past_medications">過去のお薬</string>
+    <string name="no_medications">登録されているお薬はありません</string>
+    <string name="no_past_medications">過去のお薬はありません</string>
+    <string name="edit">編集</string>
+    <string name="delete">削除</string>
+    <string name="delete_confirmation_title">確認</string>
+    <string name="delete_confirmation_message">服用履歴も削除されます。\n本当にこのお薬を削除しますか?</string>
+    <string name="yes">はい</string>
+    <string name="no">いいえ</string>
+    <string name="medication_times_label">服用時間: %s</string>
+    <string name="cycle_label">サイクル: %s</string>
+    <string name="period_label">期間: %s</string>
+    <string name="period_no_end">%s 〜</string>
+    <string name="period_with_end" formatted="false">%s 〜 %s</string>
+
+    <!-- Medication Form Screen -->
+    <string name="add_medication_title">お薬を追加</string>
+    <string name="edit_medication_title">お薬を編集</string>
+    <string name="back">戻る</string>
+    <string name="medication_name">お薬の名前</string>
+    <string name="medication_name_hint">お薬の名前を入力</string>
+    <string name="medication_times">服用時間</string>
+    <string name="add_time">時間を追加</string>
+    <string name="cycle_type">服用サイクル</string>
+    <string name="cycle_daily">毎日</string>
+    <string name="cycle_weekly">毎週</string>
+    <string name="cycle_interval">N日ごと</string>
+    <string name="select_days">曜日を選択</string>
+    <string name="sunday_short">日</string>
+    <string name="monday_short">月</string>
+    <string name="tuesday_short">火</string>
+    <string name="wednesday_short">水</string>
+    <string name="thursday_short">木</string>
+    <string name="friday_short">金</string>
+    <string name="saturday_short">土</string>
+    <string name="interval_days">日数</string>
+    <string name="start_date">開始日</string>
+    <string name="end_date">終了日</string>
+    <string name="start_date_label">開始日: %s</string>
+    <string name="end_date_label">終了日: %s</string>
+    <string name="end_date_none">終了日: なし</string>
+    <string name="clear_end_date">終了日をクリア</string>
+    <string name="save">保存</string>
+
+    <!-- Cycle Descriptions -->
+    <string name="cycle_daily_full">毎日</string>
+    <string name="cycle_weekly_prefix">毎週</string>
+    <string name="cycle_interval_format">%s日ごと</string>
+
+    <!-- Week Days Full Names -->
+    <string name="sunday">日曜日</string>
+    <string name="monday">月曜日</string>
+    <string name="tuesday">火曜日</string>
+    <string name="wednesday">水曜日</string>
+    <string name="thursday">木曜日</string>
+    <string name="friday">金曜日</string>
+    <string name="saturday">土曜日</string>
+
+    <!-- Error Messages -->
+    <string name="error_empty_name">お薬の名前を入力してください</string>
+    <string name="error_no_times">少なくとも1つの服用時間を設定してください</string>
+    <string name="error_invalid_end_date">終了日は開始日より後に設定してください</string>
+    <string name="error_no_days_selected">少なくとも1つの曜日を選択してください</string>
+    <string name="error_invalid_interval">1以上の日数を入力してください</string>
+</resources>
