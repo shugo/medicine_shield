@@ -318,13 +318,13 @@ fun WeekdaySelector(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TimePickerDialog(
     initialTime: String? = null,
     onDismiss: () -> Unit,
     onConfirm: (hour: Int, minute: Int) -> Unit
 ) {
-    val context = androidx.compose.ui.platform.LocalContext.current
     val (initialHour, initialMinute) = initialTime?.let {
         val parts = it.split(":")
         if (parts.size == 2) {
@@ -334,69 +334,69 @@ fun TimePickerDialog(
         }
     } ?: (0 to 0)
 
-    DisposableEffect(Unit) {
-        val timePickerDialog = android.app.TimePickerDialog(
-            context,
-            { _, hourOfDay, minute ->
-                onConfirm(hourOfDay, minute)
-            },
-            initialHour ?: 0,
-            initialMinute ?: 0,
-            true  // true = 24時間表記
-        )
+    val timePickerState = rememberTimePickerState(
+        initialHour = initialHour ?: 0,
+        initialMinute = initialMinute ?: 0,
+        is24Hour = true
+    )
 
-        timePickerDialog.setOnCancelListener {
-            onDismiss()
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = {
+                onConfirm(timePickerState.hour, timePickerState.minute)
+            }) {
+                Text("OK")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("キャンセル")
+            }
+        },
+        text = {
+            TimePicker(state = timePickerState)
         }
-
-        timePickerDialog.show()
-
-        onDispose {
-            timePickerDialog.dismiss()
-        }
-    }
+    )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DatePickerDialog(
     initialDate: Long,
     onDismiss: () -> Unit,
     onConfirm: (Long) -> Unit
 ) {
-    val context = androidx.compose.ui.platform.LocalContext.current
-    val calendar = Calendar.getInstance().apply {
-        timeInMillis = initialDate
-    }
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = initialDate
+    )
 
-    DisposableEffect(Unit) {
-        val datePickerDialog = android.app.DatePickerDialog(
-            context,
-            { _, year, month, dayOfMonth ->
-                val selectedCalendar = Calendar.getInstance().apply {
-                    set(Calendar.YEAR, year)
-                    set(Calendar.MONTH, month)
-                    set(Calendar.DAY_OF_MONTH, dayOfMonth)
-                    set(Calendar.HOUR_OF_DAY, 0)
-                    set(Calendar.MINUTE, 0)
-                    set(Calendar.SECOND, 0)
-                    set(Calendar.MILLISECOND, 0)
+    androidx.compose.material3.DatePickerDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = {
+                datePickerState.selectedDateMillis?.let { millis ->
+                    // 選択された日付を00:00:00に正規化
+                    val selectedCalendar = Calendar.getInstance().apply {
+                        timeInMillis = millis
+                        set(Calendar.HOUR_OF_DAY, 0)
+                        set(Calendar.MINUTE, 0)
+                        set(Calendar.SECOND, 0)
+                        set(Calendar.MILLISECOND, 0)
+                    }
+                    onConfirm(selectedCalendar.timeInMillis)
                 }
-                onConfirm(selectedCalendar.timeInMillis)
-            },
-            calendar.get(Calendar.YEAR),
-            calendar.get(Calendar.MONTH),
-            calendar.get(Calendar.DAY_OF_MONTH)
-        )
-
-        datePickerDialog.setOnCancelListener {
-            onDismiss()
+            }) {
+                Text("OK")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("キャンセル")
+            }
         }
-
-        datePickerDialog.show()
-
-        onDispose {
-            datePickerDialog.dismiss()
-        }
+    ) {
+        DatePicker(state = datePickerState)
     }
 }
 
