@@ -18,7 +18,7 @@ import net.shugo.medicineshield.data.model.MedicationTime
 
 @Database(
     entities = [Medication::class, MedicationTime::class, MedicationIntake::class, MedicationConfig::class],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -183,6 +183,81 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // 1. MedicationIntakeを全削除（履歴の移行は複雑すぎるため）
+                database.execSQL("DELETE FROM medication_intakes")
+
+                // 2. MedicationTimeに一時テーブルを作成
+                database.execSQL(
+                    """
+                    CREATE TABLE medication_times_new (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        medicationId INTEGER NOT NULL,
+                        sequenceNumber INTEGER NOT NULL,
+                        time TEXT NOT NULL,
+                        validFrom INTEGER NOT NULL,
+                        validTo INTEGER,
+                        createdAt INTEGER NOT NULL,
+                        updatedAt INTEGER NOT NULL,
+                        FOREIGN KEY(medicationId) REFERENCES medications(id) ON DELETE CASCADE
+                    )
+                    """.trimIndent()
+                )
+
+                // 3. 既存データを移行（sequenceNumberを割り当て）
+                // valid_to IS NULLのレコードのみ移行し、medicationId毎にtime順で連番を割り当て
+                database.execSQL(
+                    """
+                    INSERT INTO medication_times_new (id, medicationId, sequenceNumber, time, validFrom, validTo, createdAt, updatedAt)
+                    SELECT
+                        id,
+                        medicationId,
+                        ROW_NUMBER() OVER (PARTITION BY medicationId ORDER BY time) as sequenceNumber,
+                        time,
+                        validFrom,
+                        validTo,
+                        createdAt,
+                        updatedAt
+                    FROM medication_times
+                    WHERE validTo IS NULL
+                    """.trimIndent()
+                )
+
+                // 4. 古いテーブルを削除
+                database.execSQL("DROP TABLE medication_times")
+
+                // 5. 新しいテーブルをリネーム
+                database.execSQL("ALTER TABLE medication_times_new RENAME TO medication_times")
+
+                // 6. インデックスを作成
+                database.execSQL("CREATE INDEX index_medication_times_medicationId ON medication_times(medicationId)")
+                database.execSQL("CREATE INDEX index_medication_times_medicationId_validFrom_validTo ON medication_times(medicationId, validFrom, validTo)")
+
+                // 7. MedicationIntakeテーブルを再作成
+                database.execSQL("DROP TABLE medication_intakes")
+                database.execSQL(
+                    """
+                    CREATE TABLE medication_intakes (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        medicationId INTEGER NOT NULL,
+                        sequenceNumber INTEGER NOT NULL,
+                        scheduledDate TEXT NOT NULL,
+                        takenAt INTEGER,
+                        createdAt INTEGER NOT NULL,
+                        updatedAt INTEGER NOT NULL,
+                        FOREIGN KEY(medicationId) REFERENCES medications(id) ON DELETE CASCADE
+                    )
+                    """.trimIndent()
+                )
+
+                // 8. インデックスを作成
+                database.execSQL("CREATE INDEX index_medication_intakes_medicationId ON medication_intakes(medicationId)")
+                database.execSQL("CREATE INDEX index_medication_intakes_scheduledDate ON medication_intakes(scheduledDate)")
+                database.execSQL("CREATE UNIQUE INDEX index_medication_intakes_medicationId_scheduledDate_sequenceNumber ON medication_intakes(medicationId, scheduledDate, sequenceNumber)")
+            }
+        }
+
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -190,7 +265,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "medicine_shield_database"
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                     .build()
                 INSTANCE = instance
                 instance

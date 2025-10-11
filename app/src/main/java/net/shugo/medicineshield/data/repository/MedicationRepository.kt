@@ -83,11 +83,12 @@ class MedicationRepository(
         )
         medicationConfigDao.insert(config)
 
-        // 3. MedicationTimeを作成
+        // 3. MedicationTimeを作成（sequenceNumberを1から割り当て）
         // 初期登録時はvalidFrom = 0（過去すべての日付で有効）
-        val medicationTimes = times.map { time ->
+        val medicationTimes = times.mapIndexed { index, time ->
             MedicationTime(
                 medicationId = medicationId,
+                sequenceNumber = index + 1,
                 time = time,
                 validFrom = 0,
                 validTo = null
@@ -105,15 +106,10 @@ class MedicationRepository(
         cycleValue: String?,
         startDate: Long,
         endDate: Long?,
-        times: List<String>
+        timesWithSequence: List<Pair<Int, String>>  // (sequenceNumber, time)のペア
     ) {
         val now = System.currentTimeMillis()
-        val currentCalendar = Calendar.getInstance().apply { timeInMillis = now }
-        val currentHour = currentCalendar.get(Calendar.HOUR_OF_DAY)
-        val currentMinute = currentCalendar.get(Calendar.MINUTE)
-
         val today = DateUtils.normalizeToStartOfDay(now)
-        val tomorrow = today + (24 * 60 * 60 * 1000)
 
         // 1. Medicationの名前を更新
         val medication = medicationDao.getMedicationById(medicationId) ?: return
@@ -165,46 +161,57 @@ class MedicationRepository(
 
         // 3. MedicationTimeの変更をチェック
         val currentTimes = medicationTimeDao.getCurrentTimesForMedication(medicationId)
-        val currentTimeStrings = currentTimes.map { it.time }.toSet()
-        val newTimeStrings = times.toSet()
+        val currentMap = currentTimes.associateBy { it.sequenceNumber }
+        val newMap = timesWithSequence.toMap()
 
-        // 削除する時刻（validToを設定）
-        val timesToEnd = currentTimes.filter { it.time !in newTimeStrings }
+        // 削除する時刻（sequenceNumberが新しいリストにない）
+        val timesToEnd = currentTimes.filter { it.sequenceNumber !in newMap }
         timesToEnd.forEach { oldTime ->
-            // この時刻が現在時刻より前か後かを判定
-            val validTo = if (isTimeBeforeOrEqual(oldTime.time, currentHour, currentMinute)) {
-                tomorrow // 過去の時刻 → 明日から無効
-            } else {
-                today // 未来の時刻 → 今日から無効
-            }
-
             medicationTimeDao.update(
                 oldTime.copy(
-                    validTo = validTo,
-                    updatedAt = System.currentTimeMillis()
+                    validTo = today,  // 今日から無効（過去/未来の判定なし）
+                    updatedAt = now
                 )
             )
         }
 
-        // 追加する時刻
-        val timesToAdd = newTimeStrings.filter { it !in currentTimeStrings }
-        val newMedicationTimes = timesToAdd.map { time ->
-            // この時刻が現在時刻より前か後かを判定
-            val validFrom = if (isTimeBeforeOrEqual(time, currentHour, currentMinute)) {
-                tomorrow // 過去の時刻 → 明日から有効
-            } else {
-                today // 未来の時刻 → 今日から有効
-            }
+        // 追加または更新する時刻
+        timesWithSequence.forEach { (sequenceNumber, newTime) ->
+            val currentTime = currentMap[sequenceNumber]
 
-            MedicationTime(
-                medicationId = medicationId,
-                time = time,
-                validFrom = validFrom,
-                validTo = null
-            )
-        }
-        if (newMedicationTimes.isNotEmpty()) {
-            medicationTimeDao.insertAll(newMedicationTimes)
+            if (currentTime == null) {
+                // 新規追加
+                medicationTimeDao.insert(
+                    MedicationTime(
+                        medicationId = medicationId,
+                        sequenceNumber = sequenceNumber,
+                        time = newTime,
+                        validFrom = today,  // 今日から有効
+                        validTo = null
+                    )
+                )
+            } else if (currentTime.time != newTime) {
+                // 時刻が変更された場合
+                // 古いレコードを無効化
+                medicationTimeDao.update(
+                    currentTime.copy(
+                        validTo = today,
+                        updatedAt = now
+                    )
+                )
+
+                // 新しいレコードを作成（同じsequenceNumber）
+                medicationTimeDao.insert(
+                    MedicationTime(
+                        medicationId = medicationId,
+                        sequenceNumber = sequenceNumber,
+                        time = newTime,
+                        validFrom = today,  // 今日から有効
+                        validTo = null
+                    )
+                )
+            }
+            // else: 変更なし
         }
     }
 
@@ -229,7 +236,7 @@ class MedicationRepository(
 
         return combine(medications, medicationTimes, medicationConfigs, intakes) { medList, allTimes, allConfigs, intakeList ->
             val dailyItems = mutableListOf<DailyMedicationItem>()
-            val intakeMap = intakeList.associateBy { "${it.medicationId}_${it.scheduledTime}" }
+            val intakeMap = intakeList.associateBy { "${it.medicationId}_${it.sequenceNumber}" }
 
             // dateStringをタイムスタンプに変換
             val targetDate = parseDateString(dateString)
@@ -254,18 +261,18 @@ class MedicationRepository(
                     val validTimes = medicationWithTimes.getTimesForDate(targetDate)
 
                     for (medTime in validTimes) {
-                        val key = "${medication.id}_${medTime.time}"
+                        val key = "${medication.id}_${medTime.sequenceNumber}"
                         val intake = intakeMap[key]
 
                         dailyItems.add(
                             DailyMedicationItem(
                                 medicationId = medication.id,
                                 medicationName = medication.name,
+                                sequenceNumber = medTime.sequenceNumber,
                                 scheduledTime = medTime.time,
                                 isTaken = intake?.takenAt != null,
                                 takenAt = intake?.takenAt
                             )
-
                          )
                     }
                 }
@@ -280,12 +287,12 @@ class MedicationRepository(
      */
     suspend fun updateIntakeStatus(
         medicationId: Long,
-        scheduledTime: String,
+        sequenceNumber: Int,
         isTaken: Boolean,
         scheduledDate: String = getCurrentDateString()
     ) {
         val existingIntake = medicationIntakeDao.getIntakeByMedicationAndDateTime(
-            medicationId, scheduledDate, scheduledTime
+            medicationId, scheduledDate, sequenceNumber
         )
 
         if (isTaken) {
@@ -294,7 +301,7 @@ class MedicationRepository(
                 medicationIntakeDao.insert(
                     MedicationIntake(
                         medicationId = medicationId,
-                        scheduledTime = scheduledTime,
+                        sequenceNumber = sequenceNumber,
                         scheduledDate = scheduledDate,
                         takenAt = System.currentTimeMillis()
                     )
@@ -391,26 +398,5 @@ class MedicationRepository(
         calendar.add(Calendar.DAY_OF_YEAR, -daysToKeep)
         val cutoffDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(calendar.time)
         medicationIntakeDao.deleteOldIntakes(cutoffDate)
-    }
-
-    /**
-     * 指定された時刻が現在時刻より前または同じかを判定
-     * @param time HH:mm形式の時刻文字列（例: "08:00", "14:30"）
-     * @param currentHour 現在の時（0-23）
-     * @param currentMinute 現在の分（0-59）
-     * @return 指定時刻が現在時刻以前の場合true、未来の場合false
-     */
-    private fun isTimeBeforeOrEqual(time: String, currentHour: Int, currentMinute: Int): Boolean {
-        val timeParts = time.split(":")
-        if (timeParts.size != 2) return false
-
-        val timeHour = timeParts[0].toIntOrNull() ?: return false
-        val timeMinute = timeParts[1].toIntOrNull() ?: return false
-
-        return when {
-            timeHour < currentHour -> true
-            timeHour > currentHour -> false
-            else -> timeMinute <= currentMinute // 同じ時間の場合は分で判定
-        }
     }
 }

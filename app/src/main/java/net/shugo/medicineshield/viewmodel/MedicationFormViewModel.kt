@@ -12,10 +12,15 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+data class TimeWithSequence(
+    val sequenceNumber: Int,
+    val time: String
+)
+
 data class MedicationFormState(
     val medicationId: Long? = null,
     val name: String = "",
-    val times: List<String> = emptyList(),
+    val times: List<TimeWithSequence> = emptyList(),
     val cycleType: CycleType = CycleType.DAILY,
     val cycleValue: String? = null,  // 曜日リスト or 日数
     val startDate: Long = System.currentTimeMillis(),
@@ -36,6 +41,8 @@ class MedicationFormViewModel(
     private val _formState = MutableStateFlow(MedicationFormState())
     val formState: StateFlow<MedicationFormState> = _formState.asStateFlow()
 
+    private var nextSequenceNumber = 1  // 新規追加時のsequenceNumber
+
     private val notificationScheduler by lazy {
         NotificationScheduler(context, repository)
     }
@@ -48,10 +55,15 @@ class MedicationFormViewModel(
                 val currentConfig = mwt.config
                 val originalStartDate = currentConfig?.medicationStartDate ?: System.currentTimeMillis()
 
+                val timesWithSeq = mwt.times.map {
+                    TimeWithSequence(it.sequenceNumber, it.time)
+                }
+                nextSequenceNumber = (mwt.times.maxOfOrNull { it.sequenceNumber } ?: 0) + 1
+
                 _formState.value = _formState.value.copy(
                     medicationId = mwt.medication.id,
                     name = mwt.medication.name,
-                    times = mwt.times.map { it.time },
+                    times = timesWithSeq,
                     cycleType = currentConfig?.cycleType ?: CycleType.DAILY,
                     cycleValue = currentConfig?.cycleValue,
                     startDate = originalStartDate,
@@ -68,8 +80,8 @@ class MedicationFormViewModel(
 
     fun addTime(time: String) {
         val currentTimes = _formState.value.times.toMutableList()
-        currentTimes.add(time)
-        currentTimes.sort()
+        currentTimes.add(TimeWithSequence(nextSequenceNumber++, time))
+        currentTimes.sortBy { it.time }
         _formState.value = _formState.value.copy(times = currentTimes, timesError = null)
     }
 
@@ -84,8 +96,9 @@ class MedicationFormViewModel(
     fun updateTime(index: Int, newTime: String) {
         val currentTimes = _formState.value.times.toMutableList()
         if (index in currentTimes.indices) {
-            currentTimes[index] = newTime
-            currentTimes.sort()
+            // sequenceNumberは保持したまま時刻だけ変更
+            currentTimes[index] = currentTimes[index].copy(time = newTime)
+            currentTimes.sortBy { it.time }
             _formState.value = _formState.value.copy(times = currentTimes, timesError = null)
         }
     }
@@ -128,9 +141,10 @@ class MedicationFormViewModel(
                         cycleValue = state.cycleValue,
                         startDate = state.startDate,
                         endDate = state.endDate,
-                        times = state.times
+                        times = state.times.map { it.time }
                     )
                 } else {
+                    val timesWithSeq = state.times.map { it.sequenceNumber to it.time }
                     repository.updateMedicationWithTimes(
                         medicationId = state.medicationId,
                         name = state.name,
@@ -138,13 +152,13 @@ class MedicationFormViewModel(
                         cycleValue = state.cycleValue,
                         startDate = state.startDate,
                         endDate = state.endDate,
-                        times = state.times
+                        timesWithSequence = timesWithSeq
                     )
                 }
 
                 // 通知をスケジュール
-                state.times.forEach { time ->
-                    notificationScheduler.scheduleNextNotificationForTime(time)
+                state.times.forEach { timeWithSeq ->
+                    notificationScheduler.scheduleNextNotificationForTime(timeWithSeq.time)
                 }
 
                 onSuccess()

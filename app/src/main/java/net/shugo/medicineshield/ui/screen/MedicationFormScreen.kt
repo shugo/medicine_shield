@@ -76,7 +76,7 @@ fun MedicationFormScreen(
                 }
             }
 
-            itemsIndexed(formState.times) { index, time ->
+            itemsIndexed(formState.times) { index, timeWithSeq ->
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -88,7 +88,7 @@ fun MedicationFormScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        time,
+                        timeWithSeq.time,
                         style = MaterialTheme.typography.bodyLarge,
                         modifier = Modifier
                             .padding(vertical = 12.dp)
@@ -233,7 +233,7 @@ fun MedicationFormScreen(
 
     // Time Picker Dialog
     if (showTimePicker) {
-        val currentEditingTime = editingTimeIndex?.let { formState.times.getOrNull(it) }
+        val currentEditingTime = editingTimeIndex?.let { formState.times.getOrNull(it)?.time }
         TimePickerDialog(
             initialTime = currentEditingTime,
             onDismiss = {

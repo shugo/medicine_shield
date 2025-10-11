@@ -86,10 +86,10 @@ class DailyMedicationViewModel(
         loadMedicationsForSelectedDate()
     }
 
-    fun toggleMedicationTaken(medicationId: Long, scheduledTime: String, currentStatus: Boolean) {
+    fun toggleMedicationTaken(medicationId: Long, sequenceNumber: Int, currentStatus: Boolean) {
         viewModelScope.launch {
             val dateString = formatDateToString(_selectedDate.value)
-            repository.updateIntakeStatus(medicationId, scheduledTime, !currentStatus, dateString)
+            repository.updateIntakeStatus(medicationId, sequenceNumber, !currentStatus, dateString)
         }
     }
 
