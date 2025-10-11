@@ -12,7 +12,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import net.shugo.medicineshield.R
 import net.shugo.medicineshield.data.model.CycleType
 import net.shugo.medicineshield.data.model.MedicationWithTimes
 import net.shugo.medicineshield.viewmodel.MedicationListViewModel
@@ -34,12 +36,12 @@ fun MedicationListScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("お薬一覧") }
+                title = { Text(stringResource(R.string.medication_list_title)) }
             )
         },
         floatingActionButton = {
             FloatingActionButton(onClick = onAddMedication) {
-                Icon(Icons.Default.Add, contentDescription = "お薬を追加")
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_medication))
             }
         }
     ) { padding ->
@@ -52,20 +54,20 @@ fun MedicationListScreen(
                 Tab(
                     selected = selectedTabIndex == 0,
                     onClick = { selectedTabIndex = 0 },
-                    text = { Text("服用中") }
+                    text = { Text(stringResource(R.string.current_medications)) }
                 )
                 Tab(
                     selected = selectedTabIndex == 1,
                     onClick = { selectedTabIndex = 1 },
-                    text = { Text("過去のお薬") }
+                    text = { Text(stringResource(R.string.past_medications)) }
                 )
             }
 
             val medications = if (selectedTabIndex == 0) currentMedications else pastMedications
             val emptyMessage = if (selectedTabIndex == 0) {
-                "登録されているお薬はありません"
+                stringResource(R.string.no_medications)
             } else {
-                "過去のお薬はありません"
+                stringResource(R.string.no_past_medications)
             }
 
             if (medications.isEmpty()) {
@@ -102,8 +104,8 @@ fun MedicationListScreen(
     medicationToDelete?.let { medicationId ->
         AlertDialog(
             onDismissRequest = { medicationToDelete = null },
-            title = { Text("確認") },
-            text = { Text("服用履歴も削除されます。\n本当にこのお薬を削除しますか?") },
+            title = { Text(stringResource(R.string.delete_confirmation_title)) },
+            text = { Text(stringResource(R.string.delete_confirmation_message)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -111,12 +113,12 @@ fun MedicationListScreen(
                         medicationToDelete = null
                     }
                 ) {
-                    Text("はい")
+                    Text(stringResource(R.string.yes))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { medicationToDelete = null }) {
-                    Text("いいえ")
+                    Text(stringResource(R.string.no))
                 }
             }
         )
@@ -154,10 +156,10 @@ fun MedicationCard(
                 )
                 Row {
                     IconButton(onClick = onEdit) {
-                        Icon(Icons.Default.Edit, contentDescription = "編集")
+                        Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.edit))
                     }
                     IconButton(onClick = onDelete) {
-                        Icon(Icons.Default.Delete, contentDescription = "削除")
+                        Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete))
                     }
                 }
             }
@@ -166,7 +168,7 @@ fun MedicationCard(
 
             // 服用時間（現在有効なもののみ）
             Text(
-                "服用時間: ${times.joinToString(", ") { it.time }}",
+                stringResource(R.string.medication_times_label, times.joinToString(", ") { it.time }),
                 style = MaterialTheme.typography.bodyMedium
             )
 
@@ -178,16 +180,16 @@ fun MedicationCard(
             currentConfig?.let { config ->
                 // サイクル
                 val cycleText = when (config.cycleType) {
-                    CycleType.DAILY -> "毎日"
+                    CycleType.DAILY -> stringResource(R.string.cycle_daily_full)
                     CycleType.WEEKLY -> {
                         val days = config.cycleValue?.split(",")?.mapNotNull { it.toIntOrNull() } ?: emptyList()
                         val dayNames = days.map { getDayName(it) }
-                        "毎週${dayNames.joinToString("・")}"
+                        "${stringResource(R.string.cycle_weekly_prefix)} ${dayNames.joinToString("・")}"
                     }
-                    CycleType.INTERVAL -> "${config.cycleValue}日ごと"
+                    CycleType.INTERVAL -> stringResource(R.string.cycle_interval_format, config.cycleValue ?: "")
                 }
                 Text(
-                    "サイクル: $cycleText",
+                    stringResource(R.string.cycle_label, cycleText),
                     style = MaterialTheme.typography.bodyMedium
                 )
 
@@ -198,12 +200,12 @@ fun MedicationCard(
                 val startDateStr = dateFormat.format(Date(config.medicationStartDate))
                 val endDateStr = config.medicationEndDate?.let { dateFormat.format(Date(it)) }
                 val periodText = if (endDateStr != null) {
-                    "$startDateStr 〜 $endDateStr"
+                    stringResource(R.string.period_with_end, startDateStr, endDateStr)
                 } else {
-                    "$startDateStr 〜"
+                    stringResource(R.string.period_no_end, startDateStr)
                 }
                 Text(
-                    "期間: $periodText",
+                    stringResource(R.string.period_label, periodText),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -212,15 +214,16 @@ fun MedicationCard(
     }
 }
 
+@Composable
 private fun getDayName(dayIndex: Int): String {
     return when (dayIndex) {
-        0 -> "日"
-        1 -> "月"
-        2 -> "火"
-        3 -> "水"
-        4 -> "木"
-        5 -> "金"
-        6 -> "土"
+        0 -> stringResource(R.string.sunday_short)
+        1 -> stringResource(R.string.monday_short)
+        2 -> stringResource(R.string.tuesday_short)
+        3 -> stringResource(R.string.wednesday_short)
+        4 -> stringResource(R.string.thursday_short)
+        5 -> stringResource(R.string.friday_short)
+        6 -> stringResource(R.string.saturday_short)
         else -> ""
     }
 }

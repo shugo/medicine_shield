@@ -13,9 +13,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import net.shugo.medicineshield.R
 import net.shugo.medicineshield.data.model.DailyMedicationItem
 import net.shugo.medicineshield.viewmodel.DailyMedicationViewModel
 import java.util.*
@@ -36,12 +38,12 @@ fun DailyMedicationScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("日々の服薬") },
+                title = { Text(stringResource(R.string.daily_medication_title)) },
                 actions = {
                     IconButton(onClick = onNavigateToMedicationList) {
                         Icon(
                             imageVector = Icons.Default.List,
-                            contentDescription = "お薬一覧"
+                            contentDescription = stringResource(R.string.medication_list)
                         )
                     }
                 }
@@ -122,7 +124,7 @@ fun DateNavigationBar(
             IconButton(onClick = onPreviousDay) {
                 Icon(
                     imageVector = Icons.Default.KeyboardArrowLeft,
-                    contentDescription = "前日",
+                    contentDescription = stringResource(R.string.previous_day),
                     modifier = Modifier.size(32.dp)
                 )
             }
@@ -141,7 +143,7 @@ fun DateNavigationBar(
             IconButton(onClick = onNextDay) {
                 Icon(
                     imageVector = Icons.Default.KeyboardArrowRight,
-                    contentDescription = "翌日",
+                    contentDescription = stringResource(R.string.next_day),
                     modifier = Modifier.size(32.dp)
                 )
             }
@@ -175,12 +177,12 @@ fun DatePickerDialog(
                     )
                 }
             }) {
-                Text("OK")
+                Text(stringResource(R.string.ok))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("キャンセル")
+                Text(stringResource(R.string.cancel))
             }
         }
     ) {
@@ -197,9 +199,9 @@ fun EmptyMedicationState(selectedDate: Calendar, onNavigateToMedicationList: () 
     val isFuture = selectedDate.timeInMillis > today.timeInMillis
 
     val message = when {
-        isToday -> "今日飲むお薬はありません"
-        isFuture -> "この日に飲むお薬はありません"
-        else -> "この日に飲んだお薬はありません"
+        isToday -> stringResource(R.string.no_medication_today)
+        isFuture -> stringResource(R.string.no_medication_future)
+        else -> stringResource(R.string.no_medication_past)
     }
 
     Box(
@@ -225,7 +227,7 @@ fun EmptyMedicationState(selectedDate: Calendar, onNavigateToMedicationList: () 
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("お薬を追加する")
+                Text(stringResource(R.string.add_medication_button))
             }
         }
     }
@@ -333,8 +335,8 @@ fun MedicationItem(
 fun formatTakenTime(timestamp: Long): String {
     val calendar = java.util.Calendar.getInstance()
     calendar.timeInMillis = timestamp
-    return String.format(
-        "服用済み %02d:%02d",
+    return stringResource(
+        R.string.taken_at,
         calendar.get(java.util.Calendar.HOUR_OF_DAY),
         calendar.get(java.util.Calendar.MINUTE)
     )

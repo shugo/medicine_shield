@@ -13,8 +13,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import net.shugo.medicineshield.R
 import net.shugo.medicineshield.data.model.CycleType
 import net.shugo.medicineshield.viewmodel.MedicationFormViewModel
 import java.text.SimpleDateFormat
@@ -36,10 +38,15 @@ fun MedicationFormScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (isEdit) "お薬を編集" else "お薬を追加") },
+                title = {
+                    Text(
+                        if (isEdit) stringResource(R.string.edit_medication_title)
+                        else stringResource(R.string.add_medication_title)
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "戻る")
+                        Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 }
             )
@@ -57,7 +64,7 @@ fun MedicationFormScreen(
                 OutlinedTextField(
                     value = formState.name,
                     onValueChange = { viewModel.updateName(it) },
-                    label = { Text("お薬の名前") },
+                    label = { Text(stringResource(R.string.medication_name)) },
                     isError = formState.nameError != null,
                     supportingText = formState.nameError?.let { { Text(it) } },
                     modifier = Modifier.fillMaxWidth()
@@ -66,7 +73,7 @@ fun MedicationFormScreen(
 
             // 服用時間
             item {
-                Text("服用時間", style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.medication_times), style = MaterialTheme.typography.titleMedium)
                 if (formState.timesError != null) {
                     Text(
                         formState.timesError!!,
@@ -95,7 +102,7 @@ fun MedicationFormScreen(
                             .weight(1f)
                     )
                     IconButton(onClick = { viewModel.removeTime(index) }) {
-                        Icon(Icons.Default.Delete, contentDescription = "削除")
+                        Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete))
                     }
                 }
             }
@@ -110,13 +117,13 @@ fun MedicationFormScreen(
                 ) {
                     Icon(Icons.Default.Add, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
-                    Text("時間を追加")
+                    Text(stringResource(R.string.add_time))
                 }
             }
 
             // 服用サイクル
             item {
-                Text("服用サイクル", style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.cycle_type), style = MaterialTheme.typography.titleMedium)
                 Column {
                     CycleType.entries.forEach { type ->
                         Row(
@@ -133,9 +140,9 @@ fun MedicationFormScreen(
                             Spacer(Modifier.width(8.dp))
                             Text(
                                 when (type) {
-                                    CycleType.DAILY -> "毎日"
-                                    CycleType.WEEKLY -> "毎週"
-                                    CycleType.INTERVAL -> "N日ごと"
+                                    CycleType.DAILY -> stringResource(R.string.cycle_daily)
+                                    CycleType.WEEKLY -> stringResource(R.string.cycle_weekly)
+                                    CycleType.INTERVAL -> stringResource(R.string.cycle_interval)
                                 }
                             )
                         }
@@ -165,7 +172,7 @@ fun MedicationFormScreen(
                         OutlinedTextField(
                             value = formState.cycleValue ?: "",
                             onValueChange = { viewModel.updateCycleValue(it) },
-                            label = { Text("日数") },
+                            label = { Text(stringResource(R.string.interval_days)) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -182,7 +189,7 @@ fun MedicationFormScreen(
                     onClick = { showStartDatePicker = true },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("開始日: ${formatDate(formState.startDate)}")
+                    Text(stringResource(R.string.start_date_label, formatDate(formState.startDate)))
                 }
             }
 
@@ -198,12 +205,14 @@ fun MedicationFormScreen(
                         modifier = Modifier.weight(1f)
                     ) {
                         Text(
-                            formState.endDate?.let { "終了日: ${formatDate(it)}" } ?: "終了日: なし"
+                            formState.endDate?.let {
+                                stringResource(R.string.end_date_label, formatDate(it))
+                            } ?: stringResource(R.string.end_date_none)
                         )
                     }
                     if (formState.endDate != null) {
                         IconButton(onClick = { viewModel.updateEndDate(null) }) {
-                            Icon(Icons.Default.Delete, contentDescription = "終了日をクリア")
+                            Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.clear_end_date))
                         }
                     }
                 }
@@ -225,7 +234,7 @@ fun MedicationFormScreen(
                     enabled = !formState.isSaving,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("保存")
+                    Text(stringResource(R.string.save))
                 }
             }
         }
@@ -283,17 +292,17 @@ fun WeekdaySelector(
     onDaysChanged: (Set<Int>) -> Unit
 ) {
     val weekdays = listOf(
-        0 to "日",
-        1 to "月",
-        2 to "火",
-        3 to "水",
-        4 to "木",
-        5 to "金",
-        6 to "土"
+        0 to stringResource(R.string.sunday_short),
+        1 to stringResource(R.string.monday_short),
+        2 to stringResource(R.string.tuesday_short),
+        3 to stringResource(R.string.wednesday_short),
+        4 to stringResource(R.string.thursday_short),
+        5 to stringResource(R.string.friday_short),
+        6 to stringResource(R.string.saturday_short)
     )
 
     Column {
-        Text("曜日を選択", style = MaterialTheme.typography.bodyMedium)
+        Text(stringResource(R.string.select_days), style = MaterialTheme.typography.bodyMedium)
         Spacer(Modifier.height(8.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -346,12 +355,12 @@ fun TimePickerDialog(
             TextButton(onClick = {
                 onConfirm(timePickerState.hour, timePickerState.minute)
             }) {
-                Text("OK")
+                Text(stringResource(R.string.ok))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("キャンセル")
+                Text(stringResource(R.string.cancel))
             }
         },
         text = {
@@ -387,12 +396,12 @@ fun DatePickerDialog(
                     onConfirm(selectedCalendar.timeInMillis)
                 }
             }) {
-                Text("OK")
+                Text(stringResource(R.string.ok))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("キャンセル")
+                Text(stringResource(R.string.cancel))
             }
         }
     ) {
