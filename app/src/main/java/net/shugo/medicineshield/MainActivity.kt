@@ -1,6 +1,7 @@
 package net.shugo.medicineshield
 
 import android.Manifest
+import android.app.Application
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
@@ -125,7 +126,7 @@ fun MedicineShieldApp(repository: MedicationRepository) {
     ) {
         composable("daily_medication") {
             val viewModel: DailyMedicationViewModel = viewModel(
-                factory = DailyMedicationViewModelFactory(repository)
+                factory = DailyMedicationViewModelFactory(context.applicationContext as Application, repository)
             )
             DailyMedicationScreen(
                 viewModel = viewModel,
@@ -210,12 +211,13 @@ class MedicationFormViewModelFactory(
 }
 
 class DailyMedicationViewModelFactory(
+    private val application: Application,
     private val repository: MedicationRepository
 ) : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
     override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(DailyMedicationViewModel::class.java)) {
-            return DailyMedicationViewModel(repository) as T
+            return DailyMedicationViewModel(application, repository) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

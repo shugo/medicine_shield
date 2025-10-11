@@ -14,6 +14,8 @@
     <string name="no_medication_past">この日に飲んだお薬はありません</string>
     <string name="add_medication_button">お薬を追加する</string>
     <string name="taken_at" formatted="false">服用済み %02d:%02d</string>
+    <string name="today">今日</string>
+    <string name="today_with_date">今日 %s</string>
 
     <!-- Medication List Screen -->
     <string name="medication_list_title">お薬一覧</string>

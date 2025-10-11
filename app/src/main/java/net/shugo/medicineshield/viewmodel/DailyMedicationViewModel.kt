@@ -1,7 +1,9 @@
 package net.shugo.medicineshield.viewmodel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import net.shugo.medicineshield.R
 import net.shugo.medicineshield.data.model.DailyMedicationItem
 import net.shugo.medicineshield.data.repository.MedicationRepository
 import kotlinx.coroutines.Job
@@ -13,8 +15,9 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 class DailyMedicationViewModel(
+    application: Application,
     private val repository: MedicationRepository
-) : ViewModel() {
+) : AndroidViewModel(application) {
 
     private val _dailyMedications = MutableStateFlow<List<DailyMedicationItem>>(emptyList())
     val dailyMedications: StateFlow<List<DailyMedicationItem>> = _dailyMedications.asStateFlow()
@@ -51,7 +54,7 @@ class DailyMedicationViewModel(
 
     private fun updateDisplayDate() {
         val calendar = _selectedDate.value
-        val dateFormat = SimpleDateFormat("yyyy年MM月dd日 (E)", Locale.JAPANESE)
+        val dateFormat = SimpleDateFormat("yyyy/MM/dd (E)", Locale.getDefault())
 
         // 今日かどうかチェック
         val today = Calendar.getInstance()
@@ -59,7 +62,11 @@ class DailyMedicationViewModel(
                       calendar.get(Calendar.DAY_OF_YEAR) == today.get(Calendar.DAY_OF_YEAR)
 
         val dateText = dateFormat.format(calendar.time)
-        _displayDateText.value = if (isToday) "今日 $dateText" else dateText
+        _displayDateText.value = if (isToday) {
+            getApplication<Application>().getString(R.string.today_with_date, dateText)
+        } else {
+            dateText
+        }
     }
 
     fun onPreviousDay() {
