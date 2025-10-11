@@ -1,5 +1,6 @@
 package net.shugo.medicineshield.ui.screen
 
+import android.text.format.DateFormat
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -196,7 +197,9 @@ fun MedicationCard(
                 Spacer(Modifier.height(4.dp))
 
                 // 期間
-                val dateFormat = SimpleDateFormat("yyyy/MM/dd", Locale.getDefault())
+                val locale = Locale.getDefault()
+                val pattern = DateFormat.getBestDateTimePattern(locale, "yMd")
+                val dateFormat = SimpleDateFormat(pattern, locale)
                 val startDateStr = dateFormat.format(Date(config.medicationStartDate))
                 val endDateStr = config.medicationEndDate?.let { dateFormat.format(Date(it)) }
                 val periodText = if (endDateStr != null) {

@@ -1,6 +1,7 @@
 package net.shugo.medicineshield.viewmodel
 
 import android.app.Application
+import android.text.format.DateFormat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import net.shugo.medicineshield.R
@@ -54,7 +55,11 @@ class DailyMedicationViewModel(
 
     private fun updateDisplayDate() {
         val calendar = _selectedDate.value
-        val dateFormat = SimpleDateFormat("yyyy/MM/dd (E)", Locale.getDefault())
+
+        // ロケールに応じた最適な日付パターンを取得
+        val locale = Locale.getDefault()
+        val pattern = DateFormat.getBestDateTimePattern(locale, "yMdE")
+        val dateFormat = SimpleDateFormat(pattern, locale)
 
         // 今日かどうかチェック
         val today = Calendar.getInstance()
