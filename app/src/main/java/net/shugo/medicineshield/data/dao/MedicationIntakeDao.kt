@@ -15,14 +15,14 @@ interface MedicationIntakeDao {
     @Delete
     suspend fun delete(intake: MedicationIntake)
 
-    @Query("SELECT * FROM medication_intakes WHERE scheduledDate = :date ORDER BY scheduledTime ASC")
+    @Query("SELECT * FROM medication_intakes WHERE scheduledDate = :date ORDER BY sequenceNumber ASC")
     fun getIntakesByDate(date: String): Flow<List<MedicationIntake>>
 
-    @Query("SELECT * FROM medication_intakes WHERE medicationId = :medicationId AND scheduledDate = :date AND scheduledTime = :time")
+    @Query("SELECT * FROM medication_intakes WHERE medicationId = :medicationId AND scheduledDate = :date AND sequenceNumber = :sequenceNumber")
     suspend fun getIntakeByMedicationAndDateTime(
         medicationId: Long,
         date: String,
-        time: String
+        sequenceNumber: Int
     ): MedicationIntake?
 
     @Query("DELETE FROM medication_intakes WHERE scheduledDate < :date")

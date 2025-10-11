@@ -15,13 +15,17 @@ import androidx.room.PrimaryKey
             onDelete = ForeignKey.CASCADE
         )
     ],
-    indices = [Index("medicationId"), Index("scheduledDate")]
+    indices = [
+        Index("medicationId"),
+        Index("scheduledDate"),
+        Index(value = ["medicationId", "scheduledDate", "sequenceNumber"], unique = true)
+    ]
 )
 data class MedicationIntake(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     val medicationId: Long,
-    val scheduledTime: String,  // HH:mm format (e.g., "09:00")
+    val sequenceNumber: Int,  // MedicationTimeのsequenceNumberと紐付け
     val scheduledDate: String,  // YYYY-MM-DD format (e.g., "2025-10-09")
     val takenAt: Long? = null,  // timestamp in milliseconds, null = not taken yet
     val createdAt: Long = System.currentTimeMillis(),

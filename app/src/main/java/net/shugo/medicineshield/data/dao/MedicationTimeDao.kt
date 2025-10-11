@@ -24,7 +24,7 @@ interface MedicationTimeDao {
         WHERE medicationId = :medicationId
         AND validFrom <= :targetDate
         AND (validTo IS NULL OR validTo > :targetDate)
-        ORDER BY time ASC
+        ORDER BY sequenceNumber ASC
     """)
     suspend fun getTimesForMedicationOnDate(medicationId: Long, targetDate: Long): List<MedicationTime>
 
@@ -35,9 +35,15 @@ interface MedicationTimeDao {
         SELECT * FROM medication_times
         WHERE medicationId = :medicationId
         AND validTo IS NULL
-        ORDER BY time ASC
+        ORDER BY sequenceNumber ASC
     """)
     suspend fun getCurrentTimesForMedication(medicationId: Long): List<MedicationTime>
+
+    /**
+     * 指定されたmedicationの最大sequenceNumberを取得
+     */
+    @Query("SELECT MAX(sequenceNumber) FROM medication_times WHERE medicationId = :medicationId")
+    suspend fun getMaxSequenceNumber(medicationId: Long): Int?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(medicationTime: MedicationTime): Long

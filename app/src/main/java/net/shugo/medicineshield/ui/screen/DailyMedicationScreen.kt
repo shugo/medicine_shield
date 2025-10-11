@@ -78,8 +78,8 @@ fun DailyMedicationScreen(
                 else -> {
                     MedicationList(
                         medications = dailyMedications,
-                        onToggleTaken = { medicationId, scheduledTime, isTaken ->
-                            viewModel.toggleMedicationTaken(medicationId, scheduledTime, isTaken)
+                        onToggleTaken = { medicationId, sequenceNumber, isTaken ->
+                            viewModel.toggleMedicationTaken(medicationId, sequenceNumber, isTaken)
                         }
                     )
                 }
@@ -234,7 +234,7 @@ fun EmptyMedicationState(selectedDate: Calendar, onNavigateToMedicationList: () 
 @Composable
 fun MedicationList(
     medications: List<DailyMedicationItem>,
-    onToggleTaken: (Long, String, Boolean) -> Unit
+    onToggleTaken: (Long, Int, Boolean) -> Unit
 ) {
     // 時刻でグループ化
     val groupedMedications = medications.groupBy { it.scheduledTime }
@@ -276,7 +276,7 @@ fun TimeHeader(time: String) {
 @Composable
 fun MedicationItem(
     medication: DailyMedicationItem,
-    onToggleTaken: (Long, String, Boolean) -> Unit
+    onToggleTaken: (Long, Int, Boolean) -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -320,7 +320,7 @@ fun MedicationItem(
                 onCheckedChange = {
                     onToggleTaken(
                         medication.medicationId,
-                        medication.scheduledTime,
+                        medication.sequenceNumber,
                         medication.isTaken
                     )
                 }
