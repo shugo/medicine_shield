@@ -76,7 +76,7 @@ The app uses Room database with the following entities:
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE.txt](LICENSE.txt) file for details.
+This project is licensed under MIT-0 License - see the [LICENSE.txt](LICENSE.txt) file for details.
 
 ## Author
 
