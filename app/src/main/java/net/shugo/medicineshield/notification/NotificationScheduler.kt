@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import net.shugo.medicineshield.data.model.CycleType
 import net.shugo.medicineshield.data.model.MedicationWithTimes
+import net.shugo.medicineshield.data.preferences.SettingsPreferences
 import net.shugo.medicineshield.data.repository.MedicationRepository
 import net.shugo.medicineshield.utils.DateUtils
 import java.text.SimpleDateFormat
@@ -20,6 +21,7 @@ class NotificationScheduler(
     private val repository: MedicationRepository
 ) {
     private val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+    private val settingsPreferences = SettingsPreferences(context)
 
     companion object {
         const val EXTRA_NOTIFICATION_TIME = "notification_time"
@@ -38,6 +40,11 @@ class NotificationScheduler(
      * すべての通知を再スケジュールする（再起動時・深夜0時）
      */
     suspend fun rescheduleAllNotifications() = withContext(Dispatchers.IO) {
+        // 通知が無効な場合は何もしない
+        if (!settingsPreferences.isNotificationsEnabled()) {
+            return@withContext
+        }
+
         // すべての薬を取得
         val medications = repository.getAllMedicationsWithTimes().first()
 
@@ -164,6 +171,20 @@ class NotificationScheduler(
                 pendingIntent
             )
         }
+    }
+
+    /**
+     * 深夜0時の再スケジュールジョブをキャンセル
+     */
+    fun cancelDailyRefreshJob() {
+        val intent = Intent(context, DailyRefreshReceiver::class.java)
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            DAILY_REFRESH_REQUEST_CODE,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        alarmManager.cancel(pendingIntent)
     }
 
     /**

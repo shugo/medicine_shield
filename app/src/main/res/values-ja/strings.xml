@@ -79,6 +79,12 @@
     <string name="friday">金曜日</string>
     <string name="saturday">土曜日</string>
 
+    <!-- Settings Screen -->
+    <string name="settings">設定</string>
+    <string name="notification_settings">通知設定</string>
+    <string name="enable_notifications">通知を有効にする</string>
+    <string name="notification_description">服薬時刻にリマインダーを受け取る</string>
+
     <!-- Error Messages -->
     <string name="error_empty_name">お薬の名前を入力してください</string>
     <string name="error_no_times">少なくとも1つの服用時間を設定してください</string>
