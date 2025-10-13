@@ -85,6 +85,13 @@
     <string name="enable_notifications">通知を有効にする</string>
     <string name="notification_description">服薬時刻にリマインダーを受け取る</string>
 
+    <!-- Notifications -->
+    <string name="notification_channel_name">服薬リマインダー</string>
+    <string name="notification_channel_description">薬の服用時刻をお知らせします</string>
+    <string name="notification_title">服用時刻です (%s)</string>
+    <string name="notification_message_single">%s を服用してください</string>
+    <string name="notification_message_multiple">%s を服用してください</string>
+
     <!-- Error Messages -->
     <string name="error_empty_name">お薬の名前を入力してください</string>
     <string name="error_no_times">少なくとも1つの服用時間を設定してください</string>

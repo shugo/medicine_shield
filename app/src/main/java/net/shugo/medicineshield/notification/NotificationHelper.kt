@@ -14,8 +14,6 @@ class NotificationHelper(private val context: Context) {
 
     companion object {
         private const val CHANNEL_ID = "medication_reminders"
-        private const val CHANNEL_NAME = "服薬リマインダー"
-        private const val CHANNEL_DESCRIPTION = "薬の服用時刻をお知らせします"
     }
 
     private val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -27,10 +25,10 @@ class NotificationHelper(private val context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 CHANNEL_ID,
-                CHANNEL_NAME,
+                context.getString(R.string.notification_channel_name),
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = CHANNEL_DESCRIPTION
+                description = context.getString(R.string.notification_channel_description)
                 enableVibration(true)
                 enableLights(true)
             }
@@ -54,9 +52,9 @@ class NotificationHelper(private val context: Context) {
 
         // 通知本文を作成
         val message = if (medications.size == 1) {
-            "${medications[0]} を服用してください"
+            context.getString(R.string.notification_message_single, medications[0])
         } else {
-            "${medications.joinToString("、")} を服用してください"
+            context.getString(R.string.notification_message_multiple, medications.joinToString("、"))
         }
 
         // 通知をタップした時のIntent
@@ -74,7 +72,7 @@ class NotificationHelper(private val context: Context) {
         // 通知を作成
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentTitle("服用時刻です ($time)")
+            .setContentTitle(context.getString(R.string.notification_title, time))
             .setContentText(message)
             .setStyle(NotificationCompat.BigTextStyle().bigText(message))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
