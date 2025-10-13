@@ -84,6 +84,12 @@
     <string name="notification_settings">通知設定</string>
     <string name="enable_notifications">通知を有効にする</string>
     <string name="notification_description">服薬時刻にリマインダーを受け取る</string>
+    <string name="app_info">アプリ情報</string>
+    <string name="version">バージョン</string>
+    <string name="license_info">ライセンス情報</string>
+    <string name="app_license">このアプリケーションは MIT-0 ライセンスの下で公開されています。</string>
+    <string name="open_source_licenses">オープンソースライセンス</string>
+    <string name="license_details">このアプリケーションは以下のオープンソースライブラリを使用しています:\n\n• Android Jetpack (Apache License 2.0)\n• Kotlin (Apache License 2.0)\n• Room Database (Apache License 2.0)\n• Jetpack Compose (Apache License 2.0)\n• Material Design 3 (Apache License 2.0)</string>
 
     <!-- Notifications -->
     <string name="notification_channel_name">服薬リマインダー</string>
