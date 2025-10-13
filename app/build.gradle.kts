@@ -6,12 +6,12 @@ plugins {
 
 android {
     namespace = "net.shugo.medicineshield"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "net.shugo.medicineshield"
         minSdk = 24
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1"
 
