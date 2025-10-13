@@ -54,7 +54,8 @@ class NotificationHelper(private val context: Context) {
         val message = if (medications.size == 1) {
             context.getString(R.string.notification_message_single, medications[0])
         } else {
-            context.getString(R.string.notification_message_multiple, medications.joinToString("、"))
+            val separator = context.getString(R.string.medication_list_separator)
+            context.getString(R.string.notification_message_multiple, medications.joinToString(separator))
         }
 
         // 通知をタップした時のIntent
