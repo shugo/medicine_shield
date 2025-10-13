@@ -72,7 +72,7 @@ class NotificationHelper(private val context: Context) {
 
         // 通知を作成
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(R.drawable.ic_stat_name)
             .setContentTitle(context.getString(R.string.notification_title, time))
             .setContentText(message)
             .setStyle(NotificationCompat.BigTextStyle().bigText(message))
