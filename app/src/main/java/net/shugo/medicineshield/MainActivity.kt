@@ -12,9 +12,12 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.dynamicDarkColorScheme
+import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -112,7 +115,27 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MedicineShieldTheme(content: @Composable () -> Unit) {
+    val context = LocalContext.current
+    val isDarkTheme = isSystemInDarkTheme()
+
+    // Android 12以降でダイナミックカラーを使用
+    val colorScheme = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        if (isDarkTheme) {
+            dynamicDarkColorScheme(context)
+        } else {
+            dynamicLightColorScheme(context)
+        }
+    } else {
+        // Android 12未満ではデフォルトのMaterial 3カラースキームを使用
+        if (isDarkTheme) {
+            androidx.compose.material3.darkColorScheme()
+        } else {
+            androidx.compose.material3.lightColorScheme()
+        }
+    }
+
     MaterialTheme(
+        colorScheme = colorScheme,
         content = content
     )
 }
