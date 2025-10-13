@@ -3,7 +3,7 @@
     <string name="app_name">Medicine Shield</string>
 
     <!-- Daily Medication Screen -->
-    <string name="daily_medication_title">日々の服薬</string>
+    <string name="daily_medication_title">服薬記録</string>
     <string name="medication_list">お薬一覧</string>
     <string name="previous_day">前日</string>
     <string name="next_day">翌日</string>
