@@ -91,7 +91,7 @@
     <string name="notification_title">服用時刻です (%s)</string>
     <string name="notification_message_single">%s を服用してください</string>
     <string name="notification_message_multiple">%s を服用してください</string>
-    <string name="medication_list_separator">、</string>
+    <string name="medication_list_separator" translatable="false">"、"</string>
 
     <!-- Error Messages -->
     <string name="error_empty_name">お薬の名前を入力してください</string>
