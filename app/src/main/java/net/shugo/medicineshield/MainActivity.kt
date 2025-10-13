@@ -33,9 +33,11 @@ import net.shugo.medicineshield.notification.NotificationScheduler
 import net.shugo.medicineshield.ui.screen.MedicationFormScreen
 import net.shugo.medicineshield.ui.screen.MedicationListScreen
 import net.shugo.medicineshield.ui.screen.DailyMedicationScreen
+import net.shugo.medicineshield.ui.screen.SettingsScreen
 import net.shugo.medicineshield.viewmodel.MedicationFormViewModel
 import net.shugo.medicineshield.viewmodel.MedicationListViewModel
 import net.shugo.medicineshield.viewmodel.DailyMedicationViewModel
+import net.shugo.medicineshield.viewmodel.SettingsViewModel
 
 class MainActivity : ComponentActivity() {
     private lateinit var repository: MedicationRepository
@@ -132,6 +134,21 @@ fun MedicineShieldApp(repository: MedicationRepository) {
                 viewModel = viewModel,
                 onNavigateToMedicationList = {
                     navController.navigate("medication_list")
+                },
+                onNavigateToSettings = {
+                    navController.navigate("settings")
+                }
+            )
+        }
+
+        composable("settings") {
+            val viewModel: SettingsViewModel = viewModel(
+                factory = SettingsViewModelFactory(context.applicationContext, repository)
+            )
+            SettingsScreen(
+                viewModel = viewModel,
+                onNavigateBack = {
+                    navController.popBackStack()
                 }
             )
         }
@@ -218,6 +235,19 @@ class DailyMedicationViewModelFactory(
     override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(DailyMedicationViewModel::class.java)) {
             return DailyMedicationViewModel(application, repository) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
+    }
+}
+
+class SettingsViewModelFactory(
+    private val context: Context,
+    private val repository: MedicationRepository
+) : ViewModelProvider.Factory {
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(SettingsViewModel::class.java)) {
+            return SettingsViewModel(context, repository) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

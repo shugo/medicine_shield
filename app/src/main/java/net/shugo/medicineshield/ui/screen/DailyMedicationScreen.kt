@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.*
@@ -26,7 +27,8 @@ import java.util.*
 @Composable
 fun DailyMedicationScreen(
     viewModel: DailyMedicationViewModel,
-    onNavigateToMedicationList: () -> Unit
+    onNavigateToMedicationList: () -> Unit,
+    onNavigateToSettings: () -> Unit
 ) {
     val dailyMedications by viewModel.dailyMedications.collectAsState()
     val displayDateText by viewModel.displayDateText.collectAsState()
@@ -40,6 +42,12 @@ fun DailyMedicationScreen(
             TopAppBar(
                 title = { Text(stringResource(R.string.daily_medication_title)) },
                 actions = {
+                    IconButton(onClick = onNavigateToSettings) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = stringResource(R.string.settings)
+                        )
+                    }
                     IconButton(onClick = onNavigateToMedicationList) {
                         Icon(
                             imageVector = Icons.Default.List,
