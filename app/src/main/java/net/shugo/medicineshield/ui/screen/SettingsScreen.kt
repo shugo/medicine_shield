@@ -1,13 +1,20 @@
 package net.shugo.medicineshield.ui.screen
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import net.shugo.medicineshield.R
 import net.shugo.medicineshield.viewmodel.SettingsViewModel
@@ -19,6 +26,7 @@ fun SettingsScreen(
     onNavigateBack: () -> Unit
 ) {
     val notificationsEnabled by viewModel.notificationsEnabled.collectAsState()
+    val context = LocalContext.current
 
     Scaffold(
         topBar = {
@@ -146,10 +154,43 @@ fun SettingsScreen(
                         .fillMaxWidth()
                         .padding(16.dp)
                 ) {
-                    // App License
-                    Text(
-                        text = stringResource(R.string.app_license),
-                        style = MaterialTheme.typography.bodyMedium
+                    // App License with clickable MIT-0 link
+                    val licenseText = stringResource(R.string.app_license)
+                    val licenseUrl = stringResource(R.string.mit0_license_url)
+                    val mit0Tag = "MIT-0"
+
+                    val annotatedString = buildAnnotatedString {
+                        val startIndex = licenseText.indexOf(mit0Tag)
+                        if (startIndex >= 0) {
+                            append(licenseText.substring(0, startIndex))
+                            pushStringAnnotation(tag = "URL", annotation = licenseUrl)
+                            withStyle(
+                                style = SpanStyle(
+                                    color = MaterialTheme.colorScheme.primary,
+                                    textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline
+                                )
+                            ) {
+                                append(mit0Tag)
+                            }
+                            pop()
+                            append(licenseText.substring(startIndex + mit0Tag.length))
+                        } else {
+                            append(licenseText)
+                        }
+                    }
+
+                    ClickableText(
+                        text = annotatedString,
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            color = MaterialTheme.colorScheme.onSurface
+                        ),
+                        onClick = { offset ->
+                            annotatedString.getStringAnnotations(tag = "URL", start = offset, end = offset)
+                                .firstOrNull()?.let { annotation ->
+                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(annotation.item))
+                                    context.startActivity(intent)
+                                }
+                        }
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))

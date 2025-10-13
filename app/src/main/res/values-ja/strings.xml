@@ -88,6 +88,7 @@
     <string name="version">バージョン</string>
     <string name="license_info">ライセンス情報</string>
     <string name="app_license">このアプリケーションは MIT-0 ライセンスの下で公開されています。</string>
+    <string name="mit0_license_url" translatable="false">https://licenses.opensource.jp/MIT-0/MIT-0.html</string>
     <string name="open_source_licenses">オープンソースライセンス</string>
     <string name="license_details">このアプリケーションは以下のオープンソースライブラリを使用しています:\n\n• Android Jetpack (Apache License 2.0)\n• Kotlin (Apache License 2.0)\n• Room Database (Apache License 2.0)\n• Jetpack Compose (Apache License 2.0)\n• Material Design 3 (Apache License 2.0)</string>
 
