@@ -85,6 +85,14 @@
     <string name="enable_notifications">Enable Notifications</string>
     <string name="notification_description">Receive reminders when it\'s time to take medication</string>
 
+    <!-- Notifications -->
+    <string name="notification_channel_name">Medication Reminders</string>
+    <string name="notification_channel_description">Notifies you when it\'s time to take your medication</string>
+    <string name="notification_title">Time to take medication (%s)</string>
+    <string name="notification_message_single">Please take %s</string>
+    <string name="notification_message_multiple">Please take %s</string>
+    <string name="medication_list_separator" translatable="false">", "</string>
+
     <!-- Error Messages -->
     <string name="error_empty_name">Please enter a medication name</string>
     <string name="error_no_times">Please set at least one medication time</string>
