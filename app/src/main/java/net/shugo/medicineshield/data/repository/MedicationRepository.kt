@@ -124,13 +124,20 @@ class MedicationRepository(
                     currentConfig.medicationEndDate != endDate
 
             if (configChanged) {
-                // 既存のConfigを無効化
-                medicationConfigDao.update(
-                    currentConfig.copy(
-                        validTo = today,
-                        updatedAt = System.currentTimeMillis()
+                val normalizedConfigValidFrom = DateUtils.normalizeToStartOfDay(currentConfig.validFrom)
+
+                if (normalizedConfigValidFrom == today) {
+                    // validFromが今日の場合、古いConfigは使用されないので削除
+                    medicationConfigDao.delete(currentConfig)
+                } else {
+                    // validFromが今日より前の場合、既存のConfigを無効化
+                    medicationConfigDao.update(
+                        currentConfig.copy(
+                            validTo = today,
+                            updatedAt = System.currentTimeMillis()
+                        )
                     )
-                )
+                }
 
                 // 新しいConfigを作成
                 val newConfig = MedicationConfig(
@@ -205,13 +212,20 @@ class MedicationRepository(
                 )
             } else if (currentTime.time != newTime) {
                 // 時刻が変更された場合
-                // 古いレコードを無効化
-                medicationTimeDao.update(
-                    currentTime.copy(
-                        validTo = today,
-                        updatedAt = now
+                val normalizedValidFrom = DateUtils.normalizeToStartOfDay(currentTime.validFrom)
+
+                if (normalizedValidFrom == today) {
+                    // validFromが今日の場合、古いレコードは使用されないので削除
+                    medicationTimeDao.delete(currentTime)
+                } else {
+                    // validFromが今日より前の場合、古いレコードを無効化
+                    medicationTimeDao.update(
+                        currentTime.copy(
+                            validTo = today,
+                            updatedAt = now
+                        )
                     )
-                )
+                }
 
                 // 新しいレコードを作成（同じsequenceNumber）
                 medicationTimeDao.insert(
