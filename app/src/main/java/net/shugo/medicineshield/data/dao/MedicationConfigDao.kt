@@ -1,6 +1,7 @@
 package net.shugo.medicineshield.data.dao
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Update
@@ -36,4 +37,7 @@ interface MedicationConfigDao {
 
     @Update
     suspend fun update(config: MedicationConfig)
+
+    @Delete
+    suspend fun delete(config: MedicationConfig)
 }
