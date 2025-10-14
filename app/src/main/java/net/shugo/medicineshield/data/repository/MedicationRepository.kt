@@ -124,9 +124,7 @@ class MedicationRepository(
                     currentConfig.medicationEndDate != endDate
 
             if (configChanged) {
-                val normalizedConfigValidFrom = DateUtils.normalizeToStartOfDay(currentConfig.validFrom)
-
-                if (normalizedConfigValidFrom == today) {
+                if (currentConfig.validFrom == today) {
                     // validFromが今日の場合、古いConfigは使用されないので削除
                     medicationConfigDao.delete(currentConfig)
                 } else {
@@ -212,9 +210,7 @@ class MedicationRepository(
                 )
             } else if (currentTime.time != newTime) {
                 // 時刻が変更された場合
-                val normalizedValidFrom = DateUtils.normalizeToStartOfDay(currentTime.validFrom)
-
-                if (normalizedValidFrom == today) {
+                if (currentTime.validFrom == today) {
                     // validFromが今日の場合、古いレコードは使用されないので削除
                     medicationTimeDao.delete(currentTime)
                 } else {
