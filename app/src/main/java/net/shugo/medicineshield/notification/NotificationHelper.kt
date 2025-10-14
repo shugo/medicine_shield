@@ -5,6 +5,7 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.media.RingtoneManager
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import net.shugo.medicineshield.MainActivity
@@ -23,6 +24,7 @@ class NotificationHelper(private val context: Context) {
      */
     fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
             val channel = NotificationChannel(
                 CHANNEL_ID,
                 context.getString(R.string.notification_channel_name),
@@ -31,6 +33,7 @@ class NotificationHelper(private val context: Context) {
                 description = context.getString(R.string.notification_channel_description)
                 enableVibration(true)
                 enableLights(true)
+                setSound(soundUri, null)
             }
             notificationManager.createNotificationChannel(channel)
         }
@@ -71,12 +74,15 @@ class NotificationHelper(private val context: Context) {
         )
 
         // 通知を作成
+        val soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_stat_name)
             .setContentTitle(context.getString(R.string.notification_title, time))
             .setContentText(message)
             .setStyle(NotificationCompat.BigTextStyle().bigText(message))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setDefaults(NotificationCompat.DEFAULT_ALL)
+            .setSound(soundUri)
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
             .build()
