@@ -64,7 +64,7 @@ class MedicationRepository(
         cycleValue: String?,
         startDate: Long,
         endDate: Long?,
-        times: List<String>
+        timesWithDose: List<Pair<String, Double>>  // (time, dose)のペア
     ): Long {
         // 1. Medicationを作成
         val medication = Medication(name = name)
@@ -85,11 +85,12 @@ class MedicationRepository(
 
         // 3. MedicationTimeを作成（sequenceNumberを1から割り当て）
         // 初期登録時はvalidFrom = 0（過去すべての日付で有効）
-        val medicationTimes = times.mapIndexed { index, time ->
+        val medicationTimes = timesWithDose.mapIndexed { index, (time, dose) ->
             MedicationTime(
                 medicationId = medicationId,
                 sequenceNumber = index + 1,
                 time = time,
+                dose = dose,
                 validFrom = 0,
                 validTo = null
             )
@@ -106,7 +107,7 @@ class MedicationRepository(
         cycleValue: String?,
         startDate: Long,
         endDate: Long?,
-        timesWithSequence: List<Pair<Int, String>>  // (sequenceNumber, time)のペア
+        timesWithSequenceAndDose: List<Triple<Int, String, Double>>  // (sequenceNumber, time, dose)のトリプル
     ) {
         val now = System.currentTimeMillis()
         val today = DateUtils.normalizeToStartOfDay(now)
@@ -167,7 +168,7 @@ class MedicationRepository(
         // 3. MedicationTimeの変更をチェック
         val currentTimes = medicationTimeDao.getCurrentTimesForMedication(medicationId)
         val currentMap = currentTimes.associateBy { it.sequenceNumber }
-        val newMap = timesWithSequence.toMap()
+        val newMap = timesWithSequenceAndDose.associate { (seq, time, dose) -> seq to Pair(time, dose) }
 
         // 削除する時刻（sequenceNumberが新しいリストにない）
         val timesToEnd = currentTimes.filter { it.sequenceNumber !in newMap }
@@ -194,7 +195,7 @@ class MedicationRepository(
         }
 
         // 追加または更新する時刻
-        timesWithSequence.forEach { (sequenceNumber, newTime) ->
+        timesWithSequenceAndDose.forEach { (sequenceNumber, newTime, newDose) ->
             val currentTime = currentMap[sequenceNumber]
 
             if (currentTime == null) {
@@ -204,12 +205,13 @@ class MedicationRepository(
                         medicationId = medicationId,
                         sequenceNumber = sequenceNumber,
                         time = newTime,
+                        dose = newDose,
                         validFrom = today,  // 今日から有効
                         validTo = null
                     )
                 )
-            } else if (currentTime.time != newTime) {
-                // 時刻が変更された場合
+            } else if (currentTime.time != newTime || currentTime.dose != newDose) {
+                // 時刻または服用量が変更された場合
                 if (currentTime.validFrom == today) {
                     // validFromが今日の場合、古いレコードは使用されないので削除
                     medicationTimeDao.delete(currentTime)
@@ -229,6 +231,7 @@ class MedicationRepository(
                         medicationId = medicationId,
                         sequenceNumber = sequenceNumber,
                         time = newTime,
+                        dose = newDose,
                         validFrom = today,  // 今日から有効
                         validTo = null
                     )
@@ -293,6 +296,7 @@ class MedicationRepository(
                                 medicationName = medication.name,
                                 sequenceNumber = medTime.sequenceNumber,
                                 scheduledTime = medTime.time,
+                                dose = medTime.dose,
                                 isTaken = intake?.takenAt != null,
                                 takenAt = intake?.takenAt
                             )

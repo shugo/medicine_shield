@@ -10,6 +10,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import net.shugo.medicineshield.R
 import net.shugo.medicineshield.data.model.CycleType
@@ -87,22 +91,23 @@ fun MedicationFormScreen(
 
             itemsIndexed(formState.times) { index, timeWithSeq ->
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            editingTimeIndex = index
-                            showTimePicker = true
-                        },
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        timeWithSeq.time,
+                        "${timeWithSeq.time} x ${String.format("%.1f", timeWithSeq.dose)}",
                         style = MaterialTheme.typography.bodyLarge,
                         modifier = Modifier
                             .padding(vertical = 12.dp)
                             .weight(1f)
                     )
+                    IconButton(onClick = {
+                        editingTimeIndex = index
+                        showTimePicker = true
+                    }) {
+                        Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.edit))
+                    }
                     IconButton(onClick = { viewModel.removeTime(index) }) {
                         Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete))
                     }
@@ -242,21 +247,28 @@ fun MedicationFormScreen(
         }
     }
 
-    // Time Picker Dialog
+    // Time and Dose Picker Dialog
     if (showTimePicker) {
-        val currentEditingTime = editingTimeIndex?.let { formState.times.getOrNull(it)?.time }
-        TimePickerDialog(
-            initialTime = currentEditingTime,
+        val currentEditingTimeWithSeq = editingTimeIndex?.let { formState.times.getOrNull(it) }
+        // 新規追加時のデフォルト値：既存の時刻リストがあれば時刻順で最後のdose、なければ1.0
+        val defaultDose = if (currentEditingTimeWithSeq != null) {
+            currentEditingTimeWithSeq.dose
+        } else {
+            formState.times.maxByOrNull { it.time }?.dose ?: 1.0
+        }
+        TimeAndDosePickerDialog(
+            initialTime = currentEditingTimeWithSeq?.time,
+            initialDose = defaultDose,
             onDismiss = {
                 showTimePicker = false
                 editingTimeIndex = null
             },
-            onConfirm = { hour, minute ->
+            onConfirm = { hour, minute, dose ->
                 val timeString = String.format("%02d:%02d", hour, minute)
                 if (editingTimeIndex != null) {
-                    viewModel.updateTime(editingTimeIndex!!, timeString)
+                    viewModel.updateTime(editingTimeIndex!!, timeString, dose)
                 } else {
-                    viewModel.addTime(timeString)
+                    viewModel.addTime(timeString, dose)
                 }
                 showTimePicker = false
                 editingTimeIndex = null
@@ -368,6 +380,111 @@ fun TimePickerDialog(
         },
         text = {
             TimePicker(state = timePickerState)
+        }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TimeAndDosePickerDialog(
+    initialTime: String? = null,
+    initialDose: Double = 1.0,
+    onDismiss: () -> Unit,
+    onConfirm: (hour: Int, minute: Int, dose: Double) -> Unit
+) {
+    val (initialHour, initialMinute) = initialTime?.let {
+        val parts = it.split(":")
+        if (parts.size == 2) {
+            parts[0].toIntOrNull() to parts[1].toIntOrNull()
+        } else {
+            null to null
+        }
+    } ?: (0 to 0)
+
+    val timePickerState = rememberTimePickerState(
+        initialHour = initialHour ?: 0,
+        initialMinute = initialMinute ?: 0,
+        is24Hour = true
+    )
+
+    var doseText by remember { mutableStateOf(String.format("%.1f", initialDose)) }
+    var doseError by remember { mutableStateOf<String?>(null) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = {
+                val dose = doseText.toDoubleOrNull()
+                if (dose != null && dose in 0.1..99.9) {
+                    onConfirm(timePickerState.hour, timePickerState.minute, dose)
+                } else {
+                    doseError = "0.1〜99.9の範囲で入力してください"
+                }
+            }) {
+                Text(stringResource(R.string.ok))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.cancel))
+            }
+        },
+        text = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                TimePicker(state = timePickerState)
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedTextField(
+                        value = doseText,
+                        onValueChange = {
+                            doseText = it
+                            doseError = null
+                        },
+                        label = { Text(stringResource(R.string.dose)) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.End),
+                        isError = doseError != null,
+                        supportingText = doseError?.let { { Text(it) } },
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        IconButton(
+                            onClick = {
+                                val currentDose = doseText.toDoubleOrNull() ?: 1.0
+                                val newDose = currentDose + 1.0
+                                if (newDose <= 99.9) {
+                                    doseText = String.format("%.1f", newDose)
+                                    doseError = null
+                                }
+                            }
+                        ) {
+                            Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Increase dose")
+                        }
+
+                        IconButton(
+                            onClick = {
+                                val currentDose = doseText.toDoubleOrNull() ?: 1.0
+                                val newDose = currentDose - 1.0
+                                if (newDose >= 0.1) {
+                                    doseText = String.format("%.1f", newDose)
+                                    doseError = null
+                                }
+                            }
+                        ) {
+                            Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Decrease dose")
+                        }
+                    }
+                }
+            }
         }
     )
 }

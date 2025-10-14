@@ -64,6 +64,7 @@
     <string name="end_date_none">終了日: なし</string>
     <string name="clear_end_date">終了日をクリア</string>
     <string name="save">保存</string>
+    <string name="dose">服用量</string>
 
     <!-- Cycle Descriptions -->
     <string name="cycle_daily_full">毎日</string>

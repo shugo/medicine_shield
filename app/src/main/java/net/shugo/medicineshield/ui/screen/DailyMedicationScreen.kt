@@ -310,11 +310,21 @@ fun MedicationItem(
             Column(
                 modifier = Modifier.weight(1f)
             ) {
-                Text(
-                    text = medication.medicationName,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = medication.medicationName,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "x ${String.format("%.1f", medication.dose)}",
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
                 if (medication.isTaken && medication.takenAt != null) {
                     Text(
                         text = formatTakenTime(medication.takenAt),
