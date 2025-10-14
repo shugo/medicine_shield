@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import net.shugo.medicineshield.R
 import net.shugo.medicineshield.data.model.CycleType
@@ -439,6 +440,7 @@ fun TimeAndDosePickerDialog(
                         },
                         label = { Text(stringResource(R.string.dose)) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.End),
                         isError = doseError != null,
                         supportingText = doseError?.let { { Text(it) } },
                         modifier = Modifier.weight(1f)
