@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.*
@@ -90,12 +91,7 @@ fun MedicationFormScreen(
 
             itemsIndexed(formState.times) { index, timeWithSeq ->
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            editingTimeIndex = index
-                            showTimePicker = true
-                        },
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -106,6 +102,12 @@ fun MedicationFormScreen(
                             .padding(vertical = 12.dp)
                             .weight(1f)
                     )
+                    IconButton(onClick = {
+                        editingTimeIndex = index
+                        showTimePicker = true
+                    }) {
+                        Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.edit))
+                    }
                     IconButton(onClick = { viewModel.removeTime(index) }) {
                         Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete))
                     }
