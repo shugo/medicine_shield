@@ -97,7 +97,7 @@ fun MedicationFormScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        timeWithSeq.time,
+                        "${timeWithSeq.time} x ${String.format("%.1f", timeWithSeq.dose)}",
                         style = MaterialTheme.typography.bodyLarge,
                         modifier = Modifier
                             .padding(vertical = 12.dp)
@@ -242,21 +242,22 @@ fun MedicationFormScreen(
         }
     }
 
-    // Time Picker Dialog
+    // Time and Dose Picker Dialog
     if (showTimePicker) {
-        val currentEditingTime = editingTimeIndex?.let { formState.times.getOrNull(it)?.time }
-        TimePickerDialog(
-            initialTime = currentEditingTime,
+        val currentEditingTimeWithSeq = editingTimeIndex?.let { formState.times.getOrNull(it) }
+        TimeAndDosePickerDialog(
+            initialTime = currentEditingTimeWithSeq?.time,
+            initialDose = currentEditingTimeWithSeq?.dose ?: 1.0,
             onDismiss = {
                 showTimePicker = false
                 editingTimeIndex = null
             },
-            onConfirm = { hour, minute ->
+            onConfirm = { hour, minute, dose ->
                 val timeString = String.format("%02d:%02d", hour, minute)
                 if (editingTimeIndex != null) {
-                    viewModel.updateTime(editingTimeIndex!!, timeString)
+                    viewModel.updateTime(editingTimeIndex!!, timeString, dose)
                 } else {
-                    viewModel.addTime(timeString)
+                    viewModel.addTime(timeString, dose)
                 }
                 showTimePicker = false
                 editingTimeIndex = null
@@ -368,6 +369,75 @@ fun TimePickerDialog(
         },
         text = {
             TimePicker(state = timePickerState)
+        }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TimeAndDosePickerDialog(
+    initialTime: String? = null,
+    initialDose: Double = 1.0,
+    onDismiss: () -> Unit,
+    onConfirm: (hour: Int, minute: Int, dose: Double) -> Unit
+) {
+    val (initialHour, initialMinute) = initialTime?.let {
+        val parts = it.split(":")
+        if (parts.size == 2) {
+            parts[0].toIntOrNull() to parts[1].toIntOrNull()
+        } else {
+            null to null
+        }
+    } ?: (0 to 0)
+
+    val timePickerState = rememberTimePickerState(
+        initialHour = initialHour ?: 0,
+        initialMinute = initialMinute ?: 0,
+        is24Hour = true
+    )
+
+    var doseText by remember { mutableStateOf(String.format("%.1f", initialDose)) }
+    var doseError by remember { mutableStateOf<String?>(null) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = {
+                val dose = doseText.toDoubleOrNull()
+                if (dose != null && dose in 0.1..99.9) {
+                    onConfirm(timePickerState.hour, timePickerState.minute, dose)
+                } else {
+                    doseError = "0.1〜99.9の範囲で入力してください"
+                }
+            }) {
+                Text(stringResource(R.string.ok))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.cancel))
+            }
+        },
+        text = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                TimePicker(state = timePickerState)
+
+                OutlinedTextField(
+                    value = doseText,
+                    onValueChange = {
+                        doseText = it
+                        doseError = null
+                    },
+                    label = { Text("服用量") },
+                    suffix = { Text("錠") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    isError = doseError != null,
+                    supportingText = doseError?.let { { Text(it) } },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
         }
     )
 }

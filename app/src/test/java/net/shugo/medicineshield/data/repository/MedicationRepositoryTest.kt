@@ -49,7 +49,7 @@ class MedicationRepositoryTest {
         val cycleValue: String? = null
         val startDate = parseDate("2025-10-01")
         val endDate: Long? = null
-        val times = listOf("08:00", "20:00")
+        val times = listOf("08:00" to 1.0, "20:00" to 1.0)
         val medicationId = 1L
 
         coEvery { medicationDao.insert(any()) } returns medicationId
@@ -101,7 +101,7 @@ class MedicationRepositoryTest {
             MedicationTime(id = 1, medicationId = medicationId, sequenceNumber = 1, time = "08:00", validFrom = 0, validTo = null),
             MedicationTime(id = 2, medicationId = medicationId, sequenceNumber = 2, time = "20:00", validFrom = 0, validTo = null)
         )
-        val newTimes = listOf(1 to "09:00", 2 to "21:00")
+        val newTimes = listOf(Triple(1, "09:00", 1.0), Triple(2, "21:00", 1.0))
 
         coEvery { medicationDao.getMedicationById(medicationId) } returns Medication(id = medicationId, name = "Old Med")
         coEvery { medicationDao.update(any()) } just Runs

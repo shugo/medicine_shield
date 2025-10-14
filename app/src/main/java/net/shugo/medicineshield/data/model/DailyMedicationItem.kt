@@ -5,6 +5,7 @@ data class DailyMedicationItem(
     val medicationName: String,
     val sequenceNumber: Int,  // MedicationTimeのsequenceNumber
     val scheduledTime: String,  // 表示用の時刻（HH:mm）
+    val dose: Double = 1.0,  // 服用量
     val isTaken: Boolean,
     val takenAt: Long? = null
 )

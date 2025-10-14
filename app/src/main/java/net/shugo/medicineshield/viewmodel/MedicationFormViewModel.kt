@@ -14,7 +14,8 @@ import kotlinx.coroutines.launch
 
 data class TimeWithSequence(
     val sequenceNumber: Int,
-    val time: String
+    val time: String,
+    val dose: Double = 1.0
 )
 
 data class MedicationFormState(
@@ -56,7 +57,7 @@ class MedicationFormViewModel(
                 val originalStartDate = currentConfig?.medicationStartDate ?: System.currentTimeMillis()
 
                 val timesWithSeq = mwt.times.map {
-                    TimeWithSequence(it.sequenceNumber, it.time)
+                    TimeWithSequence(it.sequenceNumber, it.time, it.dose)
                 }
                 nextSequenceNumber = (mwt.times.maxOfOrNull { it.sequenceNumber } ?: 0) + 1
 
@@ -78,9 +79,9 @@ class MedicationFormViewModel(
         _formState.value = _formState.value.copy(name = name, nameError = null)
     }
 
-    fun addTime(time: String) {
+    fun addTime(time: String, dose: Double = 1.0) {
         val currentTimes = _formState.value.times.toMutableList()
-        currentTimes.add(TimeWithSequence(nextSequenceNumber++, time))
+        currentTimes.add(TimeWithSequence(nextSequenceNumber++, time, dose))
         currentTimes.sortBy { it.time }
         _formState.value = _formState.value.copy(times = currentTimes, timesError = null)
     }
@@ -93,11 +94,14 @@ class MedicationFormViewModel(
         }
     }
 
-    fun updateTime(index: Int, newTime: String) {
+    fun updateTime(index: Int, newTime: String, newDose: Double? = null) {
         val currentTimes = _formState.value.times.toMutableList()
         if (index in currentTimes.indices) {
-            // sequenceNumberは保持したまま時刻だけ変更
-            currentTimes[index] = currentTimes[index].copy(time = newTime)
+            // sequenceNumberは保持したまま時刻と服用量を変更
+            currentTimes[index] = currentTimes[index].copy(
+                time = newTime,
+                dose = newDose ?: currentTimes[index].dose
+            )
             currentTimes.sortBy { it.time }
             _formState.value = _formState.value.copy(times = currentTimes, timesError = null)
         }
@@ -141,10 +145,10 @@ class MedicationFormViewModel(
                         cycleValue = state.cycleValue,
                         startDate = state.startDate,
                         endDate = state.endDate,
-                        times = state.times.map { it.time }
+                        timesWithDose = state.times.map { it.time to it.dose }
                     )
                 } else {
-                    val timesWithSeq = state.times.map { it.sequenceNumber to it.time }
+                    val timesWithSeqAndDose = state.times.map { Triple(it.sequenceNumber, it.time, it.dose) }
                     repository.updateMedicationWithTimes(
                         medicationId = state.medicationId,
                         name = state.name,
@@ -152,7 +156,7 @@ class MedicationFormViewModel(
                         cycleValue = state.cycleValue,
                         startDate = state.startDate,
                         endDate = state.endDate,
-                        timesWithSequence = timesWithSeq
+                        timesWithSequenceAndDose = timesWithSeqAndDose
                     )
                 }
 

@@ -169,7 +169,7 @@ fun MedicationCard(
 
             // 服用時間（現在有効なもののみ）
             Text(
-                stringResource(R.string.medication_times_label, times.joinToString(", ") { it.time }),
+                stringResource(R.string.medication_times_label, times.joinToString(", ") { "${it.time} x ${String.format("%.1f", it.dose)}" }),
                 style = MaterialTheme.typography.bodyMedium
             )
 

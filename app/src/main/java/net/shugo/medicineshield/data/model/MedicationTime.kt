@@ -26,6 +26,7 @@ data class MedicationTime(
     val medicationId: Long,
     val sequenceNumber: Int,  // medicationId毎の連番（1, 2, 3...）
     val time: String,  // HH:mm format (e.g., "09:00", "14:30")
+    val dose: Double = 1.0,  // 服用量（デフォルト: 1.0）
     val validFrom: Long,  // このレコードが有効になった日付（タイムスタンプ）
     val validTo: Long? = null,  // このレコードが無効になった日付（null=現在も有効）
     val createdAt: Long = System.currentTimeMillis(),
