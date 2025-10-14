@@ -33,4 +33,7 @@ interface MedicationIntakeDao {
 
     @Query("DELETE FROM medication_intakes WHERE scheduledDate < :date")
     suspend fun deleteOldIntakes(date: String)
+
+    @Query("DELETE FROM medication_intakes WHERE medicationId = :medicationId AND scheduledDate >= :fromDate")
+    suspend fun deleteIntakesFromDate(medicationId: Long, fromDate: String)
 }

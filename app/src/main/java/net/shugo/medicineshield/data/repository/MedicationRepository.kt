@@ -131,6 +131,12 @@ class MedicationRepository(
                     currentConfig.medicationEndDate != endDate ||
                     currentConfig.isAsNeeded != isAsNeeded
 
+            // isAsNeededが変更された場合、今日以降の服用履歴を削除
+            if (currentConfig.isAsNeeded != isAsNeeded) {
+                val todayString = getDateString(today)
+                medicationIntakeDao.deleteIntakesFromDate(medicationId, todayString)
+            }
+
             if (configChanged) {
                 if (currentConfig.validFrom == today) {
                     // validFromが今日の場合、古いConfigは使用されないので削除
