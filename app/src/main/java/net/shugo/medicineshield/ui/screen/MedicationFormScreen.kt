@@ -430,8 +430,7 @@ fun TimeAndDosePickerDialog(
                         doseText = it
                         doseError = null
                     },
-                    label = { Text("服用量") },
-                    suffix = { Text("錠") },
+                    label = { Text(stringResource(R.string.dose)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     isError = doseError != null,
                     supportingText = doseError?.let { { Text(it) } },
