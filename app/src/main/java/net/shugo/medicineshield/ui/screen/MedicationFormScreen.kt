@@ -406,10 +406,10 @@ fun TimeAndDosePickerDialog(
         confirmButton = {
             TextButton(onClick = {
                 val dose = doseText.toDoubleOrNull()
-                if (dose != null && dose in 0.1..99.9) {
+                if (dose != null && dose in 0.0..99.9) {
                     onConfirm(timePickerState.hour, timePickerState.minute, dose)
                 } else {
-                    doseError = "0.1〜99.9の範囲で入力してください"
+                    doseError = "0.0〜99.9の範囲で入力してください"
                 }
             }) {
                 Text(stringResource(R.string.ok))
@@ -450,7 +450,7 @@ fun TimeAndDosePickerDialog(
                         IconButton(
                             onClick = {
                                 val currentDose = doseText.toDoubleOrNull() ?: 1.0
-                                val newDose = (currentDose + 1.0).coerceIn(0.1, 99.9)
+                                val newDose = (currentDose + 1.0).coerceIn(0.0, 99.9)
                                 doseText = String.format("%.1f", newDose)
                                 doseError = null
                             }
@@ -461,7 +461,7 @@ fun TimeAndDosePickerDialog(
                         IconButton(
                             onClick = {
                                 val currentDose = doseText.toDoubleOrNull() ?: 1.0
-                                val newDose = (currentDose - 1.0).coerceIn(0.1, 99.9)
+                                val newDose = (currentDose - 1.0).coerceIn(0.0, 99.9)
                                 doseText = String.format("%.1f", newDose)
                                 doseError = null
                             }
