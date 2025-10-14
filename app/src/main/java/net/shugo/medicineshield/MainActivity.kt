@@ -52,6 +52,10 @@ class MainActivity : ComponentActivity() {
         if (isGranted) {
             // 権限が許可された場合、通知をスケジュール
             setupNotifications()
+        } else {
+            // 権限が拒否された場合、設定で通知をオフにする
+            val settingsPreferences = SettingsPreferences(this)
+            settingsPreferences.setNotificationsEnabled(false)
         }
     }
 
