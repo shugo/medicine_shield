@@ -28,6 +28,7 @@ data class MedicationConfig(
     val cycleValue: String? = null,  // 曜日リスト (e.g., "0,2,4") or 日数 (e.g., "3")
     val medicationStartDate: Long,  // 実際の服用開始日（INTERVAL計算の基準日）
     val medicationEndDate: Long? = null,  // 実際の服用終了日
+    val isAsNeeded: Boolean = false,  // 頓服薬フラグ（true=頓服、false=定時薬）
     val validFrom: Long,  // この設定レコードが有効になった日付（履歴管理用）
     val validTo: Long? = null,  // この設定レコードが無効になった日付（null=現在も有効）
     val createdAt: Long = System.currentTimeMillis(),

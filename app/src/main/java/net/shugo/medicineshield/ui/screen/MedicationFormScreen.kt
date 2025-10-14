@@ -77,19 +77,48 @@ fun MedicationFormScreen(
                 )
             }
 
-            // 服用時間
+            // 頓服チェックボックス
             item {
-                Text(stringResource(R.string.medication_times), style = MaterialTheme.typography.titleMedium)
-                if (formState.timesError != null) {
-                    Text(
-                        formState.timesError!!,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { viewModel.updateIsAsNeeded(!formState.isAsNeeded) }
+                        .padding(vertical = 8.dp)
+                ) {
+                    Checkbox(
+                        checked = formState.isAsNeeded,
+                        onCheckedChange = { viewModel.updateIsAsNeeded(it) }
                     )
+                    Spacer(Modifier.width(8.dp))
+                    Column {
+                        Text(
+                            text = stringResource(R.string.as_needed_checkbox),
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                        Text(
+                            text = stringResource(R.string.as_needed_description),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
 
-            itemsIndexed(formState.times) { index, timeWithSeq ->
+            // 服用時間（頓服の場合は非表示）
+            if (!formState.isAsNeeded) {
+                item {
+                    Text(stringResource(R.string.medication_times), style = MaterialTheme.typography.titleMedium)
+                    if (formState.timesError != null) {
+                        Text(
+                            formState.timesError!!,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
+
+                itemsIndexed(formState.times) { index, timeWithSeq ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -114,22 +143,24 @@ fun MedicationFormScreen(
                 }
             }
 
-            item {
-                OutlinedButton(
-                    onClick = {
-                        editingTimeIndex = null
-                        showTimePicker = true
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = null)
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.add_time))
+                item {
+                    OutlinedButton(
+                        onClick = {
+                            editingTimeIndex = null
+                            showTimePicker = true
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = null)
+                        Spacer(Modifier.width(8.dp))
+                        Text(stringResource(R.string.add_time))
+                    }
                 }
             }
 
-            // 服用サイクル
-            item {
+            // 服用サイクル（頓服の場合は非表示）
+            if (!formState.isAsNeeded) {
+                item {
                 Text(stringResource(R.string.cycle_type), style = MaterialTheme.typography.titleMedium)
                 Column {
                     CycleType.entries.forEach { type ->
@@ -164,28 +195,29 @@ fun MedicationFormScreen(
                 }
             }
 
-            // サイクル詳細設定
-            item {
-                when (formState.cycleType) {
-                    CycleType.WEEKLY -> {
-                        WeekdaySelector(
-                            selectedDays = formState.cycleValue?.split(",")?.mapNotNull { it.toIntOrNull() }?.toSet() ?: emptySet(),
-                            onDaysChanged = { days ->
-                                viewModel.updateCycleValue(days.sorted().joinToString(","))
-                            }
-                        )
-                    }
-                    CycleType.INTERVAL -> {
-                        OutlinedTextField(
-                            value = formState.cycleValue ?: "",
-                            onValueChange = { viewModel.updateCycleValue(it) },
-                            label = { Text(stringResource(R.string.interval_days)) },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                    CycleType.DAILY -> {
-                        // No additional settings
+                // サイクル詳細設定
+                item {
+                    when (formState.cycleType) {
+                        CycleType.WEEKLY -> {
+                            WeekdaySelector(
+                                selectedDays = formState.cycleValue?.split(",")?.mapNotNull { it.toIntOrNull() }?.toSet() ?: emptySet(),
+                                onDaysChanged = { days ->
+                                    viewModel.updateCycleValue(days.sorted().joinToString(","))
+                                }
+                            )
+                        }
+                        CycleType.INTERVAL -> {
+                            OutlinedTextField(
+                                value = formState.cycleValue ?: "",
+                                onValueChange = { viewModel.updateCycleValue(it) },
+                                label = { Text(stringResource(R.string.interval_days)) },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                        CycleType.DAILY -> {
+                            // No additional settings
+                        }
                     }
                 }
             }

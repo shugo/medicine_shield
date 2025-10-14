@@ -101,6 +101,14 @@
     <string name="notification_message_multiple">%s を服用してください</string>
     <string name="medication_list_separator" translatable="false">"、"</string>
 
+    <!-- As-Needed Medication -->
+    <string name="as_needed_medication">頓服</string>
+    <string name="as_needed_checkbox">頓服薬</string>
+    <string name="as_needed_description">必要時に服用</string>
+    <string name="add_as_needed_intake">追加</string>
+    <string name="remove_intake">削除</string>
+    <string name="taken_count">服用 %d 回目</string>
+
     <!-- Error Messages -->
     <string name="error_empty_name">お薬の名前を入力してください</string>
     <string name="error_no_times">少なくとも1つの服用時間を設定してください</string>

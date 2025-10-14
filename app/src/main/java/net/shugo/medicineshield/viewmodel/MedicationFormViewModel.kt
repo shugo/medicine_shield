@@ -27,6 +27,7 @@ data class MedicationFormState(
     val startDate: Long = System.currentTimeMillis(),
     val endDate: Long? = null,
     val originalStartDate: Long? = null,  // 編集時の元の開始日（変更検出用）
+    val isAsNeeded: Boolean = false,  // 頓服薬フラグ
     val nameError: String? = null,
     val timesError: String? = null,
     val cycleError: String? = null,
@@ -69,7 +70,8 @@ class MedicationFormViewModel(
                     cycleValue = currentConfig?.cycleValue,
                     startDate = originalStartDate,
                     endDate = currentConfig?.medicationEndDate,
-                    originalStartDate = originalStartDate
+                    originalStartDate = originalStartDate,
+                    isAsNeeded = currentConfig?.isAsNeeded ?: false
                 )
             }
         }
@@ -127,6 +129,13 @@ class MedicationFormViewModel(
         _formState.value = _formState.value.copy(endDate = endDate, dateError = null)
     }
 
+    fun updateIsAsNeeded(isAsNeeded: Boolean) {
+        _formState.value = _formState.value.copy(
+            isAsNeeded = isAsNeeded,
+            timesError = null
+        )
+    }
+
     fun saveMedication(onSuccess: () -> Unit) {
         if (!validateForm()) {
             return
@@ -145,7 +154,8 @@ class MedicationFormViewModel(
                         cycleValue = state.cycleValue,
                         startDate = state.startDate,
                         endDate = state.endDate,
-                        timesWithDose = state.times.map { it.time to it.dose }
+                        timesWithDose = state.times.map { it.time to it.dose },
+                        isAsNeeded = state.isAsNeeded
                     )
                 } else {
                     val timesWithSeqAndDose = state.times.map { Triple(it.sequenceNumber, it.time, it.dose) }
@@ -156,7 +166,8 @@ class MedicationFormViewModel(
                         cycleValue = state.cycleValue,
                         startDate = state.startDate,
                         endDate = state.endDate,
-                        timesWithSequenceAndDose = timesWithSeqAndDose
+                        timesWithSequenceAndDose = timesWithSeqAndDose,
+                        isAsNeeded = state.isAsNeeded
                     )
                 }
 
@@ -181,7 +192,8 @@ class MedicationFormViewModel(
             isValid = false
         }
 
-        if (state.times.isEmpty()) {
+        // 頓服の場合は時刻が不要
+        if (!state.isAsNeeded && state.times.isEmpty()) {
             _formState.value = _formState.value.copy(timesError = "少なくとも1つの服用時間を設定してください")
             isValid = false
         }

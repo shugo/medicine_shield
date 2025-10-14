@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
@@ -90,6 +91,12 @@ fun DailyMedicationScreen(
                         medications = dailyMedications,
                         onToggleTaken = { medicationId, sequenceNumber, isTaken ->
                             viewModel.toggleMedicationTaken(medicationId, sequenceNumber, isTaken)
+                        },
+                        onAddAsNeeded = { medicationId ->
+                            viewModel.addAsNeededMedication(medicationId)
+                        },
+                        onRemoveAsNeeded = { medicationId, sequenceNumber ->
+                            viewModel.removeAsNeededMedication(medicationId, sequenceNumber)
                         }
                     )
                 }
@@ -244,16 +251,25 @@ fun EmptyMedicationState(selectedDate: Calendar, onNavigateToMedicationList: () 
 @Composable
 fun MedicationList(
     medications: List<DailyMedicationItem>,
-    onToggleTaken: (Long, Int, Boolean) -> Unit
+    onToggleTaken: (Long, Int, Boolean) -> Unit,
+    onAddAsNeeded: (Long) -> Unit,
+    onRemoveAsNeeded: (Long, Int) -> Unit
 ) {
-    // 時刻でグループ化
-    val groupedMedications = medications.groupBy { it.scheduledTime }
+    // 頓服薬と定時薬を分離
+    val (asNeededMeds, scheduledMeds) = medications.partition { it.isAsNeeded }
+
+    // 定時薬を時刻でグループ化
+    val groupedScheduledMeds = scheduledMeds.groupBy { it.scheduledTime }
+
+    // 頓服薬を薬ごとにグループ化
+    val groupedAsNeededMeds = asNeededMeds.groupBy { it.medicationId }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
     ) {
-        groupedMedications.forEach { (time, items) ->
+        // 定時薬のセクション
+        groupedScheduledMeds.forEach { (time, items) ->
             item {
                 TimeHeader(time)
             }
@@ -267,6 +283,24 @@ fun MedicationList(
 
             item {
                 Spacer(modifier = Modifier.height(16.dp))
+            }
+        }
+
+        // 頓服薬のセクション
+        if (groupedAsNeededMeds.isNotEmpty()) {
+            item {
+                TimeHeader(stringResource(R.string.as_needed_medication))
+            }
+
+            groupedAsNeededMeds.forEach { (medicationId, items) ->
+                items(items) { medication ->
+                    AsNeededMedicationItem(
+                        medication = medication,
+                        onToggleTaken = onToggleTaken,
+                        onAddIntake = onAddAsNeeded,
+                        onRemoveIntake = onRemoveAsNeeded
+                    )
+                }
             }
         }
     }
@@ -345,6 +379,90 @@ fun MedicationItem(
                     )
                 }
             )
+        }
+    }
+}
+
+@Composable
+fun AsNeededMedicationItem(
+    medication: DailyMedicationItem,
+    onToggleTaken: (Long, Int, Boolean) -> Unit,
+    onAddIntake: (Long) -> Unit,
+    onRemoveIntake: (Long, Int) -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (medication.isTaken) {
+                MaterialTheme.colorScheme.surfaceVariant
+            } else {
+                MaterialTheme.colorScheme.surface
+            }
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = medication.medicationName,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "x ${String.format("%.1f", medication.dose)}",
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                if (medication.isTaken && medication.takenAt != null) {
+                    Text(
+                        text = formatTakenTime(medication.takenAt),
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
+            }
+
+            if (medication.isTaken) {
+                // 服用済みの場合は削除ボタン
+                IconButton(
+                    onClick = {
+                        onRemoveIntake(medication.medicationId, medication.sequenceNumber)
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = stringResource(R.string.remove_intake),
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                }
+            } else {
+                // 未服用の場合はチェックボックスと追加ボタン
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Checkbox(
+                        checked = false,
+                        onCheckedChange = {
+                            onAddIntake(medication.medicationId)
+                        }
+                    )
+                }
+            }
         }
     }
 }
