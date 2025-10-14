@@ -10,6 +10,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -424,18 +426,50 @@ fun TimeAndDosePickerDialog(
             ) {
                 TimePicker(state = timePickerState)
 
-                OutlinedTextField(
-                    value = doseText,
-                    onValueChange = {
-                        doseText = it
-                        doseError = null
-                    },
-                    label = { Text(stringResource(R.string.dose)) },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    isError = doseError != null,
-                    supportingText = doseError?.let { { Text(it) } },
-                    modifier = Modifier.fillMaxWidth()
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedTextField(
+                        value = doseText,
+                        onValueChange = {
+                            doseText = it
+                            doseError = null
+                        },
+                        label = { Text(stringResource(R.string.dose)) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        isError = doseError != null,
+                        supportingText = doseError?.let { { Text(it) } },
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        IconButton(
+                            onClick = {
+                                val currentDose = doseText.toDoubleOrNull() ?: 1.0
+                                val newDose = (currentDose + 1.0).coerceIn(0.1, 99.9)
+                                doseText = String.format("%.1f", newDose)
+                                doseError = null
+                            }
+                        ) {
+                            Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Increase dose")
+                        }
+
+                        IconButton(
+                            onClick = {
+                                val currentDose = doseText.toDoubleOrNull() ?: 1.0
+                                val newDose = (currentDose - 1.0).coerceIn(0.1, 99.9)
+                                doseText = String.format("%.1f", newDose)
+                                doseError = null
+                            }
+                        ) {
+                            Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Decrease dose")
+                        }
+                    }
+                }
             }
         }
     )
