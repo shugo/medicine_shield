@@ -250,9 +250,15 @@ fun MedicationFormScreen(
     // Time and Dose Picker Dialog
     if (showTimePicker) {
         val currentEditingTimeWithSeq = editingTimeIndex?.let { formState.times.getOrNull(it) }
+        // 新規追加時のデフォルト値：既存の時刻リストがあれば時刻順で最後のdose、なければ1.0
+        val defaultDose = if (currentEditingTimeWithSeq != null) {
+            currentEditingTimeWithSeq.dose
+        } else {
+            formState.times.maxByOrNull { it.time }?.dose ?: 1.0
+        }
         TimeAndDosePickerDialog(
             initialTime = currentEditingTimeWithSeq?.time,
-            initialDose = currentEditingTimeWithSeq?.dose ?: 1.0,
+            initialDose = defaultDose,
             onDismiss = {
                 showTimePicker = false
                 editingTimeIndex = null
