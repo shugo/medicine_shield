@@ -30,6 +30,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import kotlinx.coroutines.launch
 import net.shugo.medicineshield.data.database.AppDatabase
+import net.shugo.medicineshield.data.preferences.SettingsPreferences
 import net.shugo.medicineshield.data.repository.MedicationRepository
 import net.shugo.medicineshield.notification.NotificationHelper
 import net.shugo.medicineshield.notification.NotificationScheduler
@@ -85,6 +86,13 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun requestNotificationPermission() {
+        // 通知設定を確認
+        val settingsPreferences = SettingsPreferences(this)
+        if (!settingsPreferences.isNotificationsEnabled()) {
+            // 通知がオフの場合は権限をリクエストしない
+            return
+        }
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             when {
                 ContextCompat.checkSelfPermission(
