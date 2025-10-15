@@ -536,6 +536,28 @@ class MedicationRepository(
     }
 
     /**
+     * 服用時刻を更新する
+     */
+    suspend fun updateIntakeTakenAt(
+        medicationId: Long,
+        sequenceNumber: Int,
+        newTakenAt: Long,
+        scheduledDate: String = getCurrentDateString()
+    ) {
+        val existingIntake = medicationIntakeDao.getIntakeByMedicationAndDateTime(
+            medicationId, scheduledDate, sequenceNumber
+        )
+        if (existingIntake != null) {
+            medicationIntakeDao.update(
+                existingIntake.copy(
+                    takenAt = newTakenAt,
+                    updatedAt = System.currentTimeMillis()
+                )
+            )
+        }
+    }
+
+    /**
      * 古い服用記録を削除（オプション: クリーンアップ用）
      */
     suspend fun cleanupOldIntakes(daysToKeep: Int = 30) {

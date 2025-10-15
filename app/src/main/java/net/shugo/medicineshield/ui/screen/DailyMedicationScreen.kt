@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
@@ -97,6 +98,9 @@ fun DailyMedicationScreen(
                         },
                         onRemoveAsNeeded = { medicationId, sequenceNumber ->
                             viewModel.removeAsNeededMedication(medicationId, sequenceNumber)
+                        },
+                        onUpdateTakenAt = { medicationId, sequenceNumber, hour, minute ->
+                            viewModel.updateTakenAt(medicationId, sequenceNumber, hour, minute)
                         }
                     )
                 }
@@ -253,7 +257,8 @@ fun MedicationList(
     medications: List<DailyMedicationItem>,
     onToggleTaken: (Long, Int, Boolean) -> Unit,
     onAddAsNeeded: (Long) -> Unit,
-    onRemoveAsNeeded: (Long, Int) -> Unit
+    onRemoveAsNeeded: (Long, Int) -> Unit,
+    onUpdateTakenAt: (Long, Int, Int, Int) -> Unit
 ) {
     // 頓服薬と定時薬を分離
     val (asNeededMeds, scheduledMeds) = medications.partition { it.isAsNeeded }
@@ -275,9 +280,10 @@ fun MedicationList(
             }
 
             items(items) { medication ->
-                MedicationItem(
+                ScheduledMedicationItem(
                     medication = medication,
-                    onToggleTaken = onToggleTaken
+                    onToggleTaken = onToggleTaken,
+                    onUpdateTakenAt = onUpdateTakenAt
                 )
             }
 
@@ -298,7 +304,8 @@ fun MedicationList(
                         medication = medication,
                         onToggleTaken = onToggleTaken,
                         onAddIntake = onAddAsNeeded,
-                        onRemoveIntake = onRemoveAsNeeded
+                        onRemoveIntake = onRemoveAsNeeded,
+                        onUpdateTakenAt = onUpdateTakenAt
                     )
                 }
             }
@@ -317,11 +324,17 @@ fun TimeHeader(time: String) {
     )
 }
 
+/**
+ * Base medication card that displays medication information with customizable action button
+ */
 @Composable
-fun MedicationItem(
+private fun BaseMedicationCard(
     medication: DailyMedicationItem,
-    onToggleTaken: (Long, Int, Boolean) -> Unit
+    onUpdateTakenAt: (Long, Int, Int, Int) -> Unit,
+    actionButton: @Composable () -> Unit
 ) {
+    var showTimePickerDialog by remember { mutableStateOf(false) }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -360,15 +373,57 @@ fun MedicationItem(
                     )
                 }
                 if (medication.isTaken && medication.takenAt != null) {
-                    Text(
-                        text = formatTakenTime(medication.takenAt),
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(top = 4.dp)
-                    )
+                    ) {
+                        Text(
+                            text = formatTakenTime(medication.takenAt),
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        IconButton(
+                            onClick = { showTimePickerDialog = true },
+                            modifier = Modifier.size(24.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = stringResource(R.string.edit_taken_time),
+                                modifier = Modifier.size(16.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
                 }
             }
 
+            actionButton()
+        }
+    }
+
+    if (showTimePickerDialog && medication.takenAt != null) {
+        TimePickerDialog(
+            initialTimestamp = medication.takenAt,
+            onConfirm = { hour, minute ->
+                onUpdateTakenAt(medication.medicationId, medication.sequenceNumber, hour, minute)
+                showTimePickerDialog = false
+            },
+            onDismiss = { showTimePickerDialog = false }
+        )
+    }
+}
+
+@Composable
+fun ScheduledMedicationItem(
+    medication: DailyMedicationItem,
+    onToggleTaken: (Long, Int, Boolean) -> Unit,
+    onUpdateTakenAt: (Long, Int, Int, Int) -> Unit
+) {
+    BaseMedicationCard(
+        medication = medication,
+        onUpdateTakenAt = onUpdateTakenAt,
+        actionButton = {
             Checkbox(
                 checked = medication.isTaken,
                 onCheckedChange = {
@@ -380,7 +435,7 @@ fun MedicationItem(
                 }
             )
         }
-    }
+    )
 }
 
 @Composable
@@ -388,55 +443,13 @@ fun AsNeededMedicationItem(
     medication: DailyMedicationItem,
     onToggleTaken: (Long, Int, Boolean) -> Unit,
     onAddIntake: (Long) -> Unit,
-    onRemoveIntake: (Long, Int) -> Unit
+    onRemoveIntake: (Long, Int) -> Unit,
+    onUpdateTakenAt: (Long, Int, Int, Int) -> Unit
 ) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (medication.isTaken) {
-                MaterialTheme.colorScheme.surfaceVariant
-            } else {
-                MaterialTheme.colorScheme.surface
-            }
-        )
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = medication.medicationName,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "x ${String.format("%.1f", medication.dose)}",
-                        fontSize = 14.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                if (medication.isTaken && medication.takenAt != null) {
-                    Text(
-                        text = formatTakenTime(medication.takenAt),
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(top = 4.dp)
-                    )
-                }
-            }
-
+    BaseMedicationCard(
+        medication = medication,
+        onUpdateTakenAt = onUpdateTakenAt,
+        actionButton = {
             if (medication.isTaken) {
                 // 服用済みの場合は削除ボタン
                 IconButton(
@@ -451,20 +464,52 @@ fun AsNeededMedicationItem(
                     )
                 }
             } else {
-                // 未服用の場合はチェックボックスと追加ボタン
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Checkbox(
-                        checked = false,
-                        onCheckedChange = {
-                            onAddIntake(medication.medicationId)
-                        }
-                    )
-                }
+                // 未服用の場合はチェックボックス
+                Checkbox(
+                    checked = false,
+                    onCheckedChange = {
+                        onAddIntake(medication.medicationId)
+                    }
+                )
             }
         }
-    }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TimePickerDialog(
+    initialTimestamp: Long,
+    onConfirm: (hour: Int, minute: Int) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val calendar = Calendar.getInstance()
+    calendar.timeInMillis = initialTimestamp
+
+    val timePickerState = rememberTimePickerState(
+        initialHour = calendar.get(Calendar.HOUR_OF_DAY),
+        initialMinute = calendar.get(Calendar.MINUTE),
+        is24Hour = true
+    )
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = {
+                onConfirm(timePickerState.hour, timePickerState.minute)
+            }) {
+                Text(stringResource(R.string.ok))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.cancel))
+            }
+        },
+        text = {
+            TimePicker(state = timePickerState)
+        }
+    )
 }
 
 @Composable
