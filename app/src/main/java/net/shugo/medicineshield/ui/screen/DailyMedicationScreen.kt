@@ -109,7 +109,7 @@ fun DailyMedicationScreen(
 
         // DatePickerダイアログ
         if (showDatePicker) {
-            DatePickerDialog(
+            DailyMedicationDatePickerDialog(
                 selectedDate = selectedDate,
                 onDateSelected = { year, month, dayOfMonth ->
                     viewModel.onDateSelected(year, month, dayOfMonth)
@@ -172,7 +172,7 @@ fun DateNavigationBar(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DatePickerDialog(
+fun DailyMedicationDatePickerDialog(
     selectedDate: Calendar,
     onDateSelected: (year: Int, month: Int, dayOfMonth: Int) -> Unit,
     onDismiss: () -> Unit
@@ -181,7 +181,7 @@ fun DatePickerDialog(
         initialSelectedDateMillis = selectedDate.timeInMillis
     )
 
-    androidx.compose.material3.DatePickerDialog(
+    DatePickerDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
             TextButton(onClick = {
@@ -298,11 +298,10 @@ fun MedicationList(
                 TimeHeader(stringResource(R.string.as_needed_medication))
             }
 
-            groupedAsNeededMeds.forEach { (medicationId, items) ->
+            groupedAsNeededMeds.forEach { (_, items) ->
                 items(items) { medication ->
                     AsNeededMedicationItem(
                         medication = medication,
-                        onToggleTaken = onToggleTaken,
                         onAddIntake = onAddAsNeeded,
                         onRemoveIntake = onRemoveAsNeeded,
                         onUpdateTakenAt = onUpdateTakenAt
@@ -441,7 +440,6 @@ fun ScheduledMedicationItem(
 @Composable
 fun AsNeededMedicationItem(
     medication: DailyMedicationItem,
-    onToggleTaken: (Long, Int, Boolean) -> Unit,
     onAddIntake: (Long) -> Unit,
     onRemoveIntake: (Long, Int) -> Unit,
     onUpdateTakenAt: (Long, Int, Int, Int) -> Unit
@@ -514,11 +512,11 @@ fun TimePickerDialog(
 
 @Composable
 fun formatTakenTime(timestamp: Long): String {
-    val calendar = java.util.Calendar.getInstance()
+    val calendar = Calendar.getInstance()
     calendar.timeInMillis = timestamp
     return stringResource(
         R.string.taken_at,
-        calendar.get(java.util.Calendar.HOUR_OF_DAY),
-        calendar.get(java.util.Calendar.MINUTE)
+        calendar.get(Calendar.HOUR_OF_DAY),
+        calendar.get(Calendar.MINUTE)
     )
 }
