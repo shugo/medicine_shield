@@ -199,6 +199,11 @@ class MedicationRepository(
             medicationConfigDao.insert(newConfig)
         }
 
+        // 頓服薬の場合はMedicationTimeの管理は不要なのでここで終了
+        if (isAsNeeded) {
+            return
+        }
+
         // 3. MedicationTimeの変更をチェック
         val currentTimes = medicationTimeDao.getCurrentTimesForMedication(medicationId)
         val currentMap = currentTimes.associateBy { it.sequenceNumber }
