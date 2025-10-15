@@ -1,7 +1,6 @@
 package net.shugo.medicineshield.ui.screen
 
 import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.icons.Icons
@@ -18,6 +17,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import net.shugo.medicineshield.R
 import net.shugo.medicineshield.viewmodel.SettingsViewModel
+import androidx.core.net.toUri
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -187,7 +187,7 @@ fun SettingsScreen(
                         onClick = { offset ->
                             annotatedString.getStringAnnotations(tag = "URL", start = offset, end = offset)
                                 .firstOrNull()?.let { annotation ->
-                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(annotation.item))
+                                    val intent = Intent(Intent.ACTION_VIEW, annotation.item.toUri())
                                     context.startActivity(intent)
                                 }
                         }

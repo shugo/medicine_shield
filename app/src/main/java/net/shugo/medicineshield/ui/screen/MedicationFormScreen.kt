@@ -17,7 +17,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -349,11 +348,7 @@ fun MedicationFormScreen(
     if (showTimePicker) {
         val currentEditingTimeWithSeq = editingTimeIndex?.let { formState.times.getOrNull(it) }
         // 新規追加時のデフォルト値：formState.defaultDose、編集時は現在のdose
-        val defaultDose = if (currentEditingTimeWithSeq != null) {
-            currentEditingTimeWithSeq.dose
-        } else {
-            formState.defaultDose
-        }
+        val defaultDose = currentEditingTimeWithSeq?.dose ?: formState.defaultDose
         TimeAndDosePickerDialog(
             initialTime = currentEditingTimeWithSeq?.time,
             initialDose = defaultDose,
@@ -376,7 +371,7 @@ fun MedicationFormScreen(
 
     // Date Picker Dialogs
     if (showStartDatePicker) {
-        DatePickerDialog(
+        MedicationFormDatePickerDialog(
             initialDate = formState.startDate,
             onDismiss = { showStartDatePicker = false },
             onConfirm = { date ->
@@ -387,7 +382,7 @@ fun MedicationFormScreen(
     }
 
     if (showEndDatePicker) {
-        DatePickerDialog(
+        MedicationFormDatePickerDialog(
             initialDate = formState.endDate ?: System.currentTimeMillis(),
             onDismiss = { showEndDatePicker = false },
             onConfirm = { date ->
@@ -438,48 +433,6 @@ fun WeekdaySelector(
             }
         }
     }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun TimePickerDialog(
-    initialTime: String? = null,
-    onDismiss: () -> Unit,
-    onConfirm: (hour: Int, minute: Int) -> Unit
-) {
-    val (initialHour, initialMinute) = initialTime?.let {
-        val parts = it.split(":")
-        if (parts.size == 2) {
-            parts[0].toIntOrNull() to parts[1].toIntOrNull()
-        } else {
-            null to null
-        }
-    } ?: (0 to 0)
-
-    val timePickerState = rememberTimePickerState(
-        initialHour = initialHour ?: 0,
-        initialMinute = initialMinute ?: 0,
-        is24Hour = true
-    )
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        confirmButton = {
-            TextButton(onClick = {
-                onConfirm(timePickerState.hour, timePickerState.minute)
-            }) {
-                Text(stringResource(R.string.ok))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.cancel))
-            }
-        },
-        text = {
-            TimePicker(state = timePickerState)
-        }
-    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -589,7 +542,7 @@ fun TimeAndDosePickerDialog(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DatePickerDialog(
+fun MedicationFormDatePickerDialog(
     initialDate: Long,
     onDismiss: () -> Unit,
     onConfirm: (Long) -> Unit
@@ -598,7 +551,7 @@ fun DatePickerDialog(
         initialSelectedDateMillis = initialDate
     )
 
-    androidx.compose.material3.DatePickerDialog(
+    DatePickerDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
             TextButton(onClick = {
