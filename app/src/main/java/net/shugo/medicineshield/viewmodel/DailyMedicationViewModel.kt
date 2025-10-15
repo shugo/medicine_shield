@@ -125,6 +125,23 @@ class DailyMedicationViewModel(
         }
     }
 
+    /**
+     * 服用時刻を更新する
+     */
+    fun updateTakenAt(medicationId: Long, sequenceNumber: Int, hour: Int, minute: Int) {
+        viewModelScope.launch {
+            val dateString = formatDateToString(_selectedDate.value)
+            // 選択された日付の指定時刻にタイムスタンプを設定
+            val calendar = _selectedDate.value.clone() as Calendar
+            calendar.set(Calendar.HOUR_OF_DAY, hour)
+            calendar.set(Calendar.MINUTE, minute)
+            calendar.set(Calendar.SECOND, 0)
+            calendar.set(Calendar.MILLISECOND, 0)
+            val newTakenAt = calendar.timeInMillis
+            repository.updateIntakeTakenAt(medicationId, sequenceNumber, newTakenAt, dateString)
+        }
+    }
+
     fun refreshData() {
         updateDisplayDate()
         loadMedicationsForSelectedDate()
