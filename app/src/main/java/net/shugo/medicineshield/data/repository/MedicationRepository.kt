@@ -65,7 +65,8 @@ class MedicationRepository(
         startDate: Long,
         endDate: Long?,
         timesWithDose: List<Pair<String, Double>>,  // (time, dose)のペア
-        isAsNeeded: Boolean = false  // 頓服薬フラグ
+        isAsNeeded: Boolean = false,  // 頓服薬フラグ
+        defaultDose: Double = 1.0  // デフォルト服用量（MedicationConfigに保存、MedicationTimeのデフォルト値としても使用）
     ): Long {
         // 1. Medicationを作成
         val medication = Medication(name = name)
@@ -80,6 +81,7 @@ class MedicationRepository(
             medicationStartDate = startDate,
             medicationEndDate = endDate,
             isAsNeeded = isAsNeeded,
+            dose = defaultDose,
             validFrom = 0,
             validTo = null
         )
@@ -113,7 +115,8 @@ class MedicationRepository(
         startDate: Long,
         endDate: Long?,
         timesWithSequenceAndDose: List<Triple<Int, String, Double>>,  // (sequenceNumber, time, dose)のトリプル
-        isAsNeeded: Boolean = false  // 頓服薬フラグ
+        isAsNeeded: Boolean = false,  // 頓服薬フラグ
+        defaultDose: Double = 1.0  // デフォルト服用量（MedicationConfigに保存）
     ) {
         val now = System.currentTimeMillis()
         val today = DateUtils.normalizeToStartOfDay(now)
@@ -129,7 +132,8 @@ class MedicationRepository(
                     currentConfig.cycleValue != cycleValue ||
                     currentConfig.medicationStartDate != startDate ||
                     currentConfig.medicationEndDate != endDate ||
-                    currentConfig.isAsNeeded != isAsNeeded
+                    currentConfig.isAsNeeded != isAsNeeded ||
+                    currentConfig.dose != defaultDose
 
             // isAsNeededが変更された場合、今日以降の服用履歴を削除
             if (currentConfig.isAsNeeded != isAsNeeded) {
@@ -159,6 +163,7 @@ class MedicationRepository(
                     medicationStartDate = startDate,
                     medicationEndDate = endDate,
                     isAsNeeded = isAsNeeded,
+                    dose = defaultDose,
                     validFrom = today,
                     validTo = null
                 )
@@ -174,6 +179,7 @@ class MedicationRepository(
                 medicationStartDate = startDate,
                 medicationEndDate = endDate,
                 isAsNeeded = isAsNeeded,
+                dose = defaultDose,
                 validFrom = 0,
                 validTo = null
             )
@@ -313,11 +319,7 @@ class MedicationRepository(
                                     medicationName = medication.name,
                                     sequenceNumber = intake.sequenceNumber,
                                     scheduledTime = "",  // 頓服は時刻なし
-                                    dose = validConfig.let {
-                                        // MedicationTimeがあればそのdoseを使用、なければデフォルト1.0
-                                        val validTimes = medicationWithTimes.getTimesForDate(targetDate)
-                                        validTimes.firstOrNull()?.dose ?: 1.0
-                                    },
+                                    dose = validConfig.dose,  // MedicationConfig.doseを使用
                                     isTaken = true,
                                     takenAt = intake.takenAt,
                                     isAsNeeded = true
@@ -333,10 +335,7 @@ class MedicationRepository(
                                 medicationName = medication.name,
                                 sequenceNumber = nextSequenceNumber,
                                 scheduledTime = "",  // 頓服は時刻なし
-                                dose = validConfig.let {
-                                    val validTimes = medicationWithTimes.getTimesForDate(targetDate)
-                                    validTimes.firstOrNull()?.dose ?: 1.0
-                                },
+                                dose = validConfig.dose,  // MedicationConfig.doseを使用
                                 isTaken = false,
                                 takenAt = null,
                                 isAsNeeded = true

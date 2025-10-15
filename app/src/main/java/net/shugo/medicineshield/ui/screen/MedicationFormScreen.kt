@@ -105,6 +105,72 @@ fun MedicationFormScreen(
                 }
             }
 
+            // デフォルト服用量
+            item {
+                var doseText by remember { mutableStateOf(String.format("%.1f", formState.defaultDose)) }
+                var doseError by remember { mutableStateOf<String?>(null) }
+
+                LaunchedEffect(formState.defaultDose) {
+                    doseText = String.format("%.1f", formState.defaultDose)
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedTextField(
+                        value = doseText,
+                        onValueChange = { newValue ->
+                            doseText = newValue
+                            val dose = newValue.toDoubleOrNull()
+                            if (dose != null && dose in 0.1..99.9) {
+                                viewModel.updateDefaultDose(dose)
+                                doseError = null
+                            } else if (newValue.isNotEmpty()) {
+                                doseError = "0.1〜99.9の範囲で入力してください"
+                            }
+                        },
+                        label = { Text(stringResource(R.string.dose)) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.End),
+                        isError = doseError != null,
+                        supportingText = doseError?.let { { Text(it) } },
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        IconButton(
+                            onClick = {
+                                val currentDose = formState.defaultDose
+                                val newDose = currentDose + 1.0
+                                if (newDose <= 99.9) {
+                                    viewModel.updateDefaultDose(newDose)
+                                    doseError = null
+                                }
+                            }
+                        ) {
+                            Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Increase dose")
+                        }
+
+                        IconButton(
+                            onClick = {
+                                val currentDose = formState.defaultDose
+                                val newDose = currentDose - 1.0
+                                if (newDose >= 0.1) {
+                                    viewModel.updateDefaultDose(newDose)
+                                    doseError = null
+                                }
+                            }
+                        ) {
+                            Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Decrease dose")
+                        }
+                    }
+                }
+            }
+
             // 服用時間（頓服の場合は非表示）
             if (!formState.isAsNeeded) {
                 item {
@@ -282,11 +348,11 @@ fun MedicationFormScreen(
     // Time and Dose Picker Dialog
     if (showTimePicker) {
         val currentEditingTimeWithSeq = editingTimeIndex?.let { formState.times.getOrNull(it) }
-        // 新規追加時のデフォルト値：既存の時刻リストがあれば時刻順で最後のdose、なければ1.0
+        // 新規追加時のデフォルト値：formState.defaultDose、編集時は現在のdose
         val defaultDose = if (currentEditingTimeWithSeq != null) {
             currentEditingTimeWithSeq.dose
         } else {
-            formState.times.maxByOrNull { it.time }?.dose ?: 1.0
+            formState.defaultDose
         }
         TimeAndDosePickerDialog(
             initialTime = currentEditingTimeWithSeq?.time,
