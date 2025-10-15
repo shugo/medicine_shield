@@ -198,6 +198,9 @@ fun MedicineShieldApp(repository: MedicationRepository) {
             )
             MedicationListScreen(
                 viewModel = viewModel,
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
                 onAddMedication = {
                     navController.navigate("add_medication")
                 },

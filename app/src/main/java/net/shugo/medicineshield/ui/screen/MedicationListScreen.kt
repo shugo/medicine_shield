@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
@@ -26,6 +27,7 @@ import java.util.*
 @Composable
 fun MedicationListScreen(
     viewModel: MedicationListViewModel,
+    onNavigateBack: () -> Unit,
     onAddMedication: () -> Unit,
     onEditMedication: (Long) -> Unit
 ) {
@@ -37,7 +39,15 @@ fun MedicationListScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.medication_list_title)) }
+                title = { Text(stringResource(R.string.medication_list_title)) },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = stringResource(R.string.back)
+                        )
+                    }
+                }
             )
         },
         floatingActionButton = {
