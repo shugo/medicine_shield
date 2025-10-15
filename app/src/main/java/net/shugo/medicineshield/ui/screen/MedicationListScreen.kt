@@ -167,34 +167,41 @@ fun MedicationCard(
 
             Spacer(Modifier.height(8.dp))
 
-            // 服用時間（現在有効なもののみ）
-            Text(
-                stringResource(R.string.medication_times_label, times.joinToString(", ") { "${it.time} x ${String.format("%.1f", it.dose)}" }),
-                style = MaterialTheme.typography.bodyMedium
-            )
-
-            Spacer(Modifier.height(4.dp))
-
             // 現在有効なConfigを取得
             val currentConfig = medicationWithTimes.config
 
             currentConfig?.let { config ->
-                // サイクル
-                val cycleText = when (config.cycleType) {
-                    CycleType.DAILY -> stringResource(R.string.cycle_daily_full)
-                    CycleType.WEEKLY -> {
-                        val days = config.cycleValue?.split(",")?.mapNotNull { it.toIntOrNull() } ?: emptyList()
-                        val dayNames = days.map { getDayName(it) }
-                        "${stringResource(R.string.cycle_weekly_prefix)} ${dayNames.joinToString("・")}"
-                    }
-                    CycleType.INTERVAL -> stringResource(R.string.cycle_interval_format, config.cycleValue ?: "")
+                // 服用時間（頓服の場合は "As Needed x dose"、定時の場合は時刻リスト）
+                val timesText = if (config.isAsNeeded) {
+                    "${stringResource(R.string.as_needed_medication)} x ${String.format("%.1f", config.dose)}"
+                } else {
+                    times.joinToString(", ") { "${it.time} x ${String.format("%.1f", it.dose)}" }
                 }
                 Text(
-                    stringResource(R.string.cycle_label, cycleText),
+                    stringResource(R.string.medication_times_label, timesText),
                     style = MaterialTheme.typography.bodyMedium
                 )
 
                 Spacer(Modifier.height(4.dp))
+
+                // サイクル（頓服の場合は非表示）
+                if (!config.isAsNeeded) {
+                    val cycleText = when (config.cycleType) {
+                        CycleType.DAILY -> stringResource(R.string.cycle_daily_full)
+                        CycleType.WEEKLY -> {
+                            val days = config.cycleValue?.split(",")?.mapNotNull { it.toIntOrNull() } ?: emptyList()
+                            val dayNames = days.map { getDayName(it) }
+                            "${stringResource(R.string.cycle_weekly_prefix)} ${dayNames.joinToString("・")}"
+                        }
+                        CycleType.INTERVAL -> stringResource(R.string.cycle_interval_format, config.cycleValue ?: "")
+                    }
+                    Text(
+                        stringResource(R.string.cycle_label, cycleText),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+
+                    Spacer(Modifier.height(4.dp))
+                }
 
                 // 期間
                 val locale = Locale.getDefault()
