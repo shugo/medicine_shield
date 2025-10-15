@@ -27,6 +27,9 @@ import net.shugo.medicineshield.viewmodel.MedicationFormViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 
+private const val MAX_DOSE = 0.1
+private const val MIN_DOSE = 999.9
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MedicationFormScreen(
@@ -108,6 +111,7 @@ fun MedicationFormScreen(
             item {
                 var doseText by remember { mutableStateOf(String.format("%.1f", formState.defaultDose)) }
                 var doseError by remember { mutableStateOf<String?>(null) }
+                val doseErrorText = stringResource(R.string.error_invalid_dose, MAX_DOSE, MIN_DOSE)
 
                 LaunchedEffect(formState.defaultDose) {
                     doseText = String.format("%.1f", formState.defaultDose)
@@ -123,11 +127,11 @@ fun MedicationFormScreen(
                         onValueChange = { newValue ->
                             doseText = newValue
                             val dose = newValue.toDoubleOrNull()
-                            if (dose != null && dose in 0.1..99.9) {
+                            if (dose != null && dose in MAX_DOSE..MIN_DOSE) {
                                 viewModel.updateDefaultDose(dose)
                                 doseError = null
                             } else if (newValue.isNotEmpty()) {
-                                doseError = "0.1〜99.9の範囲で入力してください"
+                                doseError = doseErrorText
                             }
                         },
                         label = { Text(stringResource(R.string.dose)) },
@@ -145,7 +149,7 @@ fun MedicationFormScreen(
                             onClick = {
                                 val currentDose = formState.defaultDose
                                 val newDose = currentDose + 1.0
-                                if (newDose <= 99.9) {
+                                if (newDose <= MIN_DOSE) {
                                     viewModel.updateDefaultDose(newDose)
                                     doseError = null
                                 }
@@ -158,7 +162,7 @@ fun MedicationFormScreen(
                             onClick = {
                                 val currentDose = formState.defaultDose
                                 val newDose = currentDose - 1.0
-                                if (newDose >= 0.1) {
+                                if (newDose >= MAX_DOSE) {
                                     viewModel.updateDefaultDose(newDose)
                                     doseError = null
                                 }
@@ -460,16 +464,17 @@ fun TimeAndDosePickerDialog(
 
     var doseText by remember { mutableStateOf(String.format("%.1f", initialDose)) }
     var doseError by remember { mutableStateOf<String?>(null) }
+    val doseErrorText = stringResource(R.string.error_invalid_dose, MAX_DOSE, MIN_DOSE)
 
     AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
             TextButton(onClick = {
                 val dose = doseText.toDoubleOrNull()
-                if (dose != null && dose in 0.1..99.9) {
+                if (dose != null && dose in MAX_DOSE..MIN_DOSE) {
                     onConfirm(timePickerState.hour, timePickerState.minute, dose)
                 } else {
-                    doseError = "0.1〜99.9の範囲で入力してください"
+                    doseError = doseErrorText
                 }
             }) {
                 Text(stringResource(R.string.ok))
@@ -512,7 +517,7 @@ fun TimeAndDosePickerDialog(
                             onClick = {
                                 val currentDose = doseText.toDoubleOrNull() ?: 1.0
                                 val newDose = currentDose + 1.0
-                                if (newDose <= 99.9) {
+                                if (newDose <= MIN_DOSE) {
                                     doseText = String.format("%.1f", newDose)
                                     doseError = null
                                 }
@@ -525,7 +530,7 @@ fun TimeAndDosePickerDialog(
                             onClick = {
                                 val currentDose = doseText.toDoubleOrNull() ?: 1.0
                                 val newDose = currentDose - 1.0
-                                if (newDose >= 0.1) {
+                                if (newDose >= MAX_DOSE) {
                                     doseText = String.format("%.1f", newDose)
                                     doseError = null
                                 }
