@@ -70,6 +70,7 @@
     <string name="cycle_daily_full">Daily</string>
     <string name="cycle_weekly_prefix">Every</string>
     <string name="cycle_interval_format">Every %s days</string>
+    <string name="day_name_separator">,&#160;</string>
 
     <!-- Week Days Full Names -->
     <string name="sunday">Sunday</string>
@@ -89,7 +90,7 @@
     <string name="version">Version</string>
     <string name="license_info">License Information</string>
     <string name="app_license">This application is released under the MIT-0 License.</string>
-    <string name="mit0_license_url" translatable="false">https://opensource.org/license/mit-0</string>
+    <string name="mit0_license_url">https://opensource.org/license/mit-0</string>
     <string name="open_source_licenses">Open Source Licenses</string>
     <string name="license_details">This application uses the following open source libraries:\n\n• Android Jetpack (Apache License 2.0)\n• Kotlin (Apache License 2.0)\n• Room Database (Apache License 2.0)\n• Jetpack Compose (Apache License 2.0)\n• Material Design 3 (Apache License 2.0)</string>
 
@@ -99,7 +100,15 @@
     <string name="notification_title">Time to take medication (%s)</string>
     <string name="notification_message_single">Please take %s</string>
     <string name="notification_message_multiple">Please take %s</string>
-    <string name="medication_list_separator" translatable="false">", "</string>
+    <string name="medication_list_separator">,&#160;</string>
+
+    <!-- As-Needed Medication -->
+    <string name="as_needed_medication">As Needed</string>
+    <string name="as_needed_checkbox">As-needed medication</string>
+    <string name="as_needed_description">Take as needed</string>
+    <string name="add_as_needed_intake">Add</string>
+    <string name="remove_intake">Remove</string>
+    <string name="taken_count">Taken %d time(s)</string>
 
     <!-- Error Messages -->
     <string name="error_empty_name">Please enter a medication name</string>

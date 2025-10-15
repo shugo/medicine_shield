@@ -77,19 +77,114 @@ fun MedicationFormScreen(
                 )
             }
 
-            // 服用時間
+            // 頓服チェックボックス
             item {
-                Text(stringResource(R.string.medication_times), style = MaterialTheme.typography.titleMedium)
-                if (formState.timesError != null) {
-                    Text(
-                        formState.timesError!!,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { viewModel.updateIsAsNeeded(!formState.isAsNeeded) }
+                        .padding(vertical = 8.dp)
+                ) {
+                    Checkbox(
+                        checked = formState.isAsNeeded,
+                        onCheckedChange = { viewModel.updateIsAsNeeded(it) }
                     )
+                    Spacer(Modifier.width(8.dp))
+                    Column {
+                        Text(
+                            text = stringResource(R.string.as_needed_checkbox),
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                        Text(
+                            text = stringResource(R.string.as_needed_description),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
 
-            itemsIndexed(formState.times) { index, timeWithSeq ->
+            // デフォルト服用量
+            item {
+                var doseText by remember { mutableStateOf(String.format("%.1f", formState.defaultDose)) }
+                var doseError by remember { mutableStateOf<String?>(null) }
+
+                LaunchedEffect(formState.defaultDose) {
+                    doseText = String.format("%.1f", formState.defaultDose)
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedTextField(
+                        value = doseText,
+                        onValueChange = { newValue ->
+                            doseText = newValue
+                            val dose = newValue.toDoubleOrNull()
+                            if (dose != null && dose in 0.1..99.9) {
+                                viewModel.updateDefaultDose(dose)
+                                doseError = null
+                            } else if (newValue.isNotEmpty()) {
+                                doseError = "0.1〜99.9の範囲で入力してください"
+                            }
+                        },
+                        label = { Text(stringResource(R.string.dose)) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.End),
+                        isError = doseError != null,
+                        supportingText = doseError?.let { { Text(it) } },
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        IconButton(
+                            onClick = {
+                                val currentDose = formState.defaultDose
+                                val newDose = currentDose + 1.0
+                                if (newDose <= 99.9) {
+                                    viewModel.updateDefaultDose(newDose)
+                                    doseError = null
+                                }
+                            }
+                        ) {
+                            Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Increase dose")
+                        }
+
+                        IconButton(
+                            onClick = {
+                                val currentDose = formState.defaultDose
+                                val newDose = currentDose - 1.0
+                                if (newDose >= 0.1) {
+                                    viewModel.updateDefaultDose(newDose)
+                                    doseError = null
+                                }
+                            }
+                        ) {
+                            Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Decrease dose")
+                        }
+                    }
+                }
+            }
+
+            // 服用時間（頓服の場合は非表示）
+            if (!formState.isAsNeeded) {
+                item {
+                    Text(stringResource(R.string.medication_times), style = MaterialTheme.typography.titleMedium)
+                    if (formState.timesError != null) {
+                        Text(
+                            formState.timesError!!,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
+
+                itemsIndexed(formState.times) { index, timeWithSeq ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -114,22 +209,24 @@ fun MedicationFormScreen(
                 }
             }
 
-            item {
-                OutlinedButton(
-                    onClick = {
-                        editingTimeIndex = null
-                        showTimePicker = true
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = null)
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.add_time))
+                item {
+                    OutlinedButton(
+                        onClick = {
+                            editingTimeIndex = null
+                            showTimePicker = true
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = null)
+                        Spacer(Modifier.width(8.dp))
+                        Text(stringResource(R.string.add_time))
+                    }
                 }
             }
 
-            // 服用サイクル
-            item {
+            // 服用サイクル（頓服の場合は非表示）
+            if (!formState.isAsNeeded) {
+                item {
                 Text(stringResource(R.string.cycle_type), style = MaterialTheme.typography.titleMedium)
                 Column {
                     CycleType.entries.forEach { type ->
@@ -164,28 +261,29 @@ fun MedicationFormScreen(
                 }
             }
 
-            // サイクル詳細設定
-            item {
-                when (formState.cycleType) {
-                    CycleType.WEEKLY -> {
-                        WeekdaySelector(
-                            selectedDays = formState.cycleValue?.split(",")?.mapNotNull { it.toIntOrNull() }?.toSet() ?: emptySet(),
-                            onDaysChanged = { days ->
-                                viewModel.updateCycleValue(days.sorted().joinToString(","))
-                            }
-                        )
-                    }
-                    CycleType.INTERVAL -> {
-                        OutlinedTextField(
-                            value = formState.cycleValue ?: "",
-                            onValueChange = { viewModel.updateCycleValue(it) },
-                            label = { Text(stringResource(R.string.interval_days)) },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                    CycleType.DAILY -> {
-                        // No additional settings
+                // サイクル詳細設定
+                item {
+                    when (formState.cycleType) {
+                        CycleType.WEEKLY -> {
+                            WeekdaySelector(
+                                selectedDays = formState.cycleValue?.split(",")?.mapNotNull { it.toIntOrNull() }?.toSet() ?: emptySet(),
+                                onDaysChanged = { days ->
+                                    viewModel.updateCycleValue(days.sorted().joinToString(","))
+                                }
+                            )
+                        }
+                        CycleType.INTERVAL -> {
+                            OutlinedTextField(
+                                value = formState.cycleValue ?: "",
+                                onValueChange = { viewModel.updateCycleValue(it) },
+                                label = { Text(stringResource(R.string.interval_days)) },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                        CycleType.DAILY -> {
+                            // No additional settings
+                        }
                     }
                 }
             }
@@ -250,11 +348,11 @@ fun MedicationFormScreen(
     // Time and Dose Picker Dialog
     if (showTimePicker) {
         val currentEditingTimeWithSeq = editingTimeIndex?.let { formState.times.getOrNull(it) }
-        // 新規追加時のデフォルト値：既存の時刻リストがあれば時刻順で最後のdose、なければ1.0
+        // 新規追加時のデフォルト値：formState.defaultDose、編集時は現在のdose
         val defaultDose = if (currentEditingTimeWithSeq != null) {
             currentEditingTimeWithSeq.dose
         } else {
-            formState.times.maxByOrNull { it.time }?.dose ?: 1.0
+            formState.defaultDose
         }
         TimeAndDosePickerDialog(
             initialTime = currentEditingTimeWithSeq?.time,

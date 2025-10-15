@@ -105,6 +105,26 @@ class DailyMedicationViewModel(
         }
     }
 
+    /**
+     * 頓服薬を追加服用する
+     */
+    fun addAsNeededMedication(medicationId: Long) {
+        viewModelScope.launch {
+            val dateString = formatDateToString(_selectedDate.value)
+            repository.addAsNeededIntake(medicationId, dateString)
+        }
+    }
+
+    /**
+     * 頓服薬の特定の服用記録を削除
+     */
+    fun removeAsNeededMedication(medicationId: Long, sequenceNumber: Int) {
+        viewModelScope.launch {
+            val dateString = formatDateToString(_selectedDate.value)
+            repository.removeAsNeededIntake(medicationId, sequenceNumber, dateString)
+        }
+    }
+
     fun refreshData() {
         updateDisplayDate()
         loadMedicationsForSelectedDate()

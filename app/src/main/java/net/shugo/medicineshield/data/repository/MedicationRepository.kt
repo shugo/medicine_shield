@@ -64,7 +64,9 @@ class MedicationRepository(
         cycleValue: String?,
         startDate: Long,
         endDate: Long?,
-        timesWithDose: List<Pair<String, Double>>  // (time, dose)のペア
+        timesWithDose: List<Pair<String, Double>>,  // (time, dose)のペア
+        isAsNeeded: Boolean = false,  // 頓服薬フラグ
+        defaultDose: Double = 1.0  // デフォルト服用量（MedicationConfigに保存、MedicationTimeのデフォルト値としても使用）
     ): Long {
         // 1. Medicationを作成
         val medication = Medication(name = name)
@@ -78,6 +80,8 @@ class MedicationRepository(
             cycleValue = cycleValue,
             medicationStartDate = startDate,
             medicationEndDate = endDate,
+            isAsNeeded = isAsNeeded,
+            dose = defaultDose,
             validFrom = 0,
             validTo = null
         )
@@ -85,17 +89,20 @@ class MedicationRepository(
 
         // 3. MedicationTimeを作成（sequenceNumberを1から割り当て）
         // 初期登録時はvalidFrom = 0（過去すべての日付で有効）
-        val medicationTimes = timesWithDose.mapIndexed { index, (time, dose) ->
-            MedicationTime(
-                medicationId = medicationId,
-                sequenceNumber = index + 1,
-                time = time,
-                dose = dose,
-                validFrom = 0,
-                validTo = null
-            )
+        // 頓服の場合は時刻が空でもOK
+        if (timesWithDose.isNotEmpty()) {
+            val medicationTimes = timesWithDose.mapIndexed { index, (time, dose) ->
+                MedicationTime(
+                    medicationId = medicationId,
+                    sequenceNumber = index + 1,
+                    time = time,
+                    dose = dose,
+                    validFrom = 0,
+                    validTo = null
+                )
+            }
+            medicationTimeDao.insertAll(medicationTimes)
         }
-        medicationTimeDao.insertAll(medicationTimes)
 
         return medicationId
     }
@@ -107,7 +114,9 @@ class MedicationRepository(
         cycleValue: String?,
         startDate: Long,
         endDate: Long?,
-        timesWithSequenceAndDose: List<Triple<Int, String, Double>>  // (sequenceNumber, time, dose)のトリプル
+        timesWithSequenceAndDose: List<Triple<Int, String, Double>>,  // (sequenceNumber, time, dose)のトリプル
+        isAsNeeded: Boolean = false,  // 頓服薬フラグ
+        defaultDose: Double = 1.0  // デフォルト服用量（MedicationConfigに保存）
     ) {
         val now = System.currentTimeMillis()
         val today = DateUtils.normalizeToStartOfDay(now)
@@ -122,7 +131,28 @@ class MedicationRepository(
             val configChanged = currentConfig.cycleType != cycleType ||
                     currentConfig.cycleValue != cycleValue ||
                     currentConfig.medicationStartDate != startDate ||
-                    currentConfig.medicationEndDate != endDate
+                    currentConfig.medicationEndDate != endDate ||
+                    currentConfig.isAsNeeded != isAsNeeded ||
+                    currentConfig.dose != defaultDose
+
+            // isAsNeededが変更された場合、今日以降の服用履歴を削除
+            if (currentConfig.isAsNeeded != isAsNeeded) {
+                val todayString = getDateString(today)
+                medicationIntakeDao.deleteIntakesFromDate(medicationId, todayString)
+
+                // isAsNeededがtrueに変更された場合（定時→頓服）、現在有効なMedicationTimesを無効化
+                if (isAsNeeded) {
+                    val currentTimes = medicationTimeDao.getCurrentTimesForMedication(medicationId)
+                    currentTimes.forEach { time ->
+                        medicationTimeDao.update(
+                            time.copy(
+                                validTo = today,
+                                updatedAt = now
+                            )
+                        )
+                    }
+                }
+            }
 
             if (configChanged) {
                 if (currentConfig.validFrom == today) {
@@ -145,6 +175,8 @@ class MedicationRepository(
                     cycleValue = cycleValue,
                     medicationStartDate = startDate,
                     medicationEndDate = endDate,
+                    isAsNeeded = isAsNeeded,
+                    dose = defaultDose,
                     validFrom = today,
                     validTo = null
                 )
@@ -159,10 +191,17 @@ class MedicationRepository(
                 cycleValue = cycleValue,
                 medicationStartDate = startDate,
                 medicationEndDate = endDate,
+                isAsNeeded = isAsNeeded,
+                dose = defaultDose,
                 validFrom = 0,
                 validTo = null
             )
             medicationConfigDao.insert(newConfig)
+        }
+
+        // 頓服薬の場合はMedicationTimeの管理は不要なのでここで終了
+        if (isAsNeeded) {
+            return
         }
 
         // 3. MedicationTimeの変更をチェック
@@ -282,25 +321,66 @@ class MedicationRepository(
                 // 対象日に有効なConfigを取得
                 val validConfig = medicationWithTimes.getConfigForDate(targetDate)
 
-                if (validConfig != null && shouldTakeMedication(validConfig, targetDate)) {
-                    // 対象日に有効な時刻を取得
-                    val validTimes = medicationWithTimes.getTimesForDate(targetDate)
+                if (validConfig != null) {
+                    if (validConfig.isAsNeeded) {
+                        // 頓服薬の処理
+                        // その日に服用済みのレコードをすべて取得
+                        val takenIntakes = intakeList.filter {
+                            it.medicationId == medication.id && it.takenAt != null
+                        }.sortedBy { it.sequenceNumber }
 
-                    for (medTime in validTimes) {
-                        val key = "${medication.id}_${medTime.sequenceNumber}"
-                        val intake = intakeMap[key]
+                        // 服用済みのレコードを表示
+                        for (intake in takenIntakes) {
+                            dailyItems.add(
+                                DailyMedicationItem(
+                                    medicationId = medication.id,
+                                    medicationName = medication.name,
+                                    sequenceNumber = intake.sequenceNumber,
+                                    scheduledTime = "",  // 頓服は時刻なし
+                                    dose = validConfig.dose,  // MedicationConfig.doseを使用
+                                    isTaken = true,
+                                    takenAt = intake.takenAt,
+                                    isAsNeeded = true
+                                )
+                            )
+                        }
 
+                        // 未服用の枠を1つ追加（次の服用用）
+                        val nextSequenceNumber = (takenIntakes.maxOfOrNull { it.sequenceNumber } ?: 0) + 1
                         dailyItems.add(
                             DailyMedicationItem(
                                 medicationId = medication.id,
                                 medicationName = medication.name,
-                                sequenceNumber = medTime.sequenceNumber,
-                                scheduledTime = medTime.time,
-                                dose = medTime.dose,
-                                isTaken = intake?.takenAt != null,
-                                takenAt = intake?.takenAt
+                                sequenceNumber = nextSequenceNumber,
+                                scheduledTime = "",  // 頓服は時刻なし
+                                dose = validConfig.dose,  // MedicationConfig.doseを使用
+                                isTaken = false,
+                                takenAt = null,
+                                isAsNeeded = true
                             )
-                         )
+                        )
+                    } else if (shouldTakeMedication(validConfig, targetDate)) {
+                        // 定時薬の処理（既存のロジック）
+                        // 対象日に有効な時刻を取得
+                        val validTimes = medicationWithTimes.getTimesForDate(targetDate)
+
+                        for (medTime in validTimes) {
+                            val key = "${medication.id}_${medTime.sequenceNumber}"
+                            val intake = intakeMap[key]
+
+                            dailyItems.add(
+                                DailyMedicationItem(
+                                    medicationId = medication.id,
+                                    medicationName = medication.name,
+                                    sequenceNumber = medTime.sequenceNumber,
+                                    scheduledTime = medTime.time,
+                                    dose = medTime.dose,
+                                    isTaken = intake?.takenAt != null,
+                                    takenAt = intake?.takenAt,
+                                    isAsNeeded = false
+                                )
+                            )
+                        }
                     }
                 }
             }
@@ -414,6 +494,44 @@ class MedicationRepository(
             sdf.parse(dateString)?.time ?: System.currentTimeMillis()
         } catch (e: Exception) {
             System.currentTimeMillis()
+        }
+    }
+
+    /**
+     * 頓服薬の服用記録を追加
+     */
+    suspend fun addAsNeededIntake(
+        medicationId: Long,
+        scheduledDate: String = getCurrentDateString()
+    ) {
+        // その日の最大sequenceNumberを取得
+        val existingIntakes = medicationIntakeDao.getIntakesByMedicationAndDate(medicationId, scheduledDate)
+        val nextSequenceNumber = (existingIntakes.maxOfOrNull { it.sequenceNumber } ?: 0) + 1
+
+        // 新しい服用記録を作成
+        medicationIntakeDao.insert(
+            MedicationIntake(
+                medicationId = medicationId,
+                sequenceNumber = nextSequenceNumber,
+                scheduledDate = scheduledDate,
+                takenAt = System.currentTimeMillis()
+            )
+        )
+    }
+
+    /**
+     * 頓服薬の特定の服用記録を削除（チェックを外す）
+     */
+    suspend fun removeAsNeededIntake(
+        medicationId: Long,
+        sequenceNumber: Int,
+        scheduledDate: String = getCurrentDateString()
+    ) {
+        val intake = medicationIntakeDao.getIntakeByMedicationAndDateTime(
+            medicationId, scheduledDate, sequenceNumber
+        )
+        if (intake != null) {
+            medicationIntakeDao.delete(intake)
         }
     }
 

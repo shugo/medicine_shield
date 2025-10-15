@@ -27,6 +27,8 @@ data class MedicationFormState(
     val startDate: Long = System.currentTimeMillis(),
     val endDate: Long? = null,
     val originalStartDate: Long? = null,  // 編集時の元の開始日（変更検出用）
+    val isAsNeeded: Boolean = false,  // 頓服薬フラグ
+    val defaultDose: Double = 1.0,  // デフォルト服用量（頓服薬の場合に使用、定時薬の新規時刻追加時のデフォルト値）
     val nameError: String? = null,
     val timesError: String? = null,
     val cycleError: String? = null,
@@ -69,7 +71,9 @@ class MedicationFormViewModel(
                     cycleValue = currentConfig?.cycleValue,
                     startDate = originalStartDate,
                     endDate = currentConfig?.medicationEndDate,
-                    originalStartDate = originalStartDate
+                    originalStartDate = originalStartDate,
+                    isAsNeeded = currentConfig?.isAsNeeded ?: false,
+                    defaultDose = currentConfig?.dose ?: 1.0
                 )
             }
         }
@@ -79,11 +83,17 @@ class MedicationFormViewModel(
         _formState.value = _formState.value.copy(name = name, nameError = null)
     }
 
-    fun addTime(time: String, dose: Double = 1.0) {
+    fun addTime(time: String, dose: Double? = null) {
         val currentTimes = _formState.value.times.toMutableList()
-        currentTimes.add(TimeWithSequence(nextSequenceNumber++, time, dose))
+        // doseが指定されていない場合はdefaultDoseを使用
+        val actualDose = dose ?: _formState.value.defaultDose
+        currentTimes.add(TimeWithSequence(nextSequenceNumber++, time, actualDose))
         currentTimes.sortBy { it.time }
         _formState.value = _formState.value.copy(times = currentTimes, timesError = null)
+    }
+
+    fun updateDefaultDose(dose: Double) {
+        _formState.value = _formState.value.copy(defaultDose = dose)
     }
 
     fun removeTime(index: Int) {
@@ -127,6 +137,13 @@ class MedicationFormViewModel(
         _formState.value = _formState.value.copy(endDate = endDate, dateError = null)
     }
 
+    fun updateIsAsNeeded(isAsNeeded: Boolean) {
+        _formState.value = _formState.value.copy(
+            isAsNeeded = isAsNeeded,
+            timesError = null
+        )
+    }
+
     fun saveMedication(onSuccess: () -> Unit) {
         if (!validateForm()) {
             return
@@ -145,7 +162,9 @@ class MedicationFormViewModel(
                         cycleValue = state.cycleValue,
                         startDate = state.startDate,
                         endDate = state.endDate,
-                        timesWithDose = state.times.map { it.time to it.dose }
+                        timesWithDose = state.times.map { it.time to it.dose },
+                        isAsNeeded = state.isAsNeeded,
+                        defaultDose = state.defaultDose
                     )
                 } else {
                     val timesWithSeqAndDose = state.times.map { Triple(it.sequenceNumber, it.time, it.dose) }
@@ -156,7 +175,9 @@ class MedicationFormViewModel(
                         cycleValue = state.cycleValue,
                         startDate = state.startDate,
                         endDate = state.endDate,
-                        timesWithSequenceAndDose = timesWithSeqAndDose
+                        timesWithSequenceAndDose = timesWithSeqAndDose,
+                        isAsNeeded = state.isAsNeeded,
+                        defaultDose = state.defaultDose
                     )
                 }
 
@@ -181,7 +202,8 @@ class MedicationFormViewModel(
             isValid = false
         }
 
-        if (state.times.isEmpty()) {
+        // 頓服の場合は時刻が不要
+        if (!state.isAsNeeded && state.times.isEmpty()) {
             _formState.value = _formState.value.copy(timesError = "少なくとも1つの服用時間を設定してください")
             isValid = false
         }
