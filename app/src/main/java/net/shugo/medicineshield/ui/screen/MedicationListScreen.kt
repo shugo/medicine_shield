@@ -191,7 +191,8 @@ fun MedicationCard(
                         CycleType.WEEKLY -> {
                             val days = config.cycleValue?.split(",")?.mapNotNull { it.toIntOrNull() } ?: emptyList()
                             val dayNames = days.map { getDayName(it) }
-                            "${stringResource(R.string.cycle_weekly_prefix)} ${dayNames.joinToString("・")}"
+                            val separator = stringResource(R.string.day_name_separator)
+                            "${stringResource(R.string.cycle_weekly_prefix)} ${dayNames.joinToString(separator)}"
                         }
                         CycleType.INTERVAL -> stringResource(R.string.cycle_interval_format, config.cycleValue ?: "")
                     }
