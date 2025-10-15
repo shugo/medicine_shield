@@ -280,7 +280,7 @@ fun MedicationList(
             }
 
             items(items) { medication ->
-                MedicationItem(
+                ScheduledMedicationItem(
                     medication = medication,
                     onToggleTaken = onToggleTaken,
                     onUpdateTakenAt = onUpdateTakenAt
@@ -415,7 +415,7 @@ private fun BaseMedicationCard(
 }
 
 @Composable
-fun MedicationItem(
+fun ScheduledMedicationItem(
     medication: DailyMedicationItem,
     onToggleTaken: (Long, Int, Boolean) -> Unit,
     onUpdateTakenAt: (Long, Int, Int, Int) -> Unit
