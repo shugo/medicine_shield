@@ -139,6 +139,19 @@ class MedicationRepository(
             if (currentConfig.isAsNeeded != isAsNeeded) {
                 val todayString = getDateString(today)
                 medicationIntakeDao.deleteIntakesFromDate(medicationId, todayString)
+
+                // isAsNeededがtrueに変更された場合（定時→頓服）、現在有効なMedicationTimesを無効化
+                if (isAsNeeded) {
+                    val currentTimes = medicationTimeDao.getCurrentTimesForMedication(medicationId)
+                    currentTimes.forEach { time ->
+                        medicationTimeDao.update(
+                            time.copy(
+                                validTo = today,
+                                updatedAt = now
+                            )
+                        )
+                    }
+                }
             }
 
             if (configChanged) {
