@@ -324,13 +324,17 @@ fun TimeHeader(time: String) {
     )
 }
 
+/**
+ * Base medication card that displays medication information with customizable action button
+ */
 @Composable
-fun MedicationItem(
+private fun BaseMedicationCard(
     medication: DailyMedicationItem,
-    onToggleTaken: (Long, Int, Boolean) -> Unit,
-    onUpdateTakenAt: (Long, Int, Int, Int) -> Unit
+    onUpdateTakenAt: (Long, Int, Int, Int) -> Unit,
+    actionButton: @Composable () -> Unit
 ) {
     var showTimePickerDialog by remember { mutableStateOf(false) }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -394,16 +398,7 @@ fun MedicationItem(
                 }
             }
 
-            Checkbox(
-                checked = medication.isTaken,
-                onCheckedChange = {
-                    onToggleTaken(
-                        medication.medicationId,
-                        medication.sequenceNumber,
-                        medication.isTaken
-                    )
-                }
-            )
+            actionButton()
         }
     }
 
@@ -420,6 +415,30 @@ fun MedicationItem(
 }
 
 @Composable
+fun MedicationItem(
+    medication: DailyMedicationItem,
+    onToggleTaken: (Long, Int, Boolean) -> Unit,
+    onUpdateTakenAt: (Long, Int, Int, Int) -> Unit
+) {
+    BaseMedicationCard(
+        medication = medication,
+        onUpdateTakenAt = onUpdateTakenAt,
+        actionButton = {
+            Checkbox(
+                checked = medication.isTaken,
+                onCheckedChange = {
+                    onToggleTaken(
+                        medication.medicationId,
+                        medication.sequenceNumber,
+                        medication.isTaken
+                    )
+                }
+            )
+        }
+    )
+}
+
+@Composable
 fun AsNeededMedicationItem(
     medication: DailyMedicationItem,
     onToggleTaken: (Long, Int, Boolean) -> Unit,
@@ -427,70 +446,10 @@ fun AsNeededMedicationItem(
     onRemoveIntake: (Long, Int) -> Unit,
     onUpdateTakenAt: (Long, Int, Int, Int) -> Unit
 ) {
-    var showTimePickerDialog by remember { mutableStateOf(false) }
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (medication.isTaken) {
-                MaterialTheme.colorScheme.surfaceVariant
-            } else {
-                MaterialTheme.colorScheme.surface
-            }
-        )
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = medication.medicationName,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "x ${String.format("%.1f", medication.dose)}",
-                        fontSize = 14.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                if (medication.isTaken && medication.takenAt != null) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(top = 4.dp)
-                    ) {
-                        Text(
-                            text = formatTakenTime(medication.takenAt),
-                            fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        IconButton(
-                            onClick = { showTimePickerDialog = true },
-                            modifier = Modifier.size(24.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Edit,
-                                contentDescription = stringResource(R.string.edit_taken_time),
-                                modifier = Modifier.size(16.dp),
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                    }
-                }
-            }
-
+    BaseMedicationCard(
+        medication = medication,
+        onUpdateTakenAt = onUpdateTakenAt,
+        actionButton = {
             if (medication.isTaken) {
                 // 服用済みの場合は削除ボタン
                 IconButton(
@@ -505,31 +464,16 @@ fun AsNeededMedicationItem(
                     )
                 }
             } else {
-                // 未服用の場合はチェックボックスと追加ボタン
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Checkbox(
-                        checked = false,
-                        onCheckedChange = {
-                            onAddIntake(medication.medicationId)
-                        }
-                    )
-                }
+                // 未服用の場合はチェックボックス
+                Checkbox(
+                    checked = false,
+                    onCheckedChange = {
+                        onAddIntake(medication.medicationId)
+                    }
+                )
             }
         }
-    }
-
-    if (showTimePickerDialog && medication.takenAt != null) {
-        TimePickerDialog(
-            initialTimestamp = medication.takenAt,
-            onConfirm = { hour, minute ->
-                onUpdateTakenAt(medication.medicationId, medication.sequenceNumber, hour, minute)
-                showTimePickerDialog = false
-            },
-            onDismiss = { showTimePickerDialog = false }
-        )
-    }
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
