@@ -68,6 +68,18 @@
     <string name="dose">Dose</string>
     <string name="dose_unit">Unit</string>
 
+    <!-- Dose Units -->
+    <string name="dose_unit_tab">tab</string>
+    <string name="dose_unit_cap">cap</string>
+    <string name="dose_unit_pack">pack</string>
+    <string name="dose_unit_ml">mL</string>
+    <string name="dose_unit_mg">mg</string>
+    <string name="dose_unit_g">g</string>
+    <string name="dose_unit_drop">drop</string>
+    <string name="dose_unit_puff">puff</string>
+    <string name="dose_unit_app">app</string>
+    <string name="dose_unit_custom">Custom</string>
+
     <!-- Cycle Descriptions -->
     <string name="cycle_daily_full">Daily</string>
     <string name="cycle_weekly_prefix">Every</string>

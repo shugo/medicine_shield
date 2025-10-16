@@ -142,10 +142,9 @@ fun MedicationFormScreen(
                         modifier = Modifier.weight(1f)
                     )
 
-                    OutlinedTextField(
-                        value = formState.doseUnit ?: "",
-                        onValueChange = { viewModel.updateDoseUnit(it.ifBlank { null }) },
-                        label = { Text(stringResource(R.string.dose_unit)) },
+                    DoseUnitSelector(
+                        selectedUnit = formState.doseUnit,
+                        onUnitSelected = { viewModel.updateDoseUnit(it) },
                         modifier = Modifier.weight(1f)
                     )
 
@@ -598,4 +597,124 @@ private fun formatDate(timestamp: Long): String {
     val pattern = DateFormat.getBestDateTimePattern(locale, "yMd")
     val sdf = SimpleDateFormat(pattern, locale)
     return sdf.format(Date(timestamp))
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DoseUnitSelector(
+    selectedUnit: String?,
+    onUnitSelected: (String?) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    // 一般的な単位の選択肢
+    val unitOptions = listOf(
+        stringResource(R.string.dose_unit_tab),
+        stringResource(R.string.dose_unit_cap),
+        stringResource(R.string.dose_unit_pack),
+        stringResource(R.string.dose_unit_ml),
+        stringResource(R.string.dose_unit_mg),
+        stringResource(R.string.dose_unit_g),
+        stringResource(R.string.dose_unit_drop),
+        stringResource(R.string.dose_unit_puff),
+        stringResource(R.string.dose_unit_app)
+    )
+
+    val customLabel = stringResource(R.string.dose_unit_custom)
+
+    var expanded by remember { mutableStateOf(false) }
+    var showCustomDialog by remember { mutableStateOf(false) }
+
+    // 現在の選択値を判定（事前定義されたオプションかカスタムか）
+    val isCustomUnit = selectedUnit != null && selectedUnit !in unitOptions
+    val displayValue = when {
+        selectedUnit == null -> ""
+        isCustomUnit -> "$customLabel: $selectedUnit"
+        else -> selectedUnit
+    }
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = it },
+        modifier = modifier
+    ) {
+        OutlinedTextField(
+            value = displayValue,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text(stringResource(R.string.dose_unit)) },
+            trailingIcon = {
+                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+            },
+            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+            modifier = Modifier
+                .menuAnchor()
+                .fillMaxWidth()
+        )
+
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            // 空欄オプション
+            DropdownMenuItem(
+                text = { Text("―") },
+                onClick = {
+                    onUnitSelected(null)
+                    expanded = false
+                }
+            )
+
+            // 事前定義された単位
+            unitOptions.forEach { unit ->
+                DropdownMenuItem(
+                    text = { Text(unit) },
+                    onClick = {
+                        onUnitSelected(unit)
+                        expanded = false
+                    }
+                )
+            }
+
+            // カスタムオプション
+            DropdownMenuItem(
+                text = { Text(customLabel) },
+                onClick = {
+                    expanded = false
+                    showCustomDialog = true
+                }
+            )
+        }
+    }
+
+    // カスタム単位入力ダイアログ
+    if (showCustomDialog) {
+        var customUnitText by remember { mutableStateOf(if (isCustomUnit) selectedUnit ?: "" else "") }
+
+        AlertDialog(
+            onDismissRequest = { showCustomDialog = false },
+            title = { Text(stringResource(R.string.dose_unit_custom)) },
+            text = {
+                OutlinedTextField(
+                    value = customUnitText,
+                    onValueChange = { customUnitText = it },
+                    label = { Text(stringResource(R.string.dose_unit)) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    onUnitSelected(customUnitText.ifBlank { null })
+                    showCustomDialog = false
+                }) {
+                    Text(stringResource(R.string.ok))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showCustomDialog = false }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
+        )
+    }
 }
