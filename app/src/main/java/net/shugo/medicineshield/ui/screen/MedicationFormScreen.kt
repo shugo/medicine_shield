@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import net.shugo.medicineshield.R
 import net.shugo.medicineshield.data.model.CycleType
 import net.shugo.medicineshield.viewmodel.MedicationFormViewModel
+import net.shugo.medicineshield.utils.formatDose
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -200,7 +201,7 @@ fun MedicationFormScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        "${timeWithSeq.time} x ${String.format("%.1f", timeWithSeq.dose)}",
+                        "${timeWithSeq.time} × ${formatDose(timeWithSeq.dose, formState.doseUnit)}",
                         style = MaterialTheme.typography.bodyLarge,
                         modifier = Modifier
                             .padding(vertical = 12.dp)
