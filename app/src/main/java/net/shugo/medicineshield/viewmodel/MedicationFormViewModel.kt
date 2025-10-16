@@ -3,10 +3,14 @@ package net.shugo.medicineshield.viewmodel
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import net.shugo.medicineshield.R
 import net.shugo.medicineshield.data.model.CycleType
+import net.shugo.medicineshield.data.model.MedicationConfig
 import net.shugo.medicineshield.data.repository.MedicationRepository
 import net.shugo.medicineshield.notification.NotificationScheduler
 import net.shugo.medicineshield.utils.DateUtils
+import net.shugo.medicineshield.utils.formatDoseInput
+import net.shugo.medicineshield.utils.parseDoseInput
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -28,12 +32,13 @@ data class MedicationFormState(
     val endDate: Long? = null,
     val originalStartDate: Long? = null,  // 編集時の元の開始日（変更検出用）
     val isAsNeeded: Boolean = false,  // 頓服薬フラグ
-    val defaultDose: Double = 1.0,  // デフォルト服用量（頓服薬の場合に使用、定時薬の新規時刻追加時のデフォルト値）
+    val defaultDoseText: String = formatDoseInput(1.0),  // デフォルト服用量（頓服薬の場合に使用、定時薬の新規時刻追加時のデフォルト値）
     val doseUnit: String? = null,  // 服用量の単位
     val nameError: String? = null,
     val timesError: String? = null,
     val cycleError: String? = null,
     val dateError: String? = null,
+    val doseError: String? = null,
     val isSaving: Boolean = false
 )
 
@@ -74,7 +79,7 @@ class MedicationFormViewModel(
                     endDate = currentConfig?.medicationEndDate,
                     originalStartDate = originalStartDate,
                     isAsNeeded = currentConfig?.isAsNeeded ?: false,
-                    defaultDose = currentConfig?.dose ?: 1.0,
+                    defaultDoseText = formatDoseInput(currentConfig?.dose ?: 1.0),
                     doseUnit = currentConfig?.doseUnit
                 )
             }
@@ -87,15 +92,15 @@ class MedicationFormViewModel(
 
     fun addTime(time: String, dose: Double? = null) {
         val currentTimes = _formState.value.times.toMutableList()
-        // doseが指定されていない場合はdefaultDoseを使用
-        val actualDose = dose ?: _formState.value.defaultDose
+        // doseが指定されていない場合はdefaultDoseTextをパースして使用
+        val actualDose = dose ?: parseDoseInput(_formState.value.defaultDoseText) ?: 1.0
         currentTimes.add(TimeWithSequence(nextSequenceNumber++, time, actualDose))
         currentTimes.sortBy { it.time }
         _formState.value = _formState.value.copy(times = currentTimes, timesError = null)
     }
 
-    fun updateDefaultDose(dose: Double) {
-        _formState.value = _formState.value.copy(defaultDose = dose)
+    fun updateDefaultDose(doseText: String) {
+        _formState.value = _formState.value.copy(defaultDoseText = doseText, doseError = null)
     }
 
     fun removeTime(index: Int) {
@@ -160,6 +165,7 @@ class MedicationFormViewModel(
         viewModelScope.launch {
             try {
                 val state = _formState.value
+                val defaultDose = parseDoseInput(state.defaultDoseText) ?: 1.0
 
                 if (state.medicationId == null) {
                     repository.insertMedicationWithTimes(
@@ -170,7 +176,7 @@ class MedicationFormViewModel(
                         endDate = state.endDate,
                         timesWithDose = state.times.map { it.time to it.dose },
                         isAsNeeded = state.isAsNeeded,
-                        defaultDose = state.defaultDose,
+                        defaultDose = defaultDose,
                         doseUnit = state.doseUnit
                     )
                 } else {
@@ -184,7 +190,7 @@ class MedicationFormViewModel(
                         endDate = state.endDate,
                         timesWithSequenceAndDose = timesWithSeqAndDose,
                         isAsNeeded = state.isAsNeeded,
-                        defaultDose = state.defaultDose,
+                        defaultDose = defaultDose,
                         doseUnit = state.doseUnit
                     )
                 }
@@ -206,27 +212,35 @@ class MedicationFormViewModel(
         var isValid = true
 
         if (state.name.isBlank()) {
-            _formState.value = _formState.value.copy(nameError = "薬の名前を入力してください")
+            _formState.value = _formState.value.copy(
+                nameError = context.getString(R.string.error_empty_name)
+            )
             isValid = false
         }
 
         // 頓服の場合は時刻が不要
         if (!state.isAsNeeded && state.times.isEmpty()) {
-            _formState.value = _formState.value.copy(timesError = "少なくとも1つの服用時間を設定してください")
+            _formState.value = _formState.value.copy(
+                timesError = context.getString(R.string.error_no_times)
+            )
             isValid = false
         }
 
         when (state.cycleType) {
             CycleType.WEEKLY -> {
                 if (state.cycleValue.isNullOrBlank()) {
-                    _formState.value = _formState.value.copy(cycleError = "少なくとも1つの曜日を選択してください")
+                    _formState.value = _formState.value.copy(
+                        cycleError = context.getString(R.string.error_no_days_selected)
+                    )
                     isValid = false
                 }
             }
             CycleType.INTERVAL -> {
                 val interval = state.cycleValue?.toIntOrNull()
                 if (interval == null || interval < 1) {
-                    _formState.value = _formState.value.copy(cycleError = "1以上の日数を入力してください")
+                    _formState.value = _formState.value.copy(
+                        cycleError = context.getString(R.string.error_invalid_interval)
+                    )
                     isValid = false
                 }
             }
@@ -235,8 +249,19 @@ class MedicationFormViewModel(
             }
         }
 
+        // 服用量のバリデーション
+        val dose = parseDoseInput(state.defaultDoseText)
+        if (dose == null || dose < MedicationConfig.MIN_DOSE || dose > MedicationConfig.MAX_DOSE) {
+            _formState.value = _formState.value.copy(
+                doseError = context.getString(R.string.error_invalid_dose, MedicationConfig.MIN_DOSE, MedicationConfig.MAX_DOSE)
+            )
+            isValid = false
+        }
+
         if (state.endDate != null && state.endDate < state.startDate) {
-            _formState.value = _formState.value.copy(dateError = "終了日は開始日以降に設定してください")
+            _formState.value = _formState.value.copy(
+                dateError = context.getString(R.string.error_invalid_end_date)
+            )
             isValid = false
         }
 
@@ -248,7 +273,9 @@ class MedicationFormViewModel(
 
             // 開始日が変更されている場合のみチェック
             if (normalizedStartDate != normalizedOriginalStartDate && normalizedStartDate < normalizedToday) {
-                _formState.value = _formState.value.copy(dateError = "編集時は開始日を過去の日付に変更できません")
+                _formState.value = _formState.value.copy(
+                    dateError = context.getString(R.string.error_invalid_start_date_past)
+                )
                 isValid = false
             }
         }

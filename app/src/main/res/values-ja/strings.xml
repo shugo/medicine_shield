@@ -131,5 +131,7 @@
     <string name="error_invalid_end_date">終了日は開始日より後に設定してください</string>
     <string name="error_no_days_selected">少なくとも1つの曜日を選択してください</string>
     <string name="error_invalid_interval">1以上の日数を入力してください</string>
-    <string name="error_invalid_dose">%.1f〜%.1fの範囲で入力してください</string>
+    <string name="error_invalid_dose" formatted="false">%.1f〜%.1fの範囲の数値を入力してください</string>
+    <string name="error_invalid_start_date_past">編集時は開始日を過去の日付に変更できません</string>
+    <string name="error_form_has_errors">入力内容に誤りがあります。上記の項目を確認してください。</string>
 </resources>
