@@ -26,6 +26,8 @@ import net.shugo.medicineshield.data.model.CycleType
 import net.shugo.medicineshield.data.model.MedicationConfig
 import net.shugo.medicineshield.viewmodel.MedicationFormViewModel
 import net.shugo.medicineshield.utils.formatDose
+import net.shugo.medicineshield.utils.formatDoseInput
+import net.shugo.medicineshield.utils.parseDoseInput
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -137,10 +139,10 @@ fun MedicationFormScreen(
                     ) {
                         IconButton(
                             onClick = {
-                                val currentDose = formState.defaultDoseText.toDoubleOrNull() ?: 1.0
+                                val currentDose = parseDoseInput(formState.defaultDoseText) ?: 1.0
                                 val newDose = currentDose + 1.0
                                 if (newDose <= MedicationConfig.MAX_DOSE) {
-                                    viewModel.updateDefaultDose(String.format("%.1f", newDose))
+                                    viewModel.updateDefaultDose(formatDoseInput(newDose))
                                 }
                             }
                         ) {
@@ -149,10 +151,10 @@ fun MedicationFormScreen(
 
                         IconButton(
                             onClick = {
-                                val currentDose = formState.defaultDoseText.toDoubleOrNull() ?: 1.0
+                                val currentDose = parseDoseInput(formState.defaultDoseText) ?: 1.0
                                 val newDose = currentDose - 1.0
                                 if (newDose >= MedicationConfig.MIN_DOSE) {
-                                    viewModel.updateDefaultDose(String.format("%.1f", newDose))
+                                    viewModel.updateDefaultDose(formatDoseInput(newDose))
                                 }
                             }
                         ) {
@@ -365,7 +367,7 @@ fun MedicationFormScreen(
     if (showTimePicker) {
         val currentEditingTimeWithSeq = editingTimeIndex?.let { formState.times.getOrNull(it) }
         // 新規追加時のデフォルト値：formState.defaultDoseText、編集時は現在のdose
-        val defaultDose = currentEditingTimeWithSeq?.dose ?: formState.defaultDoseText.toDoubleOrNull() ?: 1.0
+        val defaultDose = currentEditingTimeWithSeq?.dose ?: parseDoseInput(formState.defaultDoseText) ?: 1.0
         TimeAndDosePickerDialog(
             initialTime = currentEditingTimeWithSeq?.time,
             initialDose = defaultDose,
@@ -475,7 +477,7 @@ fun TimeAndDosePickerDialog(
         is24Hour = true
     )
 
-    var doseText by remember { mutableStateOf(String.format("%.1f", initialDose)) }
+    var doseText by remember { mutableStateOf(formatDoseInput(initialDose)) }
     var doseError by remember { mutableStateOf<String?>(null) }
     val doseErrorText = stringResource(R.string.error_invalid_dose, MedicationConfig.MIN_DOSE, MedicationConfig.MAX_DOSE)
 
@@ -483,7 +485,7 @@ fun TimeAndDosePickerDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
             TextButton(onClick = {
-                val dose = doseText.toDoubleOrNull()
+                val dose = parseDoseInput(doseText)
                 if (dose != null && dose in MedicationConfig.MIN_DOSE..MedicationConfig.MAX_DOSE) {
                     onConfirm(timePickerState.hour, timePickerState.minute, dose)
                 } else {
@@ -528,10 +530,10 @@ fun TimeAndDosePickerDialog(
                     ) {
                         IconButton(
                             onClick = {
-                                val currentDose = doseText.toDoubleOrNull() ?: 1.0
+                                val currentDose = parseDoseInput(doseText) ?: 1.0
                                 val newDose = currentDose + 1.0
                                 if (newDose <= MedicationConfig.MAX_DOSE) {
-                                    doseText = String.format("%.1f", newDose)
+                                    doseText = formatDoseInput(newDose)
                                     doseError = null
                                 }
                             }
@@ -541,10 +543,10 @@ fun TimeAndDosePickerDialog(
 
                         IconButton(
                             onClick = {
-                                val currentDose = doseText.toDoubleOrNull() ?: 1.0
+                                val currentDose = parseDoseInput(doseText) ?: 1.0
                                 val newDose = currentDose - 1.0
                                 if (newDose >= MedicationConfig.MIN_DOSE) {
-                                    doseText = String.format("%.1f", newDose)
+                                    doseText = formatDoseInput(newDose)
                                     doseError = null
                                 }
                             }

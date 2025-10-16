@@ -9,6 +9,8 @@ import net.shugo.medicineshield.data.model.MedicationConfig
 import net.shugo.medicineshield.data.repository.MedicationRepository
 import net.shugo.medicineshield.notification.NotificationScheduler
 import net.shugo.medicineshield.utils.DateUtils
+import net.shugo.medicineshield.utils.formatDoseInput
+import net.shugo.medicineshield.utils.parseDoseInput
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -77,7 +79,7 @@ class MedicationFormViewModel(
                     endDate = currentConfig?.medicationEndDate,
                     originalStartDate = originalStartDate,
                     isAsNeeded = currentConfig?.isAsNeeded ?: false,
-                    defaultDoseText = String.format("%.1f", currentConfig?.dose ?: 1.0),
+                    defaultDoseText = formatDoseInput(currentConfig?.dose ?: 1.0),
                     doseUnit = currentConfig?.doseUnit
                 )
             }
@@ -91,7 +93,7 @@ class MedicationFormViewModel(
     fun addTime(time: String, dose: Double? = null) {
         val currentTimes = _formState.value.times.toMutableList()
         // doseが指定されていない場合はdefaultDoseTextをパースして使用
-        val actualDose = dose ?: _formState.value.defaultDoseText.toDoubleOrNull() ?: 1.0
+        val actualDose = dose ?: parseDoseInput(_formState.value.defaultDoseText) ?: 1.0
         currentTimes.add(TimeWithSequence(nextSequenceNumber++, time, actualDose))
         currentTimes.sortBy { it.time }
         _formState.value = _formState.value.copy(times = currentTimes, timesError = null)
@@ -163,7 +165,7 @@ class MedicationFormViewModel(
         viewModelScope.launch {
             try {
                 val state = _formState.value
-                val defaultDose = state.defaultDoseText.toDoubleOrNull() ?: 1.0
+                val defaultDose = parseDoseInput(state.defaultDoseText) ?: 1.0
 
                 if (state.medicationId == null) {
                     repository.insertMedicationWithTimes(
@@ -248,7 +250,7 @@ class MedicationFormViewModel(
         }
 
         // 服用量のバリデーション
-        val dose = state.defaultDoseText.toDoubleOrNull()
+        val dose = parseDoseInput(state.defaultDoseText)
         if (dose == null || dose < MedicationConfig.MIN_DOSE || dose > MedicationConfig.MAX_DOSE) {
             _formState.value = _formState.value.copy(
                 doseError = context.getString(R.string.error_invalid_dose, MedicationConfig.MIN_DOSE, MedicationConfig.MAX_DOSE)
