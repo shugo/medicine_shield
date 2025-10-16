@@ -2,13 +2,19 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Top-Level Rules
+
+- **You must think exclusively in English**. However, you are required to **respond in Japanese**.
+- You must not use hard-coded strings in UI.
+- You must write commit messages in English.
+
 ## Project Overview
 
 MedicineShield is an Android medication management application built with Kotlin and Jetpack Compose. It helps users track their daily medication schedule with support for various medication cycles (daily, weekly, interval-based).
 
 **Package**: `net.shugo.medicineshield`
 **Min SDK**: 24
-**Target SDK**: 34
+**Target SDK**: 35
 
 ## Development Workflow
 
