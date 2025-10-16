@@ -133,4 +133,5 @@
     <string name="error_invalid_interval">1以上の日数を入力してください</string>
     <string name="error_invalid_dose">%.1f〜%.1fの範囲で入力してください</string>
     <string name="error_invalid_start_date_past">編集時は開始日を過去の日付に変更できません</string>
+    <string name="error_form_has_errors">入力内容にエラーがあります。上記の項目をご確認ください。</string>
 </resources>

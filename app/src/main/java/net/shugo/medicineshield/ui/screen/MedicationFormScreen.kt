@@ -333,6 +333,31 @@ fun MedicationFormScreen(
                     Text(stringResource(R.string.save))
                 }
             }
+
+            // バリデーションエラーメッセージ
+            item {
+                val hasErrors = formState.nameError != null ||
+                        formState.timesError != null ||
+                        formState.cycleError != null ||
+                        formState.dateError != null ||
+                        formState.doseError != null
+
+                if (hasErrors) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer
+                        )
+                    ) {
+                        Text(
+                            text = stringResource(R.string.error_form_has_errors),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            modifier = Modifier.padding(16.dp)
+                        )
+                    }
+                }
+            }
         }
     }
 
