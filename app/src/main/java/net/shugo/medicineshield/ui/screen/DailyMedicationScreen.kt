@@ -328,6 +328,10 @@ fun MedicationList(
 
         // メモセクション
         item {
+            TimeHeader(stringResource(R.string.note_section_title))
+        }
+
+        item {
             DailyNoteSection(
                 note = dailyNote,
                 onSave = onSaveNote,
@@ -691,38 +695,24 @@ fun DailyNoteSection(
 ) {
     var showNoteDialog by remember { mutableStateOf(false) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
-    ) {
-        Text(
-            text = stringResource(R.string.note_section_title),
-            fontSize = 16.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(vertical = 8.dp)
+    if (note != null) {
+        NoteCard(
+            content = note.content,
+            onEdit = { showNoteDialog = true },
+            onDelete = onDelete
         )
-
-        if (note != null) {
-            NoteCard(
-                content = note.content,
-                onEdit = { showNoteDialog = true },
-                onDelete = onDelete
+    } else {
+        OutlinedButton(
+            onClick = { showNoteDialog = true },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp)
             )
-        } else {
-            OutlinedButton(
-                onClick = { showNoteDialog = true },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(stringResource(R.string.add_note))
-            }
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(stringResource(R.string.add_note))
         }
     }
 
