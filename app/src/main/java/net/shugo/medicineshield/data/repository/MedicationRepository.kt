@@ -585,12 +585,25 @@ class MedicationRepository(
      * 指定日のメモを保存または更新
      */
     suspend fun saveOrUpdateDailyNote(date: String, content: String) {
-        val note = DailyNote(
-            noteDate = date,
-            content = content,
-            updatedAt = System.currentTimeMillis()
-        )
-        dailyNoteDao.insert(note)
+        val existingNote = dailyNoteDao.getNoteByDateSync(date)
+
+        if (existingNote != null) {
+            // 既存のメモを更新（createdAtは保持）
+            val updatedNote = existingNote.copy(
+                content = content,
+                updatedAt = System.currentTimeMillis()
+            )
+            dailyNoteDao.update(updatedNote)
+        } else {
+            // 新規作成
+            val newNote = DailyNote(
+                noteDate = date,
+                content = content,
+                createdAt = System.currentTimeMillis(),
+                updatedAt = System.currentTimeMillis()
+            )
+            dailyNoteDao.insert(newNote)
+        }
     }
 
     /**
