@@ -110,36 +110,21 @@ fun MedicationFormScreen(
 
             // デフォルト服用量
             item {
-                var doseText by remember { mutableStateOf(String.format("%.1f", formState.defaultDose)) }
-                var doseError by remember { mutableStateOf<String?>(null) }
-                val doseErrorText = stringResource(R.string.error_invalid_dose, MAX_DOSE, MIN_DOSE)
-
-                LaunchedEffect(formState.defaultDose) {
-                    doseText = String.format("%.1f", formState.defaultDose)
-                }
-
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = if (doseError == null) Alignment.CenterVertically else Alignment.Top
+                    verticalAlignment = if (formState.doseError == null) Alignment.CenterVertically else Alignment.Top
                 ) {
                     OutlinedTextField(
-                        value = doseText,
+                        value = formState.defaultDoseText,
                         onValueChange = { newValue ->
-                            doseText = newValue
-                            val dose = newValue.toDoubleOrNull()
-                            if (dose != null && dose in MAX_DOSE..MIN_DOSE) {
-                                viewModel.updateDefaultDose(dose)
-                                doseError = null
-                            } else if (newValue.isNotEmpty()) {
-                                doseError = doseErrorText
-                            }
+                            viewModel.updateDefaultDose(newValue)
                         },
                         label = { Text(stringResource(R.string.dose)) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.End),
-                        isError = doseError != null,
-                        supportingText = doseError?.let { { Text(it) } },
+                        isError = formState.doseError != null,
+                        supportingText = formState.doseError?.let { { Text(it) } },
                         modifier = Modifier.weight(1f)
                     )
 
@@ -154,11 +139,10 @@ fun MedicationFormScreen(
                     ) {
                         IconButton(
                             onClick = {
-                                val currentDose = formState.defaultDose
+                                val currentDose = formState.defaultDoseText.toDoubleOrNull() ?: 1.0
                                 val newDose = currentDose + 1.0
                                 if (newDose <= MIN_DOSE) {
-                                    viewModel.updateDefaultDose(newDose)
-                                    doseError = null
+                                    viewModel.updateDefaultDose(String.format("%.1f", newDose))
                                 }
                             }
                         ) {
@@ -167,11 +151,10 @@ fun MedicationFormScreen(
 
                         IconButton(
                             onClick = {
-                                val currentDose = formState.defaultDose
+                                val currentDose = formState.defaultDoseText.toDoubleOrNull() ?: 1.0
                                 val newDose = currentDose - 1.0
                                 if (newDose >= MAX_DOSE) {
-                                    viewModel.updateDefaultDose(newDose)
-                                    doseError = null
+                                    viewModel.updateDefaultDose(String.format("%.1f", newDose))
                                 }
                             }
                         ) {
@@ -358,8 +341,8 @@ fun MedicationFormScreen(
     // Time and Dose Picker Dialog
     if (showTimePicker) {
         val currentEditingTimeWithSeq = editingTimeIndex?.let { formState.times.getOrNull(it) }
-        // 新規追加時のデフォルト値：formState.defaultDose、編集時は現在のdose
-        val defaultDose = currentEditingTimeWithSeq?.dose ?: formState.defaultDose
+        // 新規追加時のデフォルト値：formState.defaultDoseText、編集時は現在のdose
+        val defaultDose = currentEditingTimeWithSeq?.dose ?: formState.defaultDoseText.toDoubleOrNull() ?: 1.0
         TimeAndDosePickerDialog(
             initialTime = currentEditingTimeWithSeq?.time,
             initialDose = defaultDose,
