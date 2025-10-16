@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import net.shugo.medicineshield.R
 import net.shugo.medicineshield.data.model.CycleType
+import net.shugo.medicineshield.data.model.MedicationConfig
 import net.shugo.medicineshield.data.repository.MedicationRepository
 import net.shugo.medicineshield.notification.NotificationScheduler
 import net.shugo.medicineshield.utils.DateUtils
@@ -12,9 +13,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-
-private const val MAX_DOSE = 0.1
-private const val MIN_DOSE = 999.9
 
 data class TimeWithSequence(
     val sequenceNumber: Int,
@@ -251,9 +249,9 @@ class MedicationFormViewModel(
 
         // 服用量のバリデーション
         val dose = state.defaultDoseText.toDoubleOrNull()
-        if (dose == null || dose < MAX_DOSE || dose > MIN_DOSE) {
+        if (dose == null || dose < MedicationConfig.MIN_DOSE || dose > MedicationConfig.MAX_DOSE) {
             _formState.value = _formState.value.copy(
-                doseError = context.getString(R.string.error_invalid_dose, MAX_DOSE, MIN_DOSE)
+                doseError = context.getString(R.string.error_invalid_dose, MedicationConfig.MIN_DOSE, MedicationConfig.MAX_DOSE)
             )
             isValid = false
         }

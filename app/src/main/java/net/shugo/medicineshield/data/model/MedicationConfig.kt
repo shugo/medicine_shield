@@ -35,4 +35,9 @@ data class MedicationConfig(
     val validTo: Long? = null,  // この設定レコードが無効になった日付（null=現在も有効）
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
-)
+) {
+    companion object {
+        const val MIN_DOSE = 0.1
+        const val MAX_DOSE = 999.9
+    }
+}
