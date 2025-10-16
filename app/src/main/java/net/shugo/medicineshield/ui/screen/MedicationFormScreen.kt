@@ -628,7 +628,6 @@ fun DoseUnitSelector(
     val isCustomUnit = selectedUnit != null && selectedUnit !in unitOptions
     val displayValue = when {
         selectedUnit == null -> ""
-        isCustomUnit -> "$customLabel: $selectedUnit"
         else -> selectedUnit
     }
 
