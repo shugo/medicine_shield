@@ -77,7 +77,6 @@ for domain in \
     "services.gradle.org" \
     "repo.maven.apache.org" \
     "jcenter.bintray.com" \
-    "plugins.gradle.org" \
     "maven.google.com"; do
     echo "Resolving $domain..."
     ips=$(dig +noall +answer A "$domain" | awk '$4 == "A" {print $5}')
