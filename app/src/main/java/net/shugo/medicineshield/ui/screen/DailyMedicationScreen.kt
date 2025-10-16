@@ -292,12 +292,12 @@ fun MedicationList(
     val listState = rememberLazyListState()
 
     // アイテム数をカウント（メモセクションのインデックスを計算するため）
-    val scheduledItemCount = groupedScheduledMeds.flatMap { (_, items) ->
-        listOf(1) + items.map { 1 } + listOf(1) // header + items + spacer
-    }.sum()
+    // 各時刻グループ: header(1) + items(n) + spacer(1) = n + 2
+    val scheduledItemCount = groupedScheduledMeds.values.sumOf { it.size + 2 }
 
+    // 頓服薬セクション: header(1) + items(n) + spacer(1)
     val asNeededItemCount = if (groupedAsNeededMeds.isNotEmpty()) {
-        1 + groupedAsNeededMeds.flatMap { (_, items) -> items.map { 1 } }.sum() + 1 // header + items + spacer
+        1 + groupedAsNeededMeds.values.sumOf { it.size } + 1
     } else {
         0
     }
