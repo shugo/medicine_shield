@@ -201,7 +201,7 @@ fun MedicationFormScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        "${timeWithSeq.time} × ${formatDose(timeWithSeq.dose, formState.doseUnit)}",
+                        "${timeWithSeq.time} ${formatDose(timeWithSeq.dose, formState.doseUnit)}",
                         style = MaterialTheme.typography.bodyLarge,
                         modifier = Modifier
                             .padding(vertical = 12.dp)

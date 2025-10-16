@@ -1,13 +1,15 @@
 package net.shugo.medicineshield.utils
 
+import java.text.DecimalFormat
 import android.annotation.SuppressLint
 
-@SuppressLint("DefaultLocale")
 fun formatDose(dose: Double, doseUnit: String?): String {
-    val doseValue = String.format("%.1f", dose).replace(".0", "");
-    return if (doseUnit != null) {
-        "${doseValue}${doseUnit}"
-    } else {
-        doseValue
-    }
+    val doseValue = formatDoseValue(dose)
+    return "× ${doseValue}${doseUnit}"
+}
+
+@SuppressLint("DefaultLocale")
+private fun formatDoseValue(dose: Double): String {
+    val formatter = DecimalFormat("#.#")
+    return formatter.format(dose)
 }

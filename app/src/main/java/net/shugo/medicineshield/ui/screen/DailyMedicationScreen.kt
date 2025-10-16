@@ -367,7 +367,7 @@ private fun BaseMedicationCard(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "× ${formatDose(medication.dose, medication.doseUnit)}",
+                        text = formatDose(medication.dose, medication.doseUnit),
                         fontSize = 14.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

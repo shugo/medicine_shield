@@ -184,9 +184,9 @@ fun MedicationCard(
             currentConfig?.let { config ->
                 // 服用時間（頓服の場合は "As Needed x dose"、定時の場合は時刻リスト）
                 val timesText = if (config.isAsNeeded) {
-                    "${stringResource(R.string.as_needed_medication)} × ${formatDose(config.dose, config.doseUnit)}"
+                    "${stringResource(R.string.as_needed_medication)} ${formatDose(config.dose, config.doseUnit)}"
                 } else {
-                    times.joinToString(", ") { "${it.time} × ${formatDose(it.dose, config.doseUnit)}" }
+                    times.joinToString(", ") { "${it.time} ${formatDose(it.dose, config.doseUnit)}" }
                 }
                 Text(
                     stringResource(R.string.medication_times_label, timesText),
