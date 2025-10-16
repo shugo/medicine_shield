@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.sp
 import net.shugo.medicineshield.R
 import net.shugo.medicineshield.data.model.DailyMedicationItem
 import net.shugo.medicineshield.viewmodel.DailyMedicationViewModel
+import net.shugo.medicineshield.utils.formatDose
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -366,11 +367,7 @@ private fun BaseMedicationCard(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = if (medication.doseUnit != null) {
-                            "x ${String.format("%.1f", medication.dose)}${medication.doseUnit}"
-                        } else {
-                            "x ${String.format("%.1f", medication.dose)}"
-                        },
+                        text = "× ${formatDose(medication.dose, medication.doseUnit)}",
                         fontSize = 14.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
