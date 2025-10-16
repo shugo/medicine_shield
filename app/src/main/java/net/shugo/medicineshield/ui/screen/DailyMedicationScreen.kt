@@ -302,13 +302,14 @@ fun MedicationList(
         0
     }
 
-    // メモセクションは最後から2番目（header）と最後（content）
-    val noteHeaderIndex = scheduledItemCount + asNeededItemCount
+    // メモセクションの最後のアイテム（content）のインデックス
+    // scheduledItemCount + asNeededItemCount + 1(header) + 1(content) - 1 = scheduledItemCount + asNeededItemCount + 1
+    val noteContentIndex = scheduledItemCount + asNeededItemCount + 1
 
     // スクロールトリガー
     LaunchedEffect(scrollToNote) {
         if (scrollToNote) {
-            listState.animateScrollToItem(noteHeaderIndex)
+            listState.animateScrollToItem(noteContentIndex)
             viewModel.resetScrollToNote()
         }
     }
