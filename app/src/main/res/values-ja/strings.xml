@@ -69,6 +69,7 @@
     <string name="dose_unit">単位</string>
 
     <!-- Dose Units -->
+    <string name="dose_unit_none">なし</string>
     <string name="dose_unit_tab">錠</string>
     <string name="dose_unit_cap">カプセル</string>
     <string name="dose_unit_pack">包</string>

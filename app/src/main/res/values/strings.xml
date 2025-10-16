@@ -69,6 +69,7 @@
     <string name="dose_unit">Unit</string>
 
     <!-- Dose Units -->
+    <string name="dose_unit_none">None</string>
     <string name="dose_unit_tab">tab</string>
     <string name="dose_unit_cap">cap</string>
     <string name="dose_unit_pack">pack</string>

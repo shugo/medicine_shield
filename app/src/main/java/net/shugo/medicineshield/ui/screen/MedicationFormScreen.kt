@@ -657,7 +657,7 @@ fun DoseUnitSelector(
         ) {
             // 空欄オプション
             DropdownMenuItem(
-                text = { Text("―") },
+                text = { Text(stringResource(R.string.dose_unit_none)) },
                 onClick = {
                     onUnitSelected(null)
                     expanded = false
