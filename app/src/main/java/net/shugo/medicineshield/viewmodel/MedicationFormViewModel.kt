@@ -32,7 +32,7 @@ data class MedicationFormState(
     val endDate: Long? = null,
     val originalStartDate: Long? = null,  // 編集時の元の開始日（変更検出用）
     val isAsNeeded: Boolean = false,  // 頓服薬フラグ
-    val defaultDoseText: String = "1.0",  // デフォルト服用量（頓服薬の場合に使用、定時薬の新規時刻追加時のデフォルト値）
+    val defaultDoseText: String = formatDoseInput(1.0),  // デフォルト服用量（頓服薬の場合に使用、定時薬の新規時刻追加時のデフォルト値）
     val doseUnit: String? = null,  // 服用量の単位
     val nameError: String? = null,
     val timesError: String? = null,
