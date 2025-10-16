@@ -370,7 +370,8 @@ fun MedicationList(
                 note = dailyNote,
                 onSave = onSaveNote,
                 onDelete = onDeleteNote,
-                viewModel = viewModel
+                viewModel = viewModel,
+                selectedDate = viewModel.selectedDate.collectAsState().value
             )
         }
     }
@@ -727,14 +728,15 @@ fun DailyNoteSection(
     note: net.shugo.medicineshield.data.model.DailyNote?,
     onSave: (String) -> Unit,
     onDelete: () -> Unit,
-    viewModel: DailyMedicationViewModel
+    viewModel: DailyMedicationViewModel,
+    selectedDate: Calendar
 ) {
     var showNoteDialog by remember { mutableStateOf(false) }
     var hasPrevious by remember { mutableStateOf(false) }
     var hasNext by remember { mutableStateOf(false) }
 
-    // メモの前後存在チェック
-    LaunchedEffect(note) {
+    // メモの前後存在チェック（selectedDateも監視）
+    LaunchedEffect(selectedDate) {
         hasPrevious = viewModel.hasPreviousNote()
         hasNext = viewModel.hasNextNote()
     }
