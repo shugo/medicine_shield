@@ -25,11 +25,30 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   jq \
   nano \
   vim \
+  wget \
+  curl \
+  openjdk-17-jdk \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Ensure default node user has access to /usr/local/share
 RUN mkdir -p /usr/local/share/npm-global && \
   chown -R node:node /usr/local/share
+
+# Install Android SDK
+ARG ANDROID_SDK_VERSION=11076708
+ENV ANDROID_HOME=/opt/android-sdk
+ENV PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools
+
+RUN mkdir -p $ANDROID_HOME/cmdline-tools && \
+  wget -q https://dl.google.com/android/repository/commandlinetools-linux-${ANDROID_SDK_VERSION}_latest.zip && \
+  unzip -q commandlinetools-linux-${ANDROID_SDK_VERSION}_latest.zip -d $ANDROID_HOME/cmdline-tools && \
+  mv $ANDROID_HOME/cmdline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest && \
+  rm commandlinetools-linux-${ANDROID_SDK_VERSION}_latest.zip
+
+# Accept licenses and install Android SDK components
+RUN yes | sdkmanager --licenses && \
+  sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0" "extras;android;m2repository" "extras;google;m2repository" && \
+  chown -R node:node $ANDROID_HOME
 
 ARG USERNAME=node
 
