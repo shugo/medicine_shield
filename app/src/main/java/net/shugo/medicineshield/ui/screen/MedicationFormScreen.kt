@@ -321,19 +321,6 @@ fun MedicationFormScreen(
                 }
             }
 
-            // 保存ボタン
-            item {
-                Button(
-                    onClick = {
-                        viewModel.saveMedication(onSuccess = onNavigateBack)
-                    },
-                    enabled = !formState.isSaving,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(stringResource(R.string.save))
-                }
-            }
-
             // バリデーションエラーメッセージ
             item {
                 val hasErrors = formState.nameError != null ||
@@ -356,6 +343,19 @@ fun MedicationFormScreen(
                             modifier = Modifier.padding(16.dp)
                         )
                     }
+                }
+            }
+
+            // 保存ボタン
+            item {
+                Button(
+                    onClick = {
+                        viewModel.saveMedication(onSuccess = onNavigateBack)
+                    },
+                    enabled = !formState.isSaving,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(stringResource(R.string.save))
                 }
             }
         }
