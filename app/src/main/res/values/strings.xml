@@ -132,4 +132,5 @@
     <string name="error_no_days_selected">Please select at least one day</string>
     <string name="error_invalid_interval">Please enter a number of days greater than or equal to 1</string>
     <string name="error_invalid_dose">Please enter a value in the range of %.1f to %.1f.</string>
+    <string name="error_invalid_start_date_past">Cannot change the start date to a past date when editing</string>
 </resources>

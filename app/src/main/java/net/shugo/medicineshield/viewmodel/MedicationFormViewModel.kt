@@ -3,6 +3,7 @@ package net.shugo.medicineshield.viewmodel
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import net.shugo.medicineshield.R
 import net.shugo.medicineshield.data.model.CycleType
 import net.shugo.medicineshield.data.repository.MedicationRepository
 import net.shugo.medicineshield.notification.NotificationScheduler
@@ -11,6 +12,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+
+private const val MAX_DOSE = 0.1
+private const val MIN_DOSE = 999.9
 
 data class TimeWithSequence(
     val sequenceNumber: Int,
@@ -208,27 +212,35 @@ class MedicationFormViewModel(
         var isValid = true
 
         if (state.name.isBlank()) {
-            _formState.value = _formState.value.copy(nameError = "薬の名前を入力してください")
+            _formState.value = _formState.value.copy(
+                nameError = context.getString(R.string.error_empty_name)
+            )
             isValid = false
         }
 
         // 頓服の場合は時刻が不要
         if (!state.isAsNeeded && state.times.isEmpty()) {
-            _formState.value = _formState.value.copy(timesError = "少なくとも1つの服用時間を設定してください")
+            _formState.value = _formState.value.copy(
+                timesError = context.getString(R.string.error_no_times)
+            )
             isValid = false
         }
 
         when (state.cycleType) {
             CycleType.WEEKLY -> {
                 if (state.cycleValue.isNullOrBlank()) {
-                    _formState.value = _formState.value.copy(cycleError = "少なくとも1つの曜日を選択してください")
+                    _formState.value = _formState.value.copy(
+                        cycleError = context.getString(R.string.error_no_days_selected)
+                    )
                     isValid = false
                 }
             }
             CycleType.INTERVAL -> {
                 val interval = state.cycleValue?.toIntOrNull()
                 if (interval == null || interval < 1) {
-                    _formState.value = _formState.value.copy(cycleError = "1以上の日数を入力してください")
+                    _formState.value = _formState.value.copy(
+                        cycleError = context.getString(R.string.error_invalid_interval)
+                    )
                     isValid = false
                 }
             }
@@ -239,13 +251,17 @@ class MedicationFormViewModel(
 
         // 服用量のバリデーション
         val dose = state.defaultDoseText.toDoubleOrNull()
-        if (dose == null || dose < 0.1 || dose > 999.9) {
-            _formState.value = _formState.value.copy(doseError = "服用量は0.1から999.9の範囲で入力してください")
+        if (dose == null || dose < MAX_DOSE || dose > MIN_DOSE) {
+            _formState.value = _formState.value.copy(
+                doseError = context.getString(R.string.error_invalid_dose, MAX_DOSE, MIN_DOSE)
+            )
             isValid = false
         }
 
         if (state.endDate != null && state.endDate < state.startDate) {
-            _formState.value = _formState.value.copy(dateError = "終了日は開始日以降に設定してください")
+            _formState.value = _formState.value.copy(
+                dateError = context.getString(R.string.error_invalid_end_date)
+            )
             isValid = false
         }
 
@@ -257,7 +273,9 @@ class MedicationFormViewModel(
 
             // 開始日が変更されている場合のみチェック
             if (normalizedStartDate != normalizedOriginalStartDate && normalizedStartDate < normalizedToday) {
-                _formState.value = _formState.value.copy(dateError = "編集時は開始日を過去の日付に変更できません")
+                _formState.value = _formState.value.copy(
+                    dateError = context.getString(R.string.error_invalid_start_date_past)
+                )
                 isValid = false
             }
         }
