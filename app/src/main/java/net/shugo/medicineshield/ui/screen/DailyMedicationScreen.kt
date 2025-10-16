@@ -366,7 +366,11 @@ private fun BaseMedicationCard(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "x ${String.format("%.1f", medication.dose)}",
+                        text = if (medication.doseUnit != null) {
+                            "x ${String.format("%.1f", medication.dose)}${medication.doseUnit}"
+                        } else {
+                            "x ${String.format("%.1f", medication.dose)}"
+                        },
                         fontSize = 14.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

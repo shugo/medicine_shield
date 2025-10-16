@@ -120,7 +120,7 @@ fun MedicationFormScreen(
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.Top
                 ) {
                     OutlinedTextField(
                         value = doseText,
@@ -139,6 +139,13 @@ fun MedicationFormScreen(
                         textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.End),
                         isError = doseError != null,
                         supportingText = doseError?.let { { Text(it) } },
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    OutlinedTextField(
+                        value = formState.doseUnit ?: "",
+                        onValueChange = { viewModel.updateDoseUnit(it.ifBlank { null }) },
+                        label = { Text(stringResource(R.string.dose_unit)) },
                         modifier = Modifier.weight(1f)
                     )
 

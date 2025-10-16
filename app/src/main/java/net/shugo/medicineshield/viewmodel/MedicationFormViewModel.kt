@@ -29,6 +29,7 @@ data class MedicationFormState(
     val originalStartDate: Long? = null,  // 編集時の元の開始日（変更検出用）
     val isAsNeeded: Boolean = false,  // 頓服薬フラグ
     val defaultDose: Double = 1.0,  // デフォルト服用量（頓服薬の場合に使用、定時薬の新規時刻追加時のデフォルト値）
+    val doseUnit: String? = null,  // 服用量の単位
     val nameError: String? = null,
     val timesError: String? = null,
     val cycleError: String? = null,
@@ -73,7 +74,8 @@ class MedicationFormViewModel(
                     endDate = currentConfig?.medicationEndDate,
                     originalStartDate = originalStartDate,
                     isAsNeeded = currentConfig?.isAsNeeded ?: false,
-                    defaultDose = currentConfig?.dose ?: 1.0
+                    defaultDose = currentConfig?.dose ?: 1.0,
+                    doseUnit = currentConfig?.doseUnit
                 )
             }
         }
@@ -144,6 +146,10 @@ class MedicationFormViewModel(
         )
     }
 
+    fun updateDoseUnit(doseUnit: String?) {
+        _formState.value = _formState.value.copy(doseUnit = doseUnit)
+    }
+
     fun saveMedication(onSuccess: () -> Unit) {
         if (!validateForm()) {
             return
@@ -164,7 +170,8 @@ class MedicationFormViewModel(
                         endDate = state.endDate,
                         timesWithDose = state.times.map { it.time to it.dose },
                         isAsNeeded = state.isAsNeeded,
-                        defaultDose = state.defaultDose
+                        defaultDose = state.defaultDose,
+                        doseUnit = state.doseUnit
                     )
                 } else {
                     val timesWithSeqAndDose = state.times.map { Triple(it.sequenceNumber, it.time, it.dose) }
@@ -177,7 +184,8 @@ class MedicationFormViewModel(
                         endDate = state.endDate,
                         timesWithSequenceAndDose = timesWithSeqAndDose,
                         isAsNeeded = state.isAsNeeded,
-                        defaultDose = state.defaultDose
+                        defaultDose = state.defaultDose,
+                        doseUnit = state.doseUnit
                     )
                 }
 

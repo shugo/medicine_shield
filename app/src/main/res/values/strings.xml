@@ -66,6 +66,7 @@
     <string name="clear_end_date">Clear End Date</string>
     <string name="save">Save</string>
     <string name="dose">Dose</string>
+    <string name="dose_unit">Unit</string>
 
     <!-- Cycle Descriptions -->
     <string name="cycle_daily_full">Daily</string>
