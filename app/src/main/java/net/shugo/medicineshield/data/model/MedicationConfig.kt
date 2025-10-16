@@ -30,6 +30,7 @@ data class MedicationConfig(
     val medicationEndDate: Long? = null,  // 実際の服用終了日
     val isAsNeeded: Boolean = false,  // 頓服薬フラグ（true=頓服、false=定時薬）
     val dose: Double = 1.0,  // 服用量（頓服薬の場合はこの値を使用、定時薬の場合はMedicationTimeのデフォルト値）
+    val doseUnit: String? = null,  // 服用量の単位（例: "錠", "mg", "mL"）
     val validFrom: Long,  // この設定レコードが有効になった日付（履歴管理用）
     val validTo: Long? = null,  // この設定レコードが無効になった日付（null=現在も有効）
     val createdAt: Long = System.currentTimeMillis(),

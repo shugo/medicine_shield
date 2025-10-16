@@ -66,6 +66,20 @@
     <string name="clear_end_date">終了日をクリア</string>
     <string name="save">保存</string>
     <string name="dose">服用量</string>
+    <string name="dose_unit">単位</string>
+
+    <!-- Dose Units -->
+    <string name="dose_unit_none">なし</string>
+    <string name="dose_unit_tab">錠</string>
+    <string name="dose_unit_cap">カプセル</string>
+    <string name="dose_unit_pack">包</string>
+    <string name="dose_unit_ml">mL</string>
+    <string name="dose_unit_mg">mg</string>
+    <string name="dose_unit_g">g</string>
+    <string name="dose_unit_drop">滴</string>
+    <string name="dose_unit_puff">吸入</string>
+    <string name="dose_unit_app">回</string>
+    <string name="dose_unit_custom">カスタム</string>
 
     <!-- Cycle Descriptions -->
     <string name="cycle_daily_full">毎日</string>
