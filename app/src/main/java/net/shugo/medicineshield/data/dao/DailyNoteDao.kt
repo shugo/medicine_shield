@@ -24,4 +24,10 @@ interface DailyNoteDao {
 
     @Query("SELECT * FROM daily_notes WHERE noteDate = :date")
     suspend fun getNoteByDateSync(date: String): DailyNote?
+
+    @Query("SELECT * FROM daily_notes WHERE noteDate < :currentDate ORDER BY noteDate DESC LIMIT 1")
+    suspend fun getPreviousNote(currentDate: String): DailyNote?
+
+    @Query("SELECT * FROM daily_notes WHERE noteDate > :currentDate ORDER BY noteDate ASC LIMIT 1")
+    suspend fun getNextNote(currentDate: String): DailyNote?
 }

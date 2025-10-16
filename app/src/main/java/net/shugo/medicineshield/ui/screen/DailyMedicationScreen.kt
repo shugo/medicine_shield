@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
@@ -20,6 +21,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
 import net.shugo.medicineshield.R
 import net.shugo.medicineshield.data.model.DailyMedicationItem
 import net.shugo.medicineshield.viewmodel.DailyMedicationViewModel
@@ -38,6 +40,7 @@ fun DailyMedicationScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val selectedDate by viewModel.selectedDate.collectAsState()
     val dailyNote by viewModel.dailyNote.collectAsState()
+    val scrollToNote by viewModel.scrollToNote.collectAsState()
 
     var showDatePicker by remember { mutableStateOf(false) }
 
@@ -110,7 +113,9 @@ fun DailyMedicationScreen(
                         },
                         onDeleteNote = {
                             viewModel.deleteNote()
-                        }
+                        },
+                        viewModel = viewModel,
+                        scrollToNote = scrollToNote
                     )
                 }
             }
@@ -270,7 +275,9 @@ fun MedicationList(
     onUpdateTakenAt: (Long, Int, Int, Int) -> Unit,
     dailyNote: net.shugo.medicineshield.data.model.DailyNote?,
     onSaveNote: (String) -> Unit,
-    onDeleteNote: () -> Unit
+    onDeleteNote: () -> Unit,
+    viewModel: DailyMedicationViewModel,
+    scrollToNote: Boolean = false
 ) {
     // 頓服薬と定時薬を分離
     val (asNeededMeds, scheduledMeds) = medications.partition { it.isAsNeeded }
@@ -281,9 +288,35 @@ fun MedicationList(
     // 頓服薬を薬ごとにグループ化
     val groupedAsNeededMeds = asNeededMeds.groupBy { it.medicationId }
 
+    // LazyListStateを作成
+    val listState = rememberLazyListState()
+
+    // アイテム数をカウント（メモセクションのインデックスを計算するため）
+    val scheduledItemCount = groupedScheduledMeds.flatMap { (_, items) ->
+        listOf(1) + items.map { 1 } + listOf(1) // header + items + spacer
+    }.sum()
+
+    val asNeededItemCount = if (groupedAsNeededMeds.isNotEmpty()) {
+        1 + groupedAsNeededMeds.flatMap { (_, items) -> items.map { 1 } }.sum() + 1 // header + items + spacer
+    } else {
+        0
+    }
+
+    // メモセクションは最後から2番目（header）と最後（content）
+    val noteHeaderIndex = scheduledItemCount + asNeededItemCount
+
+    // スクロールトリガー
+    LaunchedEffect(scrollToNote) {
+        if (scrollToNote) {
+            listState.animateScrollToItem(noteHeaderIndex)
+            viewModel.resetScrollToNote()
+        }
+    }
+
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+        state = listState
     ) {
         // 定時薬のセクション
         groupedScheduledMeds.forEach { (time, items) ->
@@ -335,7 +368,8 @@ fun MedicationList(
             DailyNoteSection(
                 note = dailyNote,
                 onSave = onSaveNote,
-                onDelete = onDeleteNote
+                onDelete = onDeleteNote,
+                viewModel = viewModel
             )
         }
     }
@@ -691,28 +725,89 @@ fun NoteCard(
 fun DailyNoteSection(
     note: net.shugo.medicineshield.data.model.DailyNote?,
     onSave: (String) -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    viewModel: DailyMedicationViewModel
 ) {
     var showNoteDialog by remember { mutableStateOf(false) }
+    var hasPrevious by remember { mutableStateOf(false) }
+    var hasNext by remember { mutableStateOf(false) }
 
-    if (note != null) {
-        NoteCard(
-            content = note.content,
-            onEdit = { showNoteDialog = true },
-            onDelete = onDelete
-        )
-    } else {
-        OutlinedButton(
-            onClick = { showNoteDialog = true },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Icon(
-                imageVector = Icons.Default.Add,
-                contentDescription = null,
-                modifier = Modifier.size(18.dp)
+    // メモの前後存在チェック
+    LaunchedEffect(note) {
+        hasPrevious = viewModel.hasPreviousNote()
+        hasNext = viewModel.hasNextNote()
+    }
+
+    Column(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        // メモの表示または追加ボタン
+        if (note != null) {
+            NoteCard(
+                content = note.content,
+                onEdit = { showNoteDialog = true },
+                onDelete = onDelete
             )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(stringResource(R.string.add_note))
+        } else {
+            OutlinedButton(
+                onClick = { showNoteDialog = true },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(stringResource(R.string.add_note))
+            }
+        }
+
+        // ナビゲーションボタン（前後のメモがある場合のみ表示）
+        if (hasPrevious || hasNext) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                // 前のメモへ
+                if (hasPrevious) {
+                    OutlinedButton(
+                        onClick = { viewModel.navigateToPreviousNote() },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.KeyboardArrowLeft,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(stringResource(R.string.previous_note))
+                    }
+                } else {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                // 次のメモへ
+                if (hasNext) {
+                    OutlinedButton(
+                        onClick = { viewModel.navigateToNextNote() },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(stringResource(R.string.next_note))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Icon(
+                            imageVector = Icons.Default.KeyboardArrowRight,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                } else {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+            }
         }
     }
 

@@ -606,4 +606,18 @@ class MedicationRepository(
     fun getDailyNote(date: String): Flow<DailyNote?> {
         return dailyNoteDao.getNoteByDate(date)
     }
+
+    /**
+     * 指定日より前のメモを取得
+     */
+    suspend fun getPreviousNote(currentDate: String): DailyNote? {
+        return dailyNoteDao.getPreviousNote(currentDate)
+    }
+
+    /**
+     * 指定日より後のメモを取得
+     */
+    suspend fun getNextNote(currentDate: String): DailyNote? {
+        return dailyNoteDao.getNextNote(currentDate)
+    }
 }

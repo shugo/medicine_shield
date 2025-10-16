@@ -36,6 +36,9 @@ class DailyMedicationViewModel(
     private val _dailyNote = MutableStateFlow<DailyNote?>(null)
     val dailyNote: StateFlow<DailyNote?> = _dailyNote.asStateFlow()
 
+    private val _scrollToNote = MutableStateFlow(false)
+    val scrollToNote: StateFlow<Boolean> = _scrollToNote.asStateFlow()
+
     private var loadJob: Job? = null
     private var noteLoadJob: Job? = null
 
@@ -196,6 +199,79 @@ class DailyMedicationViewModel(
             val dateString = formatDateToString(_selectedDate.value)
             repository.deleteDailyNote(dateString)
         }
+    }
+
+    /**
+     * 前のメモがある日付に移動
+     */
+    fun navigateToPreviousNote() {
+        viewModelScope.launch {
+            val currentDateString = formatDateToString(_selectedDate.value)
+            val previousNote = repository.getPreviousNote(currentDateString)
+
+            if (previousNote != null) {
+                // 日付文字列をCalendarに変換
+                val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                val date = sdf.parse(previousNote.noteDate)
+                if (date != null) {
+                    val newCalendar = Calendar.getInstance()
+                    newCalendar.time = date
+                    _selectedDate.value = newCalendar
+                    updateDisplayDate()
+                    loadMedicationsForSelectedDate()
+                    loadNoteForSelectedDate()
+                    _scrollToNote.value = true
+                }
+            }
+        }
+    }
+
+    /**
+     * 次のメモがある日付に移動
+     */
+    fun navigateToNextNote() {
+        viewModelScope.launch {
+            val currentDateString = formatDateToString(_selectedDate.value)
+            val nextNote = repository.getNextNote(currentDateString)
+
+            if (nextNote != null) {
+                // 日付文字列をCalendarに変換
+                val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                val date = sdf.parse(nextNote.noteDate)
+                if (date != null) {
+                    val newCalendar = Calendar.getInstance()
+                    newCalendar.time = date
+                    _selectedDate.value = newCalendar
+                    updateDisplayDate()
+                    loadMedicationsForSelectedDate()
+                    loadNoteForSelectedDate()
+                    _scrollToNote.value = true
+                }
+            }
+        }
+    }
+
+    /**
+     * スクロールフラグをリセット
+     */
+    fun resetScrollToNote() {
+        _scrollToNote.value = false
+    }
+
+    /**
+     * 前のメモが存在するかチェック
+     */
+    suspend fun hasPreviousNote(): Boolean {
+        val currentDateString = formatDateToString(_selectedDate.value)
+        return repository.getPreviousNote(currentDateString) != null
+    }
+
+    /**
+     * 次のメモが存在するかチェック
+     */
+    suspend fun hasNextNote(): Boolean {
+        val currentDateString = formatDateToString(_selectedDate.value)
+        return repository.getNextNote(currentDateString) != null
     }
 
     /**
