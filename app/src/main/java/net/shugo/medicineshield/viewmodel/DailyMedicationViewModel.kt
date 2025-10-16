@@ -6,6 +6,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import net.shugo.medicineshield.R
 import net.shugo.medicineshield.data.model.DailyMedicationItem
+import net.shugo.medicineshield.data.model.DailyNote
 import net.shugo.medicineshield.data.repository.MedicationRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,10 +33,15 @@ class DailyMedicationViewModel(
     private val _displayDateText = MutableStateFlow("")
     val displayDateText: StateFlow<String> = _displayDateText.asStateFlow()
 
+    private val _dailyNote = MutableStateFlow<DailyNote?>(null)
+    val dailyNote: StateFlow<DailyNote?> = _dailyNote.asStateFlow()
+
     private var loadJob: Job? = null
+    private var noteLoadJob: Job? = null
 
     init {
         loadMedicationsForSelectedDate()
+        loadNoteForSelectedDate()
         updateDisplayDate()
     }
 
@@ -80,6 +86,7 @@ class DailyMedicationViewModel(
         _selectedDate.value = newDate
         updateDisplayDate()
         loadMedicationsForSelectedDate()
+        loadNoteForSelectedDate()
     }
 
     fun onNextDay() {
@@ -88,6 +95,7 @@ class DailyMedicationViewModel(
         _selectedDate.value = newDate
         updateDisplayDate()
         loadMedicationsForSelectedDate()
+        loadNoteForSelectedDate()
     }
 
     fun onDateSelected(year: Int, month: Int, dayOfMonth: Int) {
@@ -96,6 +104,7 @@ class DailyMedicationViewModel(
         _selectedDate.value = newDate
         updateDisplayDate()
         loadMedicationsForSelectedDate()
+        loadNoteForSelectedDate()
     }
 
     fun toggleMedicationTaken(medicationId: Long, sequenceNumber: Int, currentStatus: Boolean) {
@@ -145,6 +154,7 @@ class DailyMedicationViewModel(
     fun refreshData() {
         updateDisplayDate()
         loadMedicationsForSelectedDate()
+        loadNoteForSelectedDate()
     }
 
     /**
@@ -152,6 +162,40 @@ class DailyMedicationViewModel(
      */
     fun getMedicationsGroupedByTime(): Map<String, List<DailyMedicationItem>> {
         return _dailyMedications.value.groupBy { it.scheduledTime }
+    }
+
+    private fun loadNoteForSelectedDate() {
+        // 前回のnoteLoadJobをキャンセル
+        noteLoadJob?.cancel()
+
+        noteLoadJob = viewModelScope.launch {
+            val dateString = formatDateToString(_selectedDate.value)
+            repository.getDailyNote(dateString).collect { note ->
+                _dailyNote.value = note
+            }
+        }
+    }
+
+    /**
+     * メモを保存または更新
+     */
+    fun saveNote(content: String) {
+        if (content.isBlank()) return
+
+        viewModelScope.launch {
+            val dateString = formatDateToString(_selectedDate.value)
+            repository.saveOrUpdateDailyNote(dateString, content.trim())
+        }
+    }
+
+    /**
+     * メモを削除
+     */
+    fun deleteNote() {
+        viewModelScope.launch {
+            val dateString = formatDateToString(_selectedDate.value)
+            repository.deleteDailyNote(dateString)
+        }
     }
 
     /**

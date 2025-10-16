@@ -27,7 +27,8 @@ class MedicationNotificationReceiver : BroadcastReceiver() {
                     database.medicationDao(),
                     database.medicationTimeDao(),
                     database.medicationIntakeDao(),
-                    database.medicationConfigDao()
+                    database.medicationConfigDao(),
+                    database.dailyNoteDao()
                 )
 
                 // 現在日時の薬リストを取得

@@ -37,6 +37,7 @@ fun DailyMedicationScreen(
     val displayDateText by viewModel.displayDateText.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val selectedDate by viewModel.selectedDate.collectAsState()
+    val dailyNote by viewModel.dailyNote.collectAsState()
 
     var showDatePicker by remember { mutableStateOf(false) }
 
@@ -102,6 +103,13 @@ fun DailyMedicationScreen(
                         },
                         onUpdateTakenAt = { medicationId, sequenceNumber, hour, minute ->
                             viewModel.updateTakenAt(medicationId, sequenceNumber, hour, minute)
+                        },
+                        dailyNote = dailyNote,
+                        onSaveNote = { content ->
+                            viewModel.saveNote(content)
+                        },
+                        onDeleteNote = {
+                            viewModel.deleteNote()
                         }
                     )
                 }
@@ -259,7 +267,10 @@ fun MedicationList(
     onToggleTaken: (Long, Int, Boolean) -> Unit,
     onAddAsNeeded: (Long) -> Unit,
     onRemoveAsNeeded: (Long, Int) -> Unit,
-    onUpdateTakenAt: (Long, Int, Int, Int) -> Unit
+    onUpdateTakenAt: (Long, Int, Int, Int) -> Unit,
+    dailyNote: net.shugo.medicineshield.data.model.DailyNote?,
+    onSaveNote: (String) -> Unit,
+    onDeleteNote: () -> Unit
 ) {
     // 頓服薬と定時薬を分離
     val (asNeededMeds, scheduledMeds) = medications.partition { it.isAsNeeded }
@@ -309,6 +320,19 @@ fun MedicationList(
                     )
                 }
             }
+
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+        }
+
+        // メモセクション
+        item {
+            DailyNoteSection(
+                note = dailyNote,
+                onSave = onSaveNote,
+                onDelete = onDeleteNote
+            )
         }
     }
 }
@@ -520,4 +544,193 @@ fun formatTakenTime(timestamp: Long): String {
         calendar.get(Calendar.HOUR_OF_DAY),
         calendar.get(Calendar.MINUTE)
     )
+}
+
+// ========== Daily Note Components ==========
+
+@Composable
+fun NoteEditDialog(
+    initialContent: String,
+    onSave: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var noteContent by remember { mutableStateOf(initialContent) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = if (initialContent.isEmpty()) {
+                    stringResource(R.string.add_note)
+                } else {
+                    stringResource(R.string.edit_note)
+                }
+            )
+        },
+        text = {
+            OutlinedTextField(
+                value = noteContent,
+                onValueChange = { noteContent = it },
+                label = { Text(stringResource(R.string.note_content)) },
+                placeholder = { Text(stringResource(R.string.note_content_hint)) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp),
+                maxLines = 10,
+                singleLine = false
+            )
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    if (noteContent.isNotBlank()) {
+                        onSave(noteContent)
+                        onDismiss()
+                    }
+                }
+            ) {
+                Text(stringResource(R.string.save))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.cancel))
+            }
+        }
+    )
+}
+
+@Composable
+fun NoteCard(
+    content: String,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
+) {
+    var showDeleteConfirmation by remember { mutableStateOf(false) }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+            .clickable(onClick = onEdit),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.Top,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = content,
+                fontSize = 14.sp,
+                modifier = Modifier.weight(1f),
+                color = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+
+            Row {
+                IconButton(
+                    onClick = onEdit,
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = stringResource(R.string.edit_note),
+                        modifier = Modifier.size(18.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+
+                IconButton(
+                    onClick = { showDeleteConfirmation = true },
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = stringResource(R.string.delete_note),
+                        modifier = Modifier.size(18.dp),
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                }
+            }
+        }
+    }
+
+    if (showDeleteConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirmation = false },
+            title = { Text(stringResource(R.string.delete_note)) },
+            text = { Text(stringResource(R.string.confirm_delete_note)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onDelete()
+                        showDeleteConfirmation = false
+                    }
+                ) {
+                    Text(stringResource(R.string.delete_note))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirmation = false }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
+        )
+    }
+}
+
+@Composable
+fun DailyNoteSection(
+    note: net.shugo.medicineshield.data.model.DailyNote?,
+    onSave: (String) -> Unit,
+    onDelete: () -> Unit
+) {
+    var showNoteDialog by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+    ) {
+        Text(
+            text = stringResource(R.string.note_section_title),
+            fontSize = 16.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(vertical = 8.dp)
+        )
+
+        if (note != null) {
+            NoteCard(
+                content = note.content,
+                onEdit = { showNoteDialog = true },
+                onDelete = onDelete
+            )
+        } else {
+            OutlinedButton(
+                onClick = { showNoteDialog = true },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(stringResource(R.string.add_note))
+            }
+        }
+    }
+
+    if (showNoteDialog) {
+        NoteEditDialog(
+            initialContent = note?.content ?: "",
+            onSave = onSave,
+            onDismiss = { showNoteDialog = false }
+        )
+    }
 }

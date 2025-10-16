@@ -125,6 +125,15 @@
     <string name="remove_intake">Remove</string>
     <string name="taken_count">Taken %d time(s)</string>
 
+    <!-- Daily Notes -->
+    <string name="note_section_title">Note</string>
+    <string name="add_note">Add Note</string>
+    <string name="edit_note">Edit Note</string>
+    <string name="delete_note">Delete Note</string>
+    <string name="note_content">Note Content</string>
+    <string name="note_content_hint">Enter side effects, symptoms, or observations...</string>
+    <string name="confirm_delete_note">Delete this note?</string>
+
     <!-- Error Messages -->
     <string name="error_empty_name">Please enter a medication name</string>
     <string name="error_no_times">Please set at least one medication time</string>

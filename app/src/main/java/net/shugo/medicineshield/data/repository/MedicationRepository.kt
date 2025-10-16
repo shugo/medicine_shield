@@ -1,10 +1,12 @@
 package net.shugo.medicineshield.data.repository
 
+import net.shugo.medicineshield.data.dao.DailyNoteDao
 import net.shugo.medicineshield.data.dao.MedicationDao
 import net.shugo.medicineshield.data.dao.MedicationIntakeDao
 import net.shugo.medicineshield.data.dao.MedicationTimeDao
 import net.shugo.medicineshield.data.dao.MedicationConfigDao
 import net.shugo.medicineshield.data.model.CycleType
+import net.shugo.medicineshield.data.model.DailyNote
 import net.shugo.medicineshield.data.model.Medication
 import net.shugo.medicineshield.data.model.MedicationIntake
 import net.shugo.medicineshield.data.model.MedicationTime
@@ -22,7 +24,8 @@ class MedicationRepository(
     private val medicationDao: MedicationDao,
     private val medicationTimeDao: MedicationTimeDao,
     private val medicationIntakeDao: MedicationIntakeDao,
-    private val medicationConfigDao: MedicationConfigDao
+    private val medicationConfigDao: MedicationConfigDao,
+    private val dailyNoteDao: DailyNoteDao
 ) {
     /**
      * すべてのMedicationとそのリレーションを取得（現在有効なもののみ）
@@ -574,5 +577,33 @@ class MedicationRepository(
         calendar.add(Calendar.DAY_OF_YEAR, -daysToKeep)
         val cutoffDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(calendar.time)
         medicationIntakeDao.deleteOldIntakes(cutoffDate)
+    }
+
+    // ========== Daily Note Functions ==========
+
+    /**
+     * 指定日のメモを保存または更新
+     */
+    suspend fun saveOrUpdateDailyNote(date: String, content: String) {
+        val note = DailyNote(
+            noteDate = date,
+            content = content,
+            updatedAt = System.currentTimeMillis()
+        )
+        dailyNoteDao.insert(note)
+    }
+
+    /**
+     * 指定日のメモを削除
+     */
+    suspend fun deleteDailyNote(date: String) {
+        dailyNoteDao.delete(date)
+    }
+
+    /**
+     * 指定日のメモを取得（Flow）
+     */
+    fun getDailyNote(date: String): Flow<DailyNote?> {
+        return dailyNoteDao.getNoteByDate(date)
     }
 }
