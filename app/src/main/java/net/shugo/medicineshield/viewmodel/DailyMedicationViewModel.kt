@@ -21,6 +21,10 @@ class DailyMedicationViewModel(
     private val repository: MedicationRepository
 ) : AndroidViewModel(application) {
 
+    // 固定フォーマットの日付パース/フォーマット用のSimpleDateFormat
+    // Locale.ROOTを使用してロケール依存の動作を避ける
+    private val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
+
     private val _dailyMedications = MutableStateFlow<List<DailyMedicationItem>>(emptyList())
     val dailyMedications: StateFlow<List<DailyMedicationItem>> = _dailyMedications.asStateFlow()
 
@@ -211,8 +215,7 @@ class DailyMedicationViewModel(
 
             if (previousNote != null) {
                 // 日付文字列をCalendarに変換
-                val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                val date = sdf.parse(previousNote.noteDate)
+                val date = dateFormatter.parse(previousNote.noteDate)
                 if (date != null) {
                     val newCalendar = Calendar.getInstance()
                     newCalendar.time = date
@@ -236,8 +239,7 @@ class DailyMedicationViewModel(
 
             if (nextNote != null) {
                 // 日付文字列をCalendarに変換
-                val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                val date = sdf.parse(nextNote.noteDate)
+                val date = dateFormatter.parse(nextNote.noteDate)
                 if (date != null) {
                     val newCalendar = Calendar.getInstance()
                     newCalendar.time = date
@@ -278,7 +280,6 @@ class DailyMedicationViewModel(
      * CalendarをYYYY-MM-DD形式の文字列に変換
      */
     private fun formatDateToString(calendar: Calendar): String {
-        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        return sdf.format(calendar.time)
+        return dateFormatter.format(calendar.time)
     }
 }
