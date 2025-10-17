@@ -19,10 +19,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import net.shugo.medicineshield.R
 import net.shugo.medicineshield.data.model.DailyMedicationItem
+import net.shugo.medicineshield.data.model.DailyNote
 import net.shugo.medicineshield.viewmodel.DailyMedicationViewModel
 import net.shugo.medicineshield.utils.formatDose
 import java.util.*
@@ -40,6 +42,7 @@ fun DailyMedicationScreen(
     val selectedDate by viewModel.selectedDate.collectAsState()
     val dailyNote by viewModel.dailyNote.collectAsState()
     val scrollToNote by viewModel.scrollToNote.collectAsState()
+    val medicationCount by viewModel.medicationCount.collectAsState()
 
     var showDatePicker by remember { mutableStateOf(false) }
 
@@ -87,8 +90,8 @@ fun DailyMedicationScreen(
                     }
                 }
 
-                dailyMedications.isEmpty() -> {
-                    EmptyMedicationState(selectedDate, onNavigateToMedicationList)
+                medicationCount == 0 -> {
+                    EmptyMedicationState(onNavigateToMedicationList)
                 }
 
                 else -> {
@@ -224,19 +227,7 @@ fun DailyMedicationDatePickerDialog(
 }
 
 @Composable
-fun EmptyMedicationState(selectedDate: Calendar, onNavigateToMedicationList: () -> Unit) {
-    // 今日かどうか判定
-    val today = Calendar.getInstance()
-    val isToday = selectedDate.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
-                  selectedDate.get(Calendar.DAY_OF_YEAR) == today.get(Calendar.DAY_OF_YEAR)
-    val isFuture = selectedDate.timeInMillis > today.timeInMillis
-
-    val message = when {
-        isToday -> stringResource(R.string.no_medication_today)
-        isFuture -> stringResource(R.string.no_medication_future)
-        else -> stringResource(R.string.no_medication_past)
-    }
-
+fun EmptyMedicationState(onNavigateToMedicationList: () -> Unit) {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
@@ -246,7 +237,7 @@ fun EmptyMedicationState(selectedDate: Calendar, onNavigateToMedicationList: () 
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = message,
+                text = stringResource(R.string.no_medications),
                 fontSize = 18.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -274,7 +265,7 @@ fun MedicationList(
     onAddAsNeeded: (Long) -> Unit,
     onRemoveAsNeeded: (Long, Int) -> Unit,
     onUpdateTakenAt: (Long, Int, Int, Int) -> Unit,
-    dailyNote: net.shugo.medicineshield.data.model.DailyNote?,
+    dailyNote: DailyNote?,
     onSaveNote: (String) -> Unit,
     onDeleteNote: () -> Unit,
     viewModel: DailyMedicationViewModel,
@@ -288,6 +279,12 @@ fun MedicationList(
 
     // 頓服薬を薬ごとにグループ化
     val groupedAsNeededMeds = asNeededMeds.groupBy { it.medicationId }
+
+    // 今日かどうか判定
+    val today = Calendar.getInstance()
+    val isToday = selectedDate.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
+                  selectedDate.get(Calendar.DAY_OF_YEAR) == today.get(Calendar.DAY_OF_YEAR)
+    val isFuture = selectedDate.timeInMillis > today.timeInMillis
 
     // LazyListStateを作成
     val listState = rememberLazyListState()
@@ -338,6 +335,13 @@ fun MedicationList(
             }
         }
 
+        // 服薬予定がない場合のメッセージ
+        if (medications.isEmpty()) {
+            item {
+                NoMedicationMessage(isToday = isToday, isFuture = isFuture)
+            }
+        }
+
         // メモセクション
         item {
             TimeHeader(stringResource(R.string.note_section_title))
@@ -374,6 +378,38 @@ fun TimeHeader(time: String) {
         color = MaterialTheme.colorScheme.primary,
         modifier = Modifier.padding(vertical = 8.dp)
     )
+}
+
+@Composable
+fun NoMedicationMessage(isToday: Boolean, isFuture: Boolean) {
+    val message = when {
+        isToday -> stringResource(R.string.no_medication_today)
+        isFuture -> stringResource(R.string.no_medication_future)
+        else -> stringResource(R.string.no_medication_past)
+    }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(24.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = message,
+                fontSize = 16.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
+        }
+    }
 }
 
 /**
@@ -713,7 +749,7 @@ fun NoteCard(
 
 @Composable
 fun DailyNoteSection(
-    note: net.shugo.medicineshield.data.model.DailyNote?,
+    note: DailyNote?,
     onSave: (String) -> Unit,
     onDelete: () -> Unit,
     viewModel: DailyMedicationViewModel,
