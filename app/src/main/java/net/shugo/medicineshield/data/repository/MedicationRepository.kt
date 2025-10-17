@@ -27,10 +27,6 @@ class MedicationRepository(
     private val medicationConfigDao: MedicationConfigDao,
     private val dailyNoteDao: DailyNoteDao
 ) {
-    // 固定フォーマットの日付パース/フォーマット用のSimpleDateFormat
-    // Locale.ROOTを使用してロケール依存の動作を避ける
-    private val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
-
     /**
      * すべてのMedicationとそのリレーションを取得（現在有効なもののみ）
      *
@@ -497,6 +493,7 @@ class MedicationRepository(
      * 指定されたタイムスタンプを YYYY-MM-DD 形式に変換
      */
     private fun getDateString(timestamp: Long): String {
+        val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
         return dateFormatter.format(Date(timestamp))
     }
 
@@ -504,6 +501,7 @@ class MedicationRepository(
      * YYYY-MM-DD 形式の文字列をタイムスタンプに変換
      */
     private fun parseDateString(dateString: String): Long {
+        val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
         return try {
             dateFormatter.parse(dateString)?.time ?: System.currentTimeMillis()
         } catch (e: Exception) {
@@ -577,6 +575,7 @@ class MedicationRepository(
     suspend fun cleanupOldIntakes(daysToKeep: Int = 30) {
         val calendar = Calendar.getInstance()
         calendar.add(Calendar.DAY_OF_YEAR, -daysToKeep)
+        val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
         val cutoffDate = dateFormatter.format(calendar.time)
         medicationIntakeDao.deleteOldIntakes(cutoffDate)
     }
