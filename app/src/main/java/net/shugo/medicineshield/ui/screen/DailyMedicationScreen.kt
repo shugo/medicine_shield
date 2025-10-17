@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import net.shugo.medicineshield.R
 import net.shugo.medicineshield.data.model.DailyMedicationItem
+import net.shugo.medicineshield.data.model.DailyNote
 import net.shugo.medicineshield.viewmodel.DailyMedicationViewModel
 import net.shugo.medicineshield.utils.formatDose
 import java.util.*
@@ -274,7 +275,7 @@ fun MedicationList(
     onAddAsNeeded: (Long) -> Unit,
     onRemoveAsNeeded: (Long, Int) -> Unit,
     onUpdateTakenAt: (Long, Int, Int, Int) -> Unit,
-    dailyNote: net.shugo.medicineshield.data.model.DailyNote?,
+    dailyNote: DailyNote?,
     onSaveNote: (String) -> Unit,
     onDeleteNote: () -> Unit,
     viewModel: DailyMedicationViewModel,
@@ -713,7 +714,7 @@ fun NoteCard(
 
 @Composable
 fun DailyNoteSection(
-    note: net.shugo.medicineshield.data.model.DailyNote?,
+    note: DailyNote?,
     onSave: (String) -> Unit,
     onDelete: () -> Unit,
     viewModel: DailyMedicationViewModel,
