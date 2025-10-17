@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import net.shugo.medicineshield.R
@@ -279,6 +280,12 @@ fun MedicationList(
     // 頓服薬を薬ごとにグループ化
     val groupedAsNeededMeds = asNeededMeds.groupBy { it.medicationId }
 
+    // 今日かどうか判定
+    val today = Calendar.getInstance()
+    val isToday = selectedDate.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
+                  selectedDate.get(Calendar.DAY_OF_YEAR) == today.get(Calendar.DAY_OF_YEAR)
+    val isFuture = selectedDate.timeInMillis > today.timeInMillis
+
     // LazyListStateを作成
     val listState = rememberLazyListState()
 
@@ -328,6 +335,13 @@ fun MedicationList(
             }
         }
 
+        // 服薬予定がない場合のメッセージ
+        if (medications.isEmpty()) {
+            item {
+                NoMedicationMessage(isToday = isToday, isFuture = isFuture)
+            }
+        }
+
         // メモセクション
         item {
             TimeHeader(stringResource(R.string.note_section_title))
@@ -364,6 +378,38 @@ fun TimeHeader(time: String) {
         color = MaterialTheme.colorScheme.primary,
         modifier = Modifier.padding(vertical = 8.dp)
     )
+}
+
+@Composable
+fun NoMedicationMessage(isToday: Boolean, isFuture: Boolean) {
+    val message = when {
+        isToday -> stringResource(R.string.no_medication_today)
+        isFuture -> stringResource(R.string.no_medication_future)
+        else -> stringResource(R.string.no_medication_past)
+    }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(24.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = message,
+                fontSize = 16.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
+        }
+    }
 }
 
 /**
