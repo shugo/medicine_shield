@@ -49,13 +49,6 @@ class MedicationRepository(
     }
 
     /**
-     * 登録されている薬の件数を取得
-     */
-    fun getMedicationCount(): Flow<Int> {
-        return medicationDao.getMedicationCount()
-    }
-
-    /**
      * 指定IDのMedicationとそのリレーションを取得（現在有効なもののみ）
      *
      * 注意: Roomの@Relationの制約により、完全にSQLレベルでフィルタリングすることができないため、

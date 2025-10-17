@@ -1,17 +1,20 @@
 package net.shugo.medicineshield.data.dao
 
-import androidx.room.*
+import androidx.room.Dao
+import androidx.room.Delete
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import androidx.room.Transaction
+import androidx.room.Update
+import kotlinx.coroutines.flow.Flow
 import net.shugo.medicineshield.data.model.Medication
 import net.shugo.medicineshield.data.model.MedicationWithTimes
-import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface MedicationDao {
     @Query("SELECT * FROM medications ORDER BY createdAt DESC")
     fun getAllMedications(): Flow<List<Medication>>
-
-    @Query("SELECT COUNT(*) FROM medications")
-    fun getMedicationCount(): Flow<Int>
 
     /**
      * すべてのMedicationとそのリレーションを取得（履歴含む）

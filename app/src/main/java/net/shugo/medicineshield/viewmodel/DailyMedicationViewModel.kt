@@ -4,18 +4,19 @@ import android.app.Application
 import android.text.format.DateFormat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import net.shugo.medicineshield.R
-import net.shugo.medicineshield.data.model.DailyMedicationItem
-import net.shugo.medicineshield.data.model.DailyNote
-import net.shugo.medicineshield.data.repository.MedicationRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import net.shugo.medicineshield.R
+import net.shugo.medicineshield.data.model.DailyMedicationItem
+import net.shugo.medicineshield.data.model.DailyNote
+import net.shugo.medicineshield.data.repository.MedicationRepository
 import net.shugo.medicineshield.utils.DateUtils
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Calendar
+import java.util.Locale
 
 class DailyMedicationViewModel(
     application: Application,
@@ -39,23 +40,17 @@ class DailyMedicationViewModel(
     private val _scrollToNote = MutableStateFlow(false)
     val scrollToNote: StateFlow<Boolean> = _scrollToNote.asStateFlow()
 
-    private val _medicationCount = MutableStateFlow(0)
-    val medicationCount: StateFlow<Int> = _medicationCount.asStateFlow()
-
     private var loadJob: Job? = null
     private var noteLoadJob: Job? = null
-    private var countJob: Job? = null
 
     // 各データソースの読み込み完了フラグ
     private var medicationsLoaded = false
     private var noteLoaded = false
-    private var countLoaded = false
 
     init {
         _isLoading.value = true
         loadMedicationsForSelectedDate()
         loadNoteForSelectedDate()
-        loadMedicationCount()
         updateDisplayDate()
     }
 
@@ -206,24 +201,11 @@ class DailyMedicationViewModel(
         }
     }
 
-    private fun loadMedicationCount() {
-        // 前回のcountJobをキャンセル
-        countJob?.cancel()
-
-        countJob = viewModelScope.launch {
-            repository.getMedicationCount().collect { count ->
-                _medicationCount.value = count
-                countLoaded = true
-                updateLoadingState()
-            }
-        }
-    }
-
     /**
      * すべてのデータソースが読み込まれたかチェックし、ローディング状態を更新
      */
     private fun updateLoadingState() {
-        if (medicationsLoaded && noteLoaded && countLoaded) {
+        if (medicationsLoaded && noteLoaded) {
             _isLoading.value = false
         }
     }
