@@ -41,6 +41,7 @@ fun DailyMedicationScreen(
     val selectedDate by viewModel.selectedDate.collectAsState()
     val dailyNote by viewModel.dailyNote.collectAsState()
     val scrollToNote by viewModel.scrollToNote.collectAsState()
+    val medicationCount by viewModel.medicationCount.collectAsState()
 
     var showDatePicker by remember { mutableStateOf(false) }
 
@@ -88,8 +89,8 @@ fun DailyMedicationScreen(
                     }
                 }
 
-                dailyMedications.isEmpty() -> {
-                    EmptyMedicationState(selectedDate, onNavigateToMedicationList)
+                medicationCount == 0 -> {
+                    EmptyMedicationState(onNavigateToMedicationList)
                 }
 
                 else -> {
@@ -225,19 +226,7 @@ fun DailyMedicationDatePickerDialog(
 }
 
 @Composable
-fun EmptyMedicationState(selectedDate: Calendar, onNavigateToMedicationList: () -> Unit) {
-    // 今日かどうか判定
-    val today = Calendar.getInstance()
-    val isToday = selectedDate.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
-                  selectedDate.get(Calendar.DAY_OF_YEAR) == today.get(Calendar.DAY_OF_YEAR)
-    val isFuture = selectedDate.timeInMillis > today.timeInMillis
-
-    val message = when {
-        isToday -> stringResource(R.string.no_medication_today)
-        isFuture -> stringResource(R.string.no_medication_future)
-        else -> stringResource(R.string.no_medication_past)
-    }
-
+fun EmptyMedicationState(onNavigateToMedicationList: () -> Unit) {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
@@ -247,7 +236,7 @@ fun EmptyMedicationState(selectedDate: Calendar, onNavigateToMedicationList: () 
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = message,
+                text = stringResource(R.string.no_medications),
                 fontSize = 18.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

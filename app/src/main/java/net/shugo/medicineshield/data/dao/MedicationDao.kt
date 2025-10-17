@@ -10,6 +10,9 @@ interface MedicationDao {
     @Query("SELECT * FROM medications ORDER BY createdAt DESC")
     fun getAllMedications(): Flow<List<Medication>>
 
+    @Query("SELECT COUNT(*) FROM medications")
+    fun getMedicationCount(): Flow<Int>
+
     /**
      * すべてのMedicationとそのリレーションを取得（履歴含む）
      * 注意: @Relationは全データを取得するため、現在有効なデータのみが必要な場合は

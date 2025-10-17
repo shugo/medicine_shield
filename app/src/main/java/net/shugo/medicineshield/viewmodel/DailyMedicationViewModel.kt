@@ -39,12 +39,17 @@ class DailyMedicationViewModel(
     private val _scrollToNote = MutableStateFlow(false)
     val scrollToNote: StateFlow<Boolean> = _scrollToNote.asStateFlow()
 
+    private val _medicationCount = MutableStateFlow(0)
+    val medicationCount: StateFlow<Int> = _medicationCount.asStateFlow()
+
     private var loadJob: Job? = null
     private var noteLoadJob: Job? = null
+    private var countJob: Job? = null
 
     init {
         loadMedicationsForSelectedDate()
         loadNoteForSelectedDate()
+        loadMedicationCount()
         updateDisplayDate()
     }
 
@@ -175,6 +180,17 @@ class DailyMedicationViewModel(
             val dateString = DateUtils.formatIsoDate(_selectedDate.value)
             repository.getDailyNote(dateString).collect { note ->
                 _dailyNote.value = note
+            }
+        }
+    }
+
+    private fun loadMedicationCount() {
+        // 前回のcountJobをキャンセル
+        countJob?.cancel()
+
+        countJob = viewModelScope.launch {
+            repository.getMedicationCount().collect { count ->
+                _medicationCount.value = count
             }
         }
     }
