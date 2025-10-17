@@ -1,10 +1,12 @@
 package net.shugo.medicineshield.data.repository
 
+import net.shugo.medicineshield.data.dao.DailyNoteDao
 import net.shugo.medicineshield.data.dao.MedicationDao
 import net.shugo.medicineshield.data.dao.MedicationIntakeDao
 import net.shugo.medicineshield.data.dao.MedicationTimeDao
 import net.shugo.medicineshield.data.dao.MedicationConfigDao
 import net.shugo.medicineshield.data.model.CycleType
+import net.shugo.medicineshield.data.model.DailyNote
 import net.shugo.medicineshield.data.model.Medication
 import net.shugo.medicineshield.data.model.MedicationIntake
 import net.shugo.medicineshield.data.model.MedicationTime
@@ -22,7 +24,8 @@ class MedicationRepository(
     private val medicationDao: MedicationDao,
     private val medicationTimeDao: MedicationTimeDao,
     private val medicationIntakeDao: MedicationIntakeDao,
-    private val medicationConfigDao: MedicationConfigDao
+    private val medicationConfigDao: MedicationConfigDao,
+    private val dailyNoteDao: DailyNoteDao
 ) {
     /**
      * すべてのMedicationとそのリレーションを取得（現在有効なもののみ）
@@ -490,17 +493,17 @@ class MedicationRepository(
      * 指定されたタイムスタンプを YYYY-MM-DD 形式に変換
      */
     private fun getDateString(timestamp: Long): String {
-        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        return sdf.format(Date(timestamp))
+        val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
+        return dateFormatter.format(Date(timestamp))
     }
 
     /**
      * YYYY-MM-DD 形式の文字列をタイムスタンプに変換
      */
     private fun parseDateString(dateString: String): Long {
-        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
         return try {
-            sdf.parse(dateString)?.time ?: System.currentTimeMillis()
+            dateFormatter.parse(dateString)?.time ?: System.currentTimeMillis()
         } catch (e: Exception) {
             System.currentTimeMillis()
         }
@@ -572,7 +575,63 @@ class MedicationRepository(
     suspend fun cleanupOldIntakes(daysToKeep: Int = 30) {
         val calendar = Calendar.getInstance()
         calendar.add(Calendar.DAY_OF_YEAR, -daysToKeep)
-        val cutoffDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(calendar.time)
+        val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
+        val cutoffDate = dateFormatter.format(calendar.time)
         medicationIntakeDao.deleteOldIntakes(cutoffDate)
+    }
+
+    // ========== Daily Note Functions ==========
+
+    /**
+     * 指定日のメモを保存または更新
+     */
+    suspend fun saveOrUpdateDailyNote(date: String, content: String) {
+        val existingNote = dailyNoteDao.getNoteByDateSync(date)
+
+        if (existingNote != null) {
+            // 既存のメモを更新（createdAtは保持）
+            val updatedNote = existingNote.copy(
+                content = content,
+                updatedAt = System.currentTimeMillis()
+            )
+            dailyNoteDao.update(updatedNote)
+        } else {
+            // 新規作成
+            val newNote = DailyNote(
+                noteDate = date,
+                content = content,
+                createdAt = System.currentTimeMillis(),
+                updatedAt = System.currentTimeMillis()
+            )
+            dailyNoteDao.insert(newNote)
+        }
+    }
+
+    /**
+     * 指定日のメモを削除
+     */
+    suspend fun deleteDailyNote(date: String) {
+        dailyNoteDao.delete(date)
+    }
+
+    /**
+     * 指定日のメモを取得（Flow）
+     */
+    fun getDailyNote(date: String): Flow<DailyNote?> {
+        return dailyNoteDao.getNoteByDate(date)
+    }
+
+    /**
+     * 指定日より前のメモを取得
+     */
+    suspend fun getPreviousNote(currentDate: String): DailyNote? {
+        return dailyNoteDao.getPreviousNote(currentDate)
+    }
+
+    /**
+     * 指定日より後のメモを取得
+     */
+    suspend fun getNextNote(currentDate: String): DailyNote? {
+        return dailyNoteDao.getNextNote(currentDate)
     }
 }

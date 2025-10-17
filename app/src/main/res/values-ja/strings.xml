@@ -125,6 +125,17 @@
     <string name="remove_intake">削除</string>
     <string name="taken_count">服用 %d 回目</string>
 
+    <!-- Daily Notes -->
+    <string name="note_section_title">メモ</string>
+    <string name="add_note">メモを追加</string>
+    <string name="edit_note">メモを編集</string>
+    <string name="delete_note">メモを削除</string>
+    <string name="note_content">メモ内容</string>
+    <string name="note_content_hint">副作用、症状、その他気づいたことを入力してください</string>
+    <string name="confirm_delete_note">このメモを削除しますか?</string>
+    <string name="previous_note">前のメモ</string>
+    <string name="next_note">次のメモ</string>
+
     <!-- Error Messages -->
     <string name="error_empty_name">お薬の名前を入力してください</string>
     <string name="error_no_times">少なくとも1つの服用時間を設定してください</string>

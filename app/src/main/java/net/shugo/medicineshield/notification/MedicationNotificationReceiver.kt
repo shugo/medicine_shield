@@ -13,6 +13,9 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 class MedicationNotificationReceiver : BroadcastReceiver() {
+    // 固定フォーマットの日付パース/フォーマット用のSimpleDateFormat
+    // Locale.ROOTを使用してロケール依存の動作を避ける
+    private val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
 
     override fun onReceive(context: Context, intent: Intent) {
         val time = intent.getStringExtra(NotificationScheduler.EXTRA_NOTIFICATION_TIME) ?: return
@@ -27,7 +30,8 @@ class MedicationNotificationReceiver : BroadcastReceiver() {
                     database.medicationDao(),
                     database.medicationTimeDao(),
                     database.medicationIntakeDao(),
-                    database.medicationConfigDao()
+                    database.medicationConfigDao(),
+                    database.dailyNoteDao()
                 )
 
                 // 現在日時の薬リストを取得
@@ -62,7 +66,6 @@ class MedicationNotificationReceiver : BroadcastReceiver() {
      * 現在の日付を YYYY-MM-DD 形式で取得
      */
     private fun getCurrentDateString(): String {
-        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        return sdf.format(Date())
+        return dateFormatter.format(Date())
     }
 }

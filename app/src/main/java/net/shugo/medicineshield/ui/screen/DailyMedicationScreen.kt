@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
@@ -37,6 +38,8 @@ fun DailyMedicationScreen(
     val displayDateText by viewModel.displayDateText.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val selectedDate by viewModel.selectedDate.collectAsState()
+    val dailyNote by viewModel.dailyNote.collectAsState()
+    val scrollToNote by viewModel.scrollToNote.collectAsState()
 
     var showDatePicker by remember { mutableStateOf(false) }
 
@@ -90,6 +93,7 @@ fun DailyMedicationScreen(
 
                 else -> {
                     MedicationList(
+                        selectedDate = selectedDate,
                         medications = dailyMedications,
                         onToggleTaken = { medicationId, sequenceNumber, isTaken ->
                             viewModel.toggleMedicationTaken(medicationId, sequenceNumber, isTaken)
@@ -102,7 +106,16 @@ fun DailyMedicationScreen(
                         },
                         onUpdateTakenAt = { medicationId, sequenceNumber, hour, minute ->
                             viewModel.updateTakenAt(medicationId, sequenceNumber, hour, minute)
-                        }
+                        },
+                        dailyNote = dailyNote,
+                        onSaveNote = { content ->
+                            viewModel.saveNote(content)
+                        },
+                        onDeleteNote = {
+                            viewModel.deleteNote()
+                        },
+                        viewModel = viewModel,
+                        scrollToNote = scrollToNote
                     )
                 }
             }
@@ -255,11 +268,17 @@ fun EmptyMedicationState(selectedDate: Calendar, onNavigateToMedicationList: () 
 
 @Composable
 fun MedicationList(
+    selectedDate: Calendar,
     medications: List<DailyMedicationItem>,
     onToggleTaken: (Long, Int, Boolean) -> Unit,
     onAddAsNeeded: (Long) -> Unit,
     onRemoveAsNeeded: (Long, Int) -> Unit,
-    onUpdateTakenAt: (Long, Int, Int, Int) -> Unit
+    onUpdateTakenAt: (Long, Int, Int, Int) -> Unit,
+    dailyNote: net.shugo.medicineshield.data.model.DailyNote?,
+    onSaveNote: (String) -> Unit,
+    onDeleteNote: () -> Unit,
+    viewModel: DailyMedicationViewModel,
+    scrollToNote: Boolean = false
 ) {
     // 頓服薬と定時薬を分離
     val (asNeededMeds, scheduledMeds) = medications.partition { it.isAsNeeded }
@@ -270,9 +289,13 @@ fun MedicationList(
     // 頓服薬を薬ごとにグループ化
     val groupedAsNeededMeds = asNeededMeds.groupBy { it.medicationId }
 
+    // LazyListStateを作成
+    val listState = rememberLazyListState()
+
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+        state = listState
     ) {
         // 定時薬のセクション
         groupedScheduledMeds.forEach { (time, items) ->
@@ -309,6 +332,35 @@ fun MedicationList(
                     )
                 }
             }
+
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+        }
+
+        // メモセクション
+        item {
+            TimeHeader(stringResource(R.string.note_section_title))
+        }
+
+        item {
+            DailyNoteSection(
+                note = dailyNote,
+                onSave = onSaveNote,
+                onDelete = onDeleteNote,
+                viewModel = viewModel,
+                selectedDate = selectedDate,
+            )
+        }
+    }
+
+    val listEndIndex = listState.layoutInfo.totalItemsCount - 1;
+
+    // スクロールトリガー
+    LaunchedEffect(scrollToNote, listEndIndex) {
+        if (scrollToNote) {
+            listState.animateScrollToItem(listState.layoutInfo.totalItemsCount - 1)
+            viewModel.resetScrollToNote()
         }
     }
 }
@@ -520,4 +572,241 @@ fun formatTakenTime(timestamp: Long): String {
         calendar.get(Calendar.HOUR_OF_DAY),
         calendar.get(Calendar.MINUTE)
     )
+}
+
+// ========== Daily Note Components ==========
+
+@Composable
+fun NoteEditDialog(
+    initialContent: String,
+    onSave: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var noteContent by remember { mutableStateOf(initialContent) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = if (initialContent.isEmpty()) {
+                    stringResource(R.string.add_note)
+                } else {
+                    stringResource(R.string.edit_note)
+                }
+            )
+        },
+        text = {
+            OutlinedTextField(
+                value = noteContent,
+                onValueChange = { noteContent = it },
+                label = { Text(stringResource(R.string.note_content)) },
+                placeholder = { Text(stringResource(R.string.note_content_hint)) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp),
+                maxLines = 10,
+                singleLine = false
+            )
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    if (noteContent.isNotBlank()) {
+                        onSave(noteContent)
+                        onDismiss()
+                    }
+                }
+            ) {
+                Text(stringResource(R.string.save))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.cancel))
+            }
+        }
+    )
+}
+
+@Composable
+fun NoteCard(
+    content: String,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
+) {
+    var showDeleteConfirmation by remember { mutableStateOf(false) }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+            .clickable(onClick = onEdit),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.Top,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = content,
+                fontSize = 14.sp,
+                modifier = Modifier.weight(1f),
+                color = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+
+            Row {
+                IconButton(
+                    onClick = onEdit,
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = stringResource(R.string.edit_note),
+                        modifier = Modifier.size(18.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+
+                IconButton(
+                    onClick = { showDeleteConfirmation = true },
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = stringResource(R.string.delete_note),
+                        modifier = Modifier.size(18.dp),
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                }
+            }
+        }
+    }
+
+    if (showDeleteConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirmation = false },
+            title = { Text(stringResource(R.string.delete_note)) },
+            text = { Text(stringResource(R.string.confirm_delete_note)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onDelete()
+                        showDeleteConfirmation = false
+                    }
+                ) {
+                    Text(stringResource(R.string.delete_note))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirmation = false }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
+        )
+    }
+}
+
+@Composable
+fun DailyNoteSection(
+    note: net.shugo.medicineshield.data.model.DailyNote?,
+    onSave: (String) -> Unit,
+    onDelete: () -> Unit,
+    viewModel: DailyMedicationViewModel,
+    selectedDate: Calendar
+) {
+    var showNoteDialog by remember { mutableStateOf(false) }
+    var hasPrevious by remember { mutableStateOf(false) }
+    var hasNext by remember { mutableStateOf(false) }
+
+    // メモの前後存在チェック（selectedDateも監視）
+    LaunchedEffect(selectedDate) {
+        hasPrevious = viewModel.hasPreviousNote()
+        hasNext = viewModel.hasNextNote()
+    }
+
+    Column(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        // メモの表示または追加ボタン
+        if (note != null) {
+            NoteCard(
+                content = note.content,
+                onEdit = { showNoteDialog = true },
+                onDelete = onDelete
+            )
+        } else {
+            OutlinedButton(
+                onClick = { showNoteDialog = true },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(stringResource(R.string.add_note))
+            }
+        }
+
+        // ナビゲーションボタン（前後のメモがある場合のみ表示）
+        if (hasPrevious || hasNext) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                // 前のメモへ
+                if (hasPrevious) {
+                    OutlinedButton(
+                        onClick = { viewModel.navigateToPreviousNote() },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.KeyboardArrowLeft,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(stringResource(R.string.previous_note))
+                    }
+                } else {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                // 次のメモへ
+                if (hasNext) {
+                    OutlinedButton(
+                        onClick = { viewModel.navigateToNextNote() },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(stringResource(R.string.next_note))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Icon(
+                            imageVector = Icons.Default.KeyboardArrowRight,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                } else {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+            }
+        }
+    }
+
+    if (showNoteDialog) {
+        NoteEditDialog(
+            initialContent = note?.content ?: "",
+            onSave = onSave,
+            onDismiss = { showNoteDialog = false }
+        )
+    }
 }

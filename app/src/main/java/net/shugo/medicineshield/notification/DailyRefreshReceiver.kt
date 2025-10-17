@@ -22,7 +22,8 @@ class DailyRefreshReceiver : BroadcastReceiver() {
                     database.medicationDao(),
                     database.medicationTimeDao(),
                     database.medicationIntakeDao(),
-                    database.medicationConfigDao()
+                    database.medicationConfigDao(),
+                    database.dailyNoteDao()
                 )
 
                 // 通知チャネルを作成
