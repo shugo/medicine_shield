@@ -1,24 +1,26 @@
 package net.shugo.medicineshield.data.repository
 
-import net.shugo.medicineshield.data.dao.DailyNoteDao
-import net.shugo.medicineshield.data.dao.MedicationDao
-import net.shugo.medicineshield.data.dao.MedicationIntakeDao
-import net.shugo.medicineshield.data.dao.MedicationTimeDao
-import net.shugo.medicineshield.data.dao.MedicationConfigDao
-import net.shugo.medicineshield.data.model.CycleType
-import net.shugo.medicineshield.data.model.DailyNote
-import net.shugo.medicineshield.data.model.Medication
-import net.shugo.medicineshield.data.model.MedicationIntake
-import net.shugo.medicineshield.data.model.MedicationTime
-import net.shugo.medicineshield.data.model.MedicationConfig
-import net.shugo.medicineshield.data.model.MedicationWithTimes
-import net.shugo.medicineshield.data.model.DailyMedicationItem
-import net.shugo.medicineshield.utils.DateUtils
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
+import net.shugo.medicineshield.data.dao.DailyNoteDao
+import net.shugo.medicineshield.data.dao.MedicationConfigDao
+import net.shugo.medicineshield.data.dao.MedicationDao
+import net.shugo.medicineshield.data.dao.MedicationIntakeDao
+import net.shugo.medicineshield.data.dao.MedicationTimeDao
+import net.shugo.medicineshield.data.model.CycleType
+import net.shugo.medicineshield.data.model.DailyMedicationItem
+import net.shugo.medicineshield.data.model.DailyNote
+import net.shugo.medicineshield.data.model.Medication
+import net.shugo.medicineshield.data.model.MedicationConfig
+import net.shugo.medicineshield.data.model.MedicationIntake
+import net.shugo.medicineshield.data.model.MedicationTime
+import net.shugo.medicineshield.data.model.MedicationWithTimes
+import net.shugo.medicineshield.utils.DateUtils
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 class MedicationRepository(
     private val medicationDao: MedicationDao,
@@ -337,7 +339,7 @@ class MedicationRepository(
                 // 対象日に有効なConfigを取得
                 val validConfig = medicationWithTimes.getConfigForDate(targetDate)
 
-                if (validConfig != null) {
+                if (validConfig != null && shouldTakeMedication(validConfig, targetDate)) {
                     if (validConfig.isAsNeeded) {
                         // 頓服薬の処理
                         // その日に服用済みのレコードをすべて取得
@@ -377,7 +379,7 @@ class MedicationRepository(
                                 isAsNeeded = true
                             )
                         )
-                    } else if (shouldTakeMedication(validConfig, targetDate)) {
+                    } else {
                         // 定時薬の処理（既存のロジック）
                         // 対象日に有効な時刻を取得
                         val validTimes = medicationWithTimes.getTimesForDate(targetDate)
@@ -469,6 +471,9 @@ class MedicationRepository(
         // 期間チェック
         if (normalizedTargetDate < normalizedStartDate) return false
         if (normalizedEndDate != null && normalizedTargetDate > normalizedEndDate) return false
+
+        // 頓服薬チェック
+        if (config.isAsNeeded) return true
 
         return when (config.cycleType) {
             CycleType.DAILY -> true

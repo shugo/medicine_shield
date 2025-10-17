@@ -1,21 +1,35 @@
 package net.shugo.medicineshield.data.repository
 
 import app.cash.turbine.test
-import io.mockk.*
+import io.mockk.Runs
+import io.mockk.clearAllMocks
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.every
+import io.mockk.just
+import io.mockk.mockk
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
+import net.shugo.medicineshield.data.dao.DailyNoteDao
+import net.shugo.medicineshield.data.dao.MedicationConfigDao
 import net.shugo.medicineshield.data.dao.MedicationDao
 import net.shugo.medicineshield.data.dao.MedicationIntakeDao
 import net.shugo.medicineshield.data.dao.MedicationTimeDao
-import net.shugo.medicineshield.data.dao.MedicationConfigDao
-import net.shugo.medicineshield.data.model.*
+import net.shugo.medicineshield.data.model.CycleType
+import net.shugo.medicineshield.data.model.Medication
+import net.shugo.medicineshield.data.model.MedicationConfig
+import net.shugo.medicineshield.data.model.MedicationIntake
+import net.shugo.medicineshield.data.model.MedicationTime
 import org.junit.After
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import java.time.LocalDate
 import java.time.ZoneId
-import java.util.*
 
 class MedicationRepositoryTest {
 
@@ -23,6 +37,7 @@ class MedicationRepositoryTest {
     private lateinit var medicationTimeDao: MedicationTimeDao
     private lateinit var medicationIntakeDao: MedicationIntakeDao
     private lateinit var medicationConfigDao: MedicationConfigDao
+    private lateinit var dailyNoteDao: DailyNoteDao
     private lateinit var repository: MedicationRepository
 
     @Before
@@ -31,7 +46,8 @@ class MedicationRepositoryTest {
         medicationTimeDao = mockk()
         medicationIntakeDao = mockk()
         medicationConfigDao = mockk()
-        repository = MedicationRepository(medicationDao, medicationTimeDao, medicationIntakeDao, medicationConfigDao)
+        dailyNoteDao = mockk()
+        repository = MedicationRepository(medicationDao, medicationTimeDao, medicationIntakeDao, medicationConfigDao, dailyNoteDao)
     }
 
     @After
@@ -319,6 +335,47 @@ class MedicationRepositoryTest {
     }
 
     @Test
+    fun `getMedications should respect start and end dates for as-needed medications`() = runTest {
+        // Given
+        val medication = createSampleMedication(id = 1, name = "Date Range Med")
+        val config = createSampleConfig(
+            id = 1,
+            medicationId = 1,
+            isAsNeeded = true,
+            medicationStartDate = parseDate("2025-10-05"),
+            medicationEndDate = parseDate("2025-10-15"),
+            validFrom = 0,
+            validTo = null
+        )
+        val times = listOf(
+            MedicationTime(id = 1, medicationId = 1, sequenceNumber = 1, time = "08:00", validFrom = 0, validTo = null)
+        )
+
+        every { medicationDao.getAllMedications() } returns flowOf(listOf(medication))
+        every { medicationTimeDao.getAllTimesFlow() } returns flowOf(times)
+        every { medicationConfigDao.getAllConfigsFlow() } returns flowOf(listOf(config))
+        every { medicationIntakeDao.getIntakesByDate(any()) } returns flowOf(emptyList())
+
+        // Before start date
+        repository.getMedications("2025-10-04").test {
+            assertEquals(0, awaitItem().size)
+            awaitComplete()
+        }
+
+        // Within range
+        repository.getMedications("2025-10-10").test {
+            assertEquals(1, awaitItem().size)
+            awaitComplete()
+        }
+
+        // After end date
+        repository.getMedications("2025-10-16").test {
+            assertEquals(0, awaitItem().size)
+            awaitComplete()
+        }
+    }
+
+    @Test
     fun `getMedications should show past times even after deletion`() = runTest {
         // Given: Yesterday was 2025-10-09, today is 2025-10-10
         val yesterday = "2025-10-09"
@@ -526,6 +583,7 @@ class MedicationRepositoryTest {
     private fun createSampleConfig(
         id: Long,
         medicationId: Long,
+        isAsNeeded: Boolean = false,
         cycleType: CycleType = CycleType.DAILY,
         cycleValue: String? = null,
         medicationStartDate: Long = System.currentTimeMillis(),
@@ -536,6 +594,7 @@ class MedicationRepositoryTest {
         return MedicationConfig(
             id = id,
             medicationId = medicationId,
+            isAsNeeded = isAsNeeded,
             cycleType = cycleType,
             cycleValue = cycleValue,
             medicationStartDate = medicationStartDate,
