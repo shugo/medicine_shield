@@ -46,7 +46,13 @@ class DailyMedicationViewModel(
     private var noteLoadJob: Job? = null
     private var countJob: Job? = null
 
+    // 各データソースの読み込み完了フラグ
+    private var medicationsLoaded = false
+    private var noteLoaded = false
+    private var countLoaded = false
+
     init {
+        _isLoading.value = true
         loadMedicationsForSelectedDate()
         loadNoteForSelectedDate()
         loadMedicationCount()
@@ -58,11 +64,11 @@ class DailyMedicationViewModel(
         loadJob?.cancel()
 
         loadJob = viewModelScope.launch {
-            _isLoading.value = true
             val dateString = DateUtils.formatIsoDate(_selectedDate.value)
             repository.getMedications(dateString).collect { medications ->
                 _dailyMedications.value = medications
-                _isLoading.value = false
+                medicationsLoaded = true
+                updateLoadingState()
             }
         }
     }
@@ -92,6 +98,7 @@ class DailyMedicationViewModel(
         val newDate = _selectedDate.value.clone() as Calendar
         newDate.add(Calendar.DAY_OF_YEAR, -1)
         _selectedDate.value = newDate
+        resetLoadingFlags()
         updateDisplayDate()
         loadMedicationsForSelectedDate()
         loadNoteForSelectedDate()
@@ -101,6 +108,7 @@ class DailyMedicationViewModel(
         val newDate = _selectedDate.value.clone() as Calendar
         newDate.add(Calendar.DAY_OF_YEAR, 1)
         _selectedDate.value = newDate
+        resetLoadingFlags()
         updateDisplayDate()
         loadMedicationsForSelectedDate()
         loadNoteForSelectedDate()
@@ -110,9 +118,20 @@ class DailyMedicationViewModel(
         val newDate = Calendar.getInstance()
         newDate.set(year, month, dayOfMonth)
         _selectedDate.value = newDate
+        resetLoadingFlags()
         updateDisplayDate()
         loadMedicationsForSelectedDate()
         loadNoteForSelectedDate()
+    }
+
+    /**
+     * 日付変更時にローディングフラグをリセット
+     */
+    private fun resetLoadingFlags() {
+        _isLoading.value = true
+        medicationsLoaded = false
+        noteLoaded = false
+        // countLoadedはリセットしない（薬の件数は日付に依存しないため）
     }
 
     fun toggleMedicationTaken(medicationId: Long, sequenceNumber: Int, currentStatus: Boolean) {
@@ -160,6 +179,7 @@ class DailyMedicationViewModel(
     }
 
     fun refreshData() {
+        resetLoadingFlags()
         updateDisplayDate()
         loadMedicationsForSelectedDate()
         loadNoteForSelectedDate()
@@ -180,6 +200,8 @@ class DailyMedicationViewModel(
             val dateString = DateUtils.formatIsoDate(_selectedDate.value)
             repository.getDailyNote(dateString).collect { note ->
                 _dailyNote.value = note
+                noteLoaded = true
+                updateLoadingState()
             }
         }
     }
@@ -191,7 +213,18 @@ class DailyMedicationViewModel(
         countJob = viewModelScope.launch {
             repository.getMedicationCount().collect { count ->
                 _medicationCount.value = count
+                countLoaded = true
+                updateLoadingState()
             }
+        }
+    }
+
+    /**
+     * すべてのデータソースが読み込まれたかチェックし、ローディング状態を更新
+     */
+    private fun updateLoadingState() {
+        if (medicationsLoaded && noteLoaded && countLoaded) {
+            _isLoading.value = false
         }
     }
 
@@ -230,6 +263,7 @@ class DailyMedicationViewModel(
                 val newCalendar = DateUtils.parseIsoDate(previousNote.noteDate)
                 if (newCalendar != null) {
                     _selectedDate.value = newCalendar
+                    resetLoadingFlags()
                     updateDisplayDate()
                     loadMedicationsForSelectedDate()
                     loadNoteForSelectedDate()
@@ -252,6 +286,7 @@ class DailyMedicationViewModel(
                 val newCalendar = DateUtils.parseIsoDate(nextNote.noteDate)
                 if (newCalendar != null) {
                     _selectedDate.value = newCalendar
+                    resetLoadingFlags()
                     updateDisplayDate()
                     loadMedicationsForSelectedDate()
                     loadNoteForSelectedDate()
