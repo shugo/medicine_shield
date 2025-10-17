@@ -8,6 +8,7 @@ import net.shugo.medicineshield.data.dao.MedicationDao
 import net.shugo.medicineshield.data.dao.MedicationIntakeDao
 import net.shugo.medicineshield.data.dao.MedicationTimeDao
 import net.shugo.medicineshield.data.dao.MedicationConfigDao
+import net.shugo.medicineshield.data.dao.DailyNoteDao
 import net.shugo.medicineshield.data.model.*
 import org.junit.After
 import org.junit.Assert.*
@@ -23,6 +24,7 @@ class MedicationRepositoryTest {
     private lateinit var medicationTimeDao: MedicationTimeDao
     private lateinit var medicationIntakeDao: MedicationIntakeDao
     private lateinit var medicationConfigDao: MedicationConfigDao
+    private lateinit var dailyNoteDao: DailyNoteDao
     private lateinit var repository: MedicationRepository
 
     @Before
@@ -31,7 +33,8 @@ class MedicationRepositoryTest {
         medicationTimeDao = mockk()
         medicationIntakeDao = mockk()
         medicationConfigDao = mockk()
-        repository = MedicationRepository(medicationDao, medicationTimeDao, medicationIntakeDao, medicationConfigDao)
+        dailyNoteDao = mockk()
+        repository = MedicationRepository(medicationDao, medicationTimeDao, medicationIntakeDao, medicationConfigDao, dailyNoteDao)
     }
 
     @After
