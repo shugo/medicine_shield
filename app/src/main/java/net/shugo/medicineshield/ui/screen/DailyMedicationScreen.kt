@@ -358,7 +358,7 @@ fun MedicationList(
         }
     }
 
-    val listEndIndex = listState.layoutInfo.totalItemsCount - 1;
+    val listEndIndex = listState.layoutInfo.totalItemsCount - 1
 
     // スクロールトリガー
     LaunchedEffect(scrollToNote, listEndIndex) {
