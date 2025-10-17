@@ -93,6 +93,7 @@ fun DailyMedicationScreen(
 
                 else -> {
                     MedicationList(
+                        selectedDate = selectedDate,
                         medications = dailyMedications,
                         onToggleTaken = { medicationId, sequenceNumber, isTaken ->
                             viewModel.toggleMedicationTaken(medicationId, sequenceNumber, isTaken)
@@ -267,6 +268,7 @@ fun EmptyMedicationState(selectedDate: Calendar, onNavigateToMedicationList: () 
 
 @Composable
 fun MedicationList(
+    selectedDate: Calendar,
     medications: List<DailyMedicationItem>,
     onToggleTaken: (Long, Int, Boolean) -> Unit,
     onAddAsNeeded: (Long) -> Unit,
@@ -347,7 +349,7 @@ fun MedicationList(
                 onSave = onSaveNote,
                 onDelete = onDeleteNote,
                 viewModel = viewModel,
-                selectedDate = viewModel.selectedDate.collectAsState().value
+                selectedDate = selectedDate,
             )
         }
     }
