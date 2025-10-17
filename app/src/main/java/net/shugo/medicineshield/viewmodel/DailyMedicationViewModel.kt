@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import net.shugo.medicineshield.utils.DateUtils
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -53,7 +54,7 @@ class DailyMedicationViewModel(
 
         loadJob = viewModelScope.launch {
             _isLoading.value = true
-            val dateString = formatDateToString(_selectedDate.value)
+            val dateString = DateUtils.formatIsoDate(_selectedDate.value)
             repository.getMedications(dateString).collect { medications ->
                 _dailyMedications.value = medications
                 _isLoading.value = false
@@ -111,7 +112,7 @@ class DailyMedicationViewModel(
 
     fun toggleMedicationTaken(medicationId: Long, sequenceNumber: Int, currentStatus: Boolean) {
         viewModelScope.launch {
-            val dateString = formatDateToString(_selectedDate.value)
+            val dateString = DateUtils.formatIsoDate(_selectedDate.value)
             repository.updateIntakeStatus(medicationId, sequenceNumber, !currentStatus, dateString)
         }
     }
@@ -121,7 +122,7 @@ class DailyMedicationViewModel(
      */
     fun addAsNeededMedication(medicationId: Long) {
         viewModelScope.launch {
-            val dateString = formatDateToString(_selectedDate.value)
+            val dateString = DateUtils.formatIsoDate(_selectedDate.value)
             repository.addAsNeededIntake(medicationId, dateString)
         }
     }
@@ -131,7 +132,7 @@ class DailyMedicationViewModel(
      */
     fun removeAsNeededMedication(medicationId: Long, sequenceNumber: Int) {
         viewModelScope.launch {
-            val dateString = formatDateToString(_selectedDate.value)
+            val dateString = DateUtils.formatIsoDate(_selectedDate.value)
             repository.removeAsNeededIntake(medicationId, sequenceNumber, dateString)
         }
     }
@@ -141,7 +142,7 @@ class DailyMedicationViewModel(
      */
     fun updateTakenAt(medicationId: Long, sequenceNumber: Int, hour: Int, minute: Int) {
         viewModelScope.launch {
-            val dateString = formatDateToString(_selectedDate.value)
+            val dateString = DateUtils.formatIsoDate(_selectedDate.value)
             // 選択された日付の指定時刻にタイムスタンプを設定
             val calendar = _selectedDate.value.clone() as Calendar
             calendar.set(Calendar.HOUR_OF_DAY, hour)
@@ -171,7 +172,7 @@ class DailyMedicationViewModel(
         noteLoadJob?.cancel()
 
         noteLoadJob = viewModelScope.launch {
-            val dateString = formatDateToString(_selectedDate.value)
+            val dateString = DateUtils.formatIsoDate(_selectedDate.value)
             repository.getDailyNote(dateString).collect { note ->
                 _dailyNote.value = note
             }
@@ -185,7 +186,7 @@ class DailyMedicationViewModel(
         if (content.isBlank()) return
 
         viewModelScope.launch {
-            val dateString = formatDateToString(_selectedDate.value)
+            val dateString = DateUtils.formatIsoDate(_selectedDate.value)
             repository.saveOrUpdateDailyNote(dateString, content.trim())
         }
     }
@@ -195,7 +196,7 @@ class DailyMedicationViewModel(
      */
     fun deleteNote() {
         viewModelScope.launch {
-            val dateString = formatDateToString(_selectedDate.value)
+            val dateString = DateUtils.formatIsoDate(_selectedDate.value)
             repository.deleteDailyNote(dateString)
         }
     }
@@ -205,16 +206,13 @@ class DailyMedicationViewModel(
      */
     fun navigateToPreviousNote() {
         viewModelScope.launch {
-            val currentDateString = formatDateToString(_selectedDate.value)
+            val currentDateString = DateUtils.formatIsoDate(_selectedDate.value)
             val previousNote = repository.getPreviousNote(currentDateString)
 
             if (previousNote != null) {
                 // 日付文字列をCalendarに変換
-                val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
-                val date = dateFormatter.parse(previousNote.noteDate)
-                if (date != null) {
-                    val newCalendar = Calendar.getInstance()
-                    newCalendar.time = date
+                val newCalendar = DateUtils.parseIsoDate(previousNote.noteDate)
+                if (newCalendar != null) {
                     _selectedDate.value = newCalendar
                     updateDisplayDate()
                     loadMedicationsForSelectedDate()
@@ -230,16 +228,13 @@ class DailyMedicationViewModel(
      */
     fun navigateToNextNote() {
         viewModelScope.launch {
-            val currentDateString = formatDateToString(_selectedDate.value)
+            val currentDateString = DateUtils.formatIsoDate(_selectedDate.value)
             val nextNote = repository.getNextNote(currentDateString)
 
             if (nextNote != null) {
                 // 日付文字列をCalendarに変換
-                val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
-                val date = dateFormatter.parse(nextNote.noteDate)
-                if (date != null) {
-                    val newCalendar = Calendar.getInstance()
-                    newCalendar.time = date
+                val newCalendar = DateUtils.parseIsoDate(nextNote.noteDate)
+                if (newCalendar != null) {
                     _selectedDate.value = newCalendar
                     updateDisplayDate()
                     loadMedicationsForSelectedDate()
@@ -261,7 +256,7 @@ class DailyMedicationViewModel(
      * 前のメモが存在するかチェック
      */
     suspend fun hasPreviousNote(): Boolean {
-        val currentDateString = formatDateToString(_selectedDate.value)
+        val currentDateString = DateUtils.formatIsoDate(_selectedDate.value)
         return repository.getPreviousNote(currentDateString) != null
     }
 
@@ -269,15 +264,8 @@ class DailyMedicationViewModel(
      * 次のメモが存在するかチェック
      */
     suspend fun hasNextNote(): Boolean {
-        val currentDateString = formatDateToString(_selectedDate.value)
+        val currentDateString = DateUtils.formatIsoDate(_selectedDate.value)
         return repository.getNextNote(currentDateString) != null
     }
 
-    /**
-     * CalendarをYYYY-MM-DD形式の文字列に変換
-     */
-    private fun formatDateToString(calendar: Calendar): String {
-        val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
-        return dateFormatter.format(calendar.time)
-    }
 }
