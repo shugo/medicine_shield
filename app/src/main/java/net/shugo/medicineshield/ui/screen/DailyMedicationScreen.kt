@@ -21,7 +21,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.launch
 import net.shugo.medicineshield.R
 import net.shugo.medicineshield.data.model.DailyMedicationItem
 import net.shugo.medicineshield.viewmodel.DailyMedicationViewModel
@@ -291,29 +290,6 @@ fun MedicationList(
     // LazyListStateを作成
     val listState = rememberLazyListState()
 
-    // アイテム数をカウント（メモセクションのインデックスを計算するため）
-    // 各時刻グループ: header(1) + items(n) + spacer(1) = n + 2
-    val scheduledItemCount = groupedScheduledMeds.values.sumOf { it.size + 2 }
-
-    // 頓服薬セクション: header(1) + items(n) + spacer(1)
-    val asNeededItemCount = if (groupedAsNeededMeds.isNotEmpty()) {
-        1 + groupedAsNeededMeds.values.sumOf { it.size } + 1
-    } else {
-        0
-    }
-
-    // メモセクションの最後のアイテム（content）のインデックス
-    // scheduledItemCount + asNeededItemCount + 1(header) + 1(content) - 1 = scheduledItemCount + asNeededItemCount + 1
-    val noteContentIndex = scheduledItemCount + asNeededItemCount + 1
-
-    // スクロールトリガー
-    LaunchedEffect(scrollToNote) {
-        if (scrollToNote) {
-            listState.animateScrollToItem(noteContentIndex)
-            viewModel.resetScrollToNote()
-        }
-    }
-
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
@@ -373,6 +349,16 @@ fun MedicationList(
                 viewModel = viewModel,
                 selectedDate = viewModel.selectedDate.collectAsState().value
             )
+        }
+    }
+
+    val listEndIndex = listState.layoutInfo.totalItemsCount - 1;
+
+    // スクロールトリガー
+    LaunchedEffect(scrollToNote, listEndIndex) {
+        if (scrollToNote) {
+            listState.animateScrollToItem(listState.layoutInfo.totalItemsCount - 1)
+            viewModel.resetScrollToNote()
         }
     }
 }
