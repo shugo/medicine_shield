@@ -12,7 +12,6 @@ import net.shugo.medicineshield.data.model.MedicationWithTimes
 import net.shugo.medicineshield.data.preferences.SettingsPreferences
 import net.shugo.medicineshield.data.repository.MedicationRepository
 import net.shugo.medicineshield.utils.DateUtils
-import java.text.SimpleDateFormat
 import java.util.*
 
 class NotificationScheduler(
