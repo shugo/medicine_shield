@@ -637,7 +637,7 @@ fun NoteEditDialog(
                 value = noteContent,
                 onValueChange = { noteContent = it },
                 label = { Text(stringResource(R.string.note_content)) },
-                placeholder = { Text(stringResource(R.string.note_content_hint)) },
+                placeholder = { Text("") },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(200.dp),

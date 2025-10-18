@@ -130,8 +130,7 @@
     <string name="add_note">Add Note</string>
     <string name="edit_note">Edit Note</string>
     <string name="delete_note">Delete Note</string>
-    <string name="note_content">Note Content</string>
-    <string name="note_content_hint">Enter side effects, symptoms, or observations...</string>
+    <string name="note_content">Note</string>
     <string name="confirm_delete_note">Delete this note?</string>
     <string name="previous_note">Previous Note</string>
     <string name="next_note">Next Note</string>
