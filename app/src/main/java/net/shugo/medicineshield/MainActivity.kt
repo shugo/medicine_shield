@@ -89,12 +89,13 @@ class MainActivity : ComponentActivity() {
         scheduledDateState.value = intent?.getStringExtra(NotificationHelper.EXTRA_SCHEDULED_DATE)
 
         setContent {
+            val scheduledDate = scheduledDateState.value  // Stateの値をComposable内で読み取る
             MedicineShieldTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    MedicineShieldApp(repository, scheduledDateState.value)
+                    MedicineShieldApp(repository, scheduledDate)
                 }
             }
         }
