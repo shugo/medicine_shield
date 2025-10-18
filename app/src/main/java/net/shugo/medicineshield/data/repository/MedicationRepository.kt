@@ -14,6 +14,7 @@ import net.shugo.medicineshield.data.model.DailyNote
 import net.shugo.medicineshield.data.model.Medication
 import net.shugo.medicineshield.data.model.MedicationConfig
 import net.shugo.medicineshield.data.model.MedicationIntake
+import net.shugo.medicineshield.data.model.MedicationIntakeStatus
 import net.shugo.medicineshield.data.model.MedicationTime
 import net.shugo.medicineshield.data.model.MedicationWithTimes
 import net.shugo.medicineshield.utils.DateUtils
@@ -342,6 +343,13 @@ class MedicationRepository(
 
                         // 服用済みのレコードを表示
                         for (intake in takenIntakes) {
+                            // 服用状態を判定
+                            val status = when {
+                                intake.isCanceled -> MedicationIntakeStatus.CANCELED
+                                intake.takenAt != null -> MedicationIntakeStatus.TAKEN
+                                else -> MedicationIntakeStatus.UNCHECKED
+                            }
+
                             dailyItems.add(
                                 DailyMedicationItem(
                                     medicationId = medication.id,
@@ -350,10 +358,9 @@ class MedicationRepository(
                                     scheduledTime = "",  // 頓服は時刻なし
                                     dose = validConfig.dose,  // MedicationConfig.doseを使用
                                     doseUnit = validConfig.doseUnit,
-                                    isTaken = true,
+                                    status = status,
                                     takenAt = intake.takenAt,
-                                    isAsNeeded = true,
-                                    isCanceled = intake.isCanceled
+                                    isAsNeeded = true
                                 )
                             )
                         }
@@ -368,10 +375,9 @@ class MedicationRepository(
                                 scheduledTime = "",  // 頓服は時刻なし
                                 dose = validConfig.dose,  // MedicationConfig.doseを使用
                                 doseUnit = validConfig.doseUnit,
-                                isTaken = false,
+                                status = MedicationIntakeStatus.UNCHECKED,
                                 takenAt = null,
-                                isAsNeeded = true,
-                                isCanceled = false
+                                isAsNeeded = true
                             )
                         )
                     } else {
@@ -383,6 +389,13 @@ class MedicationRepository(
                             val key = "${medication.id}_${medTime.sequenceNumber}"
                             val intake = intakeMap[key]
 
+                            // 服用状態を判定
+                            val status = when {
+                                intake?.isCanceled == true -> MedicationIntakeStatus.CANCELED
+                                intake?.takenAt != null -> MedicationIntakeStatus.TAKEN
+                                else -> MedicationIntakeStatus.UNCHECKED
+                            }
+
                             dailyItems.add(
                                 DailyMedicationItem(
                                     medicationId = medication.id,
@@ -391,10 +404,9 @@ class MedicationRepository(
                                     scheduledTime = medTime.time,
                                     dose = medTime.dose,
                                     doseUnit = validConfig.doseUnit,
-                                    isTaken = intake?.takenAt != null,
+                                    status = status,
                                     takenAt = intake?.takenAt,
-                                    isAsNeeded = false,
-                                    isCanceled = intake?.isCanceled ?: false
+                                    isAsNeeded = false
                                 )
                             )
                         }
@@ -681,7 +693,7 @@ class MedicationRepository(
     }
 
     /**
-     * 服用のキャンセルを取り消す
+     * 服用のキャンセルを取り消す（MedicationIntakeレコードを削除して未服用状態に戻す）
      */
     suspend fun uncancelIntake(
         medicationId: Long,
@@ -693,14 +705,8 @@ class MedicationRepository(
         )
 
         if (existingIntake != null) {
-            // キャンセルを取り消す際は、takenAtもクリアして未服用状態に戻す
-            medicationIntakeDao.update(
-                existingIntake.copy(
-                    takenAt = null,
-                    isCanceled = false,
-                    updatedAt = System.currentTimeMillis()
-                )
-            )
+            // キャンセルを取り消す際は、レコード自体を削除して未服用状態に戻す
+            medicationIntakeDao.delete(existingIntake)
         }
     }
 }

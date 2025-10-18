@@ -19,6 +19,7 @@ import net.shugo.medicineshield.data.model.CycleType
 import net.shugo.medicineshield.data.model.Medication
 import net.shugo.medicineshield.data.model.MedicationConfig
 import net.shugo.medicineshield.data.model.MedicationIntake
+import net.shugo.medicineshield.data.model.MedicationIntakeStatus
 import net.shugo.medicineshield.data.model.MedicationTime
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -203,10 +204,10 @@ class MedicationRepositoryTest {
             assertEquals(2, items.size)
             // Sorted by time
             assertEquals("08:00", items[0].scheduledTime)
-            assertTrue(items[0].isTaken)
+            assertEquals(MedicationIntakeStatus.TAKEN, items[0].status)
             assertNotNull(items[0].takenAt)
             assertEquals("20:00", items[1].scheduledTime)
-            assertFalse(items[1].isTaken)
+            assertEquals(MedicationIntakeStatus.UNCHECKED, items[1].status)
             assertNull(items[1].takenAt)
             awaitComplete()
         }
