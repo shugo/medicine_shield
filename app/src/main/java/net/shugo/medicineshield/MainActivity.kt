@@ -89,13 +89,12 @@ class MainActivity : ComponentActivity() {
         scheduledDateState.value = intent?.getStringExtra(NotificationHelper.EXTRA_SCHEDULED_DATE)
 
         setContent {
-            val scheduledDate = scheduledDateState.value  // Stateの値をComposable内で読み取る
             MedicineShieldTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    MedicineShieldApp(repository, scheduledDate)
+                    MedicineShieldApp(repository, scheduledDateState)
                 }
             }
         }
@@ -171,7 +170,10 @@ fun MedicineShieldTheme(content: @Composable () -> Unit) {
 }
 
 @Composable
-fun MedicineShieldApp(repository: MedicationRepository, scheduledDate: String? = null) {
+fun MedicineShieldApp(
+    repository: MedicationRepository,
+    scheduledDateState: androidx.compose.runtime.State<String?>
+) {
     val navController = rememberNavController()
     val context = LocalContext.current
 
@@ -185,6 +187,7 @@ fun MedicineShieldApp(repository: MedicationRepository, scheduledDate: String? =
             )
 
             // 通知から起動された場合、その日付に移動
+            val scheduledDate = scheduledDateState.value  // Composable内でStateを読み取る
             androidx.compose.runtime.LaunchedEffect(scheduledDate) {
                 scheduledDate?.let {
                     viewModel.setDateFromNotification(it)
