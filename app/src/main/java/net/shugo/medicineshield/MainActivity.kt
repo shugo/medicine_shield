@@ -173,7 +173,7 @@ fun MedicineShieldTheme(content: @Composable () -> Unit) {
 @Composable
 fun MedicineShieldApp(
     repository: MedicationRepository,
-    scheduledDateState: State<String?>
+    scheduledDateState: androidx.compose.runtime.MutableState<String?>
 ) {
     val navController = rememberNavController()
     val context = LocalContext.current
@@ -192,6 +192,8 @@ fun MedicineShieldApp(
             if (scheduledDate != null) {
                 LaunchedEffect(scheduledDate) {
                     viewModel.setDateFromNotification(scheduledDate)
+                    // 処理完了後にクリアして、次の通知で再実行できるようにする
+                    scheduledDateState.value = null
                 }
             }
 
