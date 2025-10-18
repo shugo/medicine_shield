@@ -13,6 +13,8 @@ import net.shugo.medicineshield.R
 import net.shugo.medicineshield.data.model.DailyMedicationItem
 import net.shugo.medicineshield.data.model.DailyNote
 import net.shugo.medicineshield.data.repository.MedicationRepository
+import net.shugo.medicineshield.notification.NotificationHelper
+import net.shugo.medicineshield.notification.NotificationScheduler
 import net.shugo.medicineshield.utils.DateUtils
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -46,6 +48,10 @@ class DailyMedicationViewModel(
     // 各データソースの読み込み完了フラグ
     private var medicationsLoaded = false
     private var noteLoaded = false
+
+    // 通知管理用
+    private val notificationHelper = NotificationHelper(application.applicationContext)
+    private val notificationScheduler = NotificationScheduler(application.applicationContext, repository)
 
     init {
         _isLoading.value = true
@@ -148,8 +154,58 @@ class DailyMedicationViewModel(
 
     fun toggleMedicationTaken(medicationId: Long, sequenceNumber: Int, currentStatus: Boolean) {
         viewModelScope.launch {
+            // 服用済みにマークする場合のみ、通知を消すかチェック
+            val willBeMarkedAsTaken = !currentStatus
+
+            // 該当する薬の情報を取得（通知チェック用）
+            val medication = _dailyMedications.value.find {
+                it.medicationId == medicationId && it.sequenceNumber == sequenceNumber
+            }
+
             val dateString = DateUtils.formatIsoDate(_selectedDate.value)
             repository.updateIntakeStatus(medicationId, sequenceNumber, !currentStatus, dateString)
+
+            // 服用済みにマークした場合、その時刻の通知をチェック
+            if (willBeMarkedAsTaken && medication != null && !medication.isAsNeeded) {
+                checkAndDismissNotificationIfComplete(medication.scheduledTime, medicationId, sequenceNumber)
+            }
+        }
+    }
+
+    /**
+     * 指定時刻の全ての薬が服用済みになった場合、通知を消す
+     *
+     * @param time 服用時刻 (HH:mm形式)
+     * @param justToggledMedId 今トグルした薬のID（楽観的更新用）
+     * @param justToggledSeqNum 今トグルした薬のシーケンス番号（楽観的更新用）
+     */
+    private fun checkAndDismissNotificationIfComplete(
+        time: String,
+        justToggledMedId: Long,
+        justToggledSeqNum: Int
+    ) {
+        // TODO: 将来的には通知IDに日付を含めるべき
+        // 現在は時刻のみでIDを生成しているため、異なる日付の同じ時刻の通知が同じIDを共有する
+        // 例: "2025-10-18 09:00" → 202510180900 のようにすべき
+
+        // その時刻の全ての定時薬を取得（頓服薬は除外）
+        val allMedsAtTime = _dailyMedications.value.filter {
+            it.scheduledTime == time && !it.isAsNeeded
+        }
+
+        // 全ての薬が服用済みかチェック（楽観的更新：今トグルした薬は服用済みと仮定）
+        val allTaken = allMedsAtTime.all { med ->
+            if (med.medicationId == justToggledMedId && med.sequenceNumber == justToggledSeqNum) {
+                true // 今トグルした薬は服用済みと仮定
+            } else {
+                med.isTaken
+            }
+        }
+
+        if (allMedsAtTime.isNotEmpty() && allTaken) {
+            // 通知IDを計算して通知を消す
+            val notificationId = notificationScheduler.getNotificationIdForTime(time)
+            notificationHelper.cancelNotification(notificationId)
         }
     }
 
