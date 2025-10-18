@@ -175,7 +175,7 @@ fun MedicineShieldApp(repository: MedicationRepository, scheduledDate: String? =
             )
 
             // 通知から起動された場合、初期日付を設定
-            androidx.compose.runtime.LaunchedEffect(scheduledDate) {
+            androidx.compose.runtime.LaunchedEffect(Unit) {
                 scheduledDate?.let {
                     viewModel.setInitialDate(it)
                 }
