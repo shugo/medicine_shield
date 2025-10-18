@@ -12,6 +12,7 @@ import net.shugo.medicineshield.data.model.MedicationWithTimes
 import net.shugo.medicineshield.data.preferences.SettingsPreferences
 import net.shugo.medicineshield.data.repository.MedicationRepository
 import net.shugo.medicineshield.utils.DateUtils
+import java.text.SimpleDateFormat
 import java.util.*
 
 class NotificationScheduler(
@@ -20,9 +21,11 @@ class NotificationScheduler(
 ) {
     private val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
     private val settingsPreferences = SettingsPreferences(context)
+    private val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
 
     companion object {
         const val EXTRA_NOTIFICATION_TIME = "notification_time"
+        const val EXTRA_SCHEDULED_DATE = "scheduled_date"
         private const val DAILY_REFRESH_REQUEST_CODE = 999999
     }
 
@@ -82,10 +85,14 @@ class NotificationScheduler(
             return@withContext
         }
 
+        // 服薬予定日を計算（通知がトリガーされる日時から）
+        val scheduledDate = dateFormatter.format(Date(nextDateTime))
+
         // 通知をスケジュール
         val notificationId = getNotificationIdForTime(time)
         val intent = Intent(context, MedicationNotificationReceiver::class.java).apply {
             putExtra(EXTRA_NOTIFICATION_TIME, time)
+            putExtra(EXTRA_SCHEDULED_DATE, scheduledDate)
         }
 
         val pendingIntent = PendingIntent.getBroadcast(
