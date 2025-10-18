@@ -9,16 +9,12 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import net.shugo.medicineshield.data.database.AppDatabase
 import net.shugo.medicineshield.data.repository.MedicationRepository
-import java.text.SimpleDateFormat
-import java.util.*
 
 class MedicationNotificationReceiver : BroadcastReceiver() {
-    // 固定フォーマットの日付パース/フォーマット用のSimpleDateFormat
-    // Locale.ROOTを使用してロケール依存の動作を避ける
-    private val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
 
     override fun onReceive(context: Context, intent: Intent) {
         val time = intent.getStringExtra(NotificationScheduler.EXTRA_NOTIFICATION_TIME) ?: return
+        val scheduledDate = intent.getStringExtra(NotificationScheduler.EXTRA_SCHEDULED_DATE) ?: return
 
         val pendingResult = goAsync()
 
@@ -34,9 +30,8 @@ class MedicationNotificationReceiver : BroadcastReceiver() {
                     database.dailyNoteDao()
                 )
 
-                // 現在日時の薬リストを取得
-                val currentDate = getCurrentDateString()
-                val items = repository.getMedications(currentDate).first()
+                // 服薬予定日の薬リストを取得
+                val items = repository.getMedications(scheduledDate).first()
                 val medications = items.filter { it.scheduledTime == time && !it.isTaken }
                     .map { it.medicationName }
 
@@ -48,7 +43,8 @@ class MedicationNotificationReceiver : BroadcastReceiver() {
                     notificationHelper.showMedicationNotification(
                         medications,
                         time,
-                        notificationId
+                        notificationId,
+                        scheduledDate
                     )
                 }
 
@@ -60,12 +56,5 @@ class MedicationNotificationReceiver : BroadcastReceiver() {
                 pendingResult.finish()
             }
         }
-    }
-
-    /**
-     * 現在の日付を YYYY-MM-DD 形式で取得
-     */
-    private fun getCurrentDateString(): String {
-        return dateFormatter.format(Date())
     }
 }
