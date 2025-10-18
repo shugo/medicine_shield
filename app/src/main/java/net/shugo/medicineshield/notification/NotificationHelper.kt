@@ -15,6 +15,7 @@ class NotificationHelper(private val context: Context) {
 
     companion object {
         private const val CHANNEL_ID = "medication_reminders"
+        const val EXTRA_SCHEDULED_DATE = "scheduled_date"
     }
 
     private val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -45,11 +46,13 @@ class NotificationHelper(private val context: Context) {
      * @param medications 通知する薬のリスト
      * @param time 服用時刻 (HH:mm形式)
      * @param notificationId 通知ID
+     * @param scheduledDate 服薬予定日 (yyyy-MM-dd形式)
      */
     fun showMedicationNotification(
         medications: List<String>,
         time: String,
-        notificationId: Int
+        notificationId: Int,
+        scheduledDate: String
     ) {
         if (medications.isEmpty()) return
 
@@ -64,6 +67,7 @@ class NotificationHelper(private val context: Context) {
         // 通知をタップした時のIntent
         val intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra(EXTRA_SCHEDULED_DATE, scheduledDate)
         }
 
         val pendingIntent = PendingIntent.getActivity(

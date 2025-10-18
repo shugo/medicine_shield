@@ -54,6 +54,22 @@ class DailyMedicationViewModel(
         updateDisplayDate()
     }
 
+    /**
+     * 初期日付を設定する（通知からの起動時などに使用）
+     *
+     * @param dateString 日付文字列 (yyyy-MM-dd形式)
+     */
+    fun setInitialDate(dateString: String) {
+        val calendar = DateUtils.parseIsoDate(dateString)
+        if (calendar != null) {
+            _selectedDate.value = calendar
+            resetLoadingFlags()
+            updateDisplayDate()
+            loadMedicationsForSelectedDate()
+            loadNoteForSelectedDate()
+        }
+    }
+
     private fun loadMedicationsForSelectedDate() {
         // 前回のloadJobをキャンセル
         loadJob?.cancel()

@@ -82,13 +82,16 @@ class MainActivity : ComponentActivity() {
         // 通知権限をリクエスト
         requestNotificationPermission()
 
+        // 通知からの起動時に渡される日付を取得
+        val scheduledDate = intent?.getStringExtra(NotificationHelper.EXTRA_SCHEDULED_DATE)
+
         setContent {
             MedicineShieldTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    MedicineShieldApp(repository)
+                    MedicineShieldApp(repository, scheduledDate)
                 }
             }
         }
@@ -158,7 +161,7 @@ fun MedicineShieldTheme(content: @Composable () -> Unit) {
 }
 
 @Composable
-fun MedicineShieldApp(repository: MedicationRepository) {
+fun MedicineShieldApp(repository: MedicationRepository, scheduledDate: String? = null) {
     val navController = rememberNavController()
     val context = LocalContext.current
 
@@ -170,6 +173,14 @@ fun MedicineShieldApp(repository: MedicationRepository) {
             val viewModel: DailyMedicationViewModel = viewModel(
                 factory = DailyMedicationViewModelFactory(context.applicationContext as Application, repository)
             )
+
+            // 通知から起動された場合、初期日付を設定
+            androidx.compose.runtime.LaunchedEffect(scheduledDate) {
+                scheduledDate?.let {
+                    viewModel.setInitialDate(it)
+                }
+            }
+
             DailyMedicationScreen(
                 viewModel = viewModel,
                 onNavigateToMedicationList = {
