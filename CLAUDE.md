@@ -25,7 +25,7 @@ MedicineShield is an Android medication management application built with Kotlin
    - Always create a new branch before making any changes: `git checkout -b feature/<feature-name>` or `git checkout -b fix/<issue-name>`
    - Even for small bug fixes, create a branch first
 
-2. **Create SOW (Statement of Work)** (for complex features)
+2. **Create SOW (Statement of Work)**
    - For significant features, create a SOW document in `./tmp/SOW_<feature-name>.md`
    - Include:
      - Feature/fix description
