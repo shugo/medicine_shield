@@ -30,11 +30,26 @@ class NotificationScheduler(
     }
 
     /**
-     * 時刻から通知IDを生成
-     * 例: "09:00" -> 900, "14:30" -> 1430
+     * 時刻と日付から通知IDを生成
+     * 形式: MMDDHHMM (8桁の整数)
+     * 例: "2025-10-19"と"07:00" -> 10190700 (10月19日07時00分)
+     *
+     * 注: Androidの通知IDはInt型のため、YYYYMMDDHHMM形式（12桁）は使用できません（Int最大値: 2,147,483,647）
+     *     年を除いたMMDDHHMM形式（8桁、最大値: 12312359）を使用して日またぎ時の通知を区別します
+     *
+     * @param time 時刻 (HH:mm形式)
+     * @param scheduledDate 日付 (yyyy-MM-dd形式)
+     * @return 通知ID
      */
-    fun getNotificationIdForTime(time: String): Int {
-        return time.replace(":", "").toIntOrNull() ?: 0
+    fun getNotificationIdForTime(time: String, scheduledDate: String): Int {
+        val dateParts = scheduledDate.split("-")
+        if (dateParts.size != 3) return 0
+
+        val month = dateParts[1]
+        val day = dateParts[2]
+        val timeDigits = time.replace(":", "")
+
+        return ("$month$day$timeDigits").toIntOrNull() ?: 0
     }
 
     /**
@@ -89,7 +104,7 @@ class NotificationScheduler(
         val scheduledDate = dateFormatter.format(Date(nextDateTime))
 
         // 通知をスケジュール
-        val notificationId = getNotificationIdForTime(time)
+        val notificationId = getNotificationIdForTime(time, scheduledDate)
         val intent = Intent(context, MedicationNotificationReceiver::class.java).apply {
             putExtra(EXTRA_NOTIFICATION_TIME, time)
             putExtra(EXTRA_SCHEDULED_DATE, scheduledDate)
@@ -112,17 +127,24 @@ class NotificationScheduler(
 
     /**
      * 特定時刻の通知をキャンセルする
+     * 通知IDに日付が含まれるため、今日から7日先までの通知をすべてキャンセルする
      */
     fun cancelNotificationForTime(time: String) {
-        val notificationId = getNotificationIdForTime(time)
-        val intent = Intent(context, MedicationNotificationReceiver::class.java)
-        val pendingIntent = PendingIntent.getBroadcast(
-            context,
-            notificationId,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-        alarmManager.cancel(pendingIntent)
+        val calendar = Calendar.getInstance()
+        // 今日から7日先までの通知をキャンセル
+        for (i in 0 until 7) {
+            val scheduledDate = dateFormatter.format(calendar.time)
+            val notificationId = getNotificationIdForTime(time, scheduledDate)
+            val intent = Intent(context, MedicationNotificationReceiver::class.java)
+            val pendingIntent = PendingIntent.getBroadcast(
+                context,
+                notificationId,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            alarmManager.cancel(pendingIntent)
+            calendar.add(Calendar.DAY_OF_YEAR, 1)
+        }
     }
 
     /**

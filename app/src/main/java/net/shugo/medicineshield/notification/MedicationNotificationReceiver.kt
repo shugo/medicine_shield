@@ -39,7 +39,7 @@ class MedicationNotificationReceiver : BroadcastReceiver() {
                 if (medications.isNotEmpty()) {
                     val notificationHelper = NotificationHelper(context)
                     val notificationId = NotificationScheduler(context, repository)
-                        .getNotificationIdForTime(time)
+                        .getNotificationIdForTime(time, scheduledDate)
                     notificationHelper.showMedicationNotification(
                         medications,
                         time,
