@@ -190,8 +190,9 @@ class NotificationScheduler(
             calendar.add(Calendar.DAY_OF_YEAR, 1)
         }
 
-        // その時刻に服用すべき薬があるか最大365日先までチェック
-        for (i in 0 until 365) {
+        // その時刻に服用すべき薬があるか最大7日先までチェック
+        // 毎日深夜0時に再スケジュールされるため、7日で十分
+        for (i in 0 until 7) {
             val medications = getMedicationsForTime(time, calendar.timeInMillis)
             if (medications.isNotEmpty()) {
                 return calendar.timeInMillis
