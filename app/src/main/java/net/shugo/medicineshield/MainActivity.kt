@@ -188,9 +188,9 @@ fun MedicineShieldApp(
 
             // 通知から起動された場合、その日付に移動
             val scheduledDate = scheduledDateState.value  // Composable内でStateを読み取る
-            androidx.compose.runtime.LaunchedEffect(scheduledDate) {
-                scheduledDate?.let {
-                    viewModel.setDateFromNotification(it)
+            if (scheduledDate != null) {
+                androidx.compose.runtime.LaunchedEffect(scheduledDate) {
+                    viewModel.setDateFromNotification(scheduledDate)
                 }
             }
 
