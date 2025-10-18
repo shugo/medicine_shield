@@ -3,6 +3,7 @@ package net.shugo.medicineshield
 import android.Manifest
 import android.app.Application
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -16,6 +17,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -46,6 +48,7 @@ import net.shugo.medicineshield.viewmodel.SettingsViewModel
 
 class MainActivity : ComponentActivity() {
     private lateinit var repository: MedicationRepository
+    private val scheduledDateState = mutableStateOf<String?>(null)
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -83,7 +86,7 @@ class MainActivity : ComponentActivity() {
         requestNotificationPermission()
 
         // 通知からの起動時に渡される日付を取得
-        val scheduledDate = intent?.getStringExtra(NotificationHelper.EXTRA_SCHEDULED_DATE)
+        scheduledDateState.value = intent?.getStringExtra(NotificationHelper.EXTRA_SCHEDULED_DATE)
 
         setContent {
             MedicineShieldTheme {
@@ -91,10 +94,16 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    MedicineShieldApp(repository, scheduledDate)
+                    MedicineShieldApp(repository, scheduledDateState.value)
                 }
             }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        // 新しい通知から起動された場合、日付を更新
+        scheduledDateState.value = intent.getStringExtra(NotificationHelper.EXTRA_SCHEDULED_DATE)
     }
 
     private fun requestNotificationPermission() {
@@ -174,10 +183,10 @@ fun MedicineShieldApp(repository: MedicationRepository, scheduledDate: String? =
                 factory = DailyMedicationViewModelFactory(context.applicationContext as Application, repository)
             )
 
-            // 通知から起動された場合、初期日付を設定（一度だけ）
+            // 通知から起動された場合、その日付に移動
             androidx.compose.runtime.LaunchedEffect(scheduledDate) {
                 scheduledDate?.let {
-                    viewModel.setInitialDateOnce(it)
+                    viewModel.setDateFromNotification(it)
                 }
             }
 

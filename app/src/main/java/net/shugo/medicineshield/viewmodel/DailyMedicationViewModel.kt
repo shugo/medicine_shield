@@ -47,9 +47,6 @@ class DailyMedicationViewModel(
     private var medicationsLoaded = false
     private var noteLoaded = false
 
-    // 初期日付が設定済みかどうかのフラグ
-    private var hasSetInitialDate = false
-
     init {
         _isLoading.value = true
         loadMedicationsForSelectedDate()
@@ -58,14 +55,12 @@ class DailyMedicationViewModel(
     }
 
     /**
-     * 初期日付を設定する（通知からの起動時などに使用）
-     * 一度だけ実行される（画面遷移後に戻ってきても再実行されない）
+     * 通知からの初期日付を設定する
+     * 通知から起動された場合のみ、その日付に移動する
      *
      * @param dateString 日付文字列 (yyyy-MM-dd形式)
      */
-    fun setInitialDateOnce(dateString: String) {
-        if (hasSetInitialDate) return
-
+    fun setDateFromNotification(dateString: String) {
         val calendar = DateUtils.parseIsoDate(dateString)
         if (calendar != null) {
             _selectedDate.value = calendar
@@ -73,7 +68,6 @@ class DailyMedicationViewModel(
             updateDisplayDate()
             loadMedicationsForSelectedDate()
             loadNoteForSelectedDate()
-            hasSetInitialDate = true
         }
     }
 
