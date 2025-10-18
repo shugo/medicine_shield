@@ -11,21 +11,22 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -37,13 +38,13 @@ import net.shugo.medicineshield.data.preferences.SettingsPreferences
 import net.shugo.medicineshield.data.repository.MedicationRepository
 import net.shugo.medicineshield.notification.NotificationHelper
 import net.shugo.medicineshield.notification.NotificationScheduler
+import net.shugo.medicineshield.ui.screen.DailyMedicationScreen
 import net.shugo.medicineshield.ui.screen.MedicationFormScreen
 import net.shugo.medicineshield.ui.screen.MedicationListScreen
-import net.shugo.medicineshield.ui.screen.DailyMedicationScreen
 import net.shugo.medicineshield.ui.screen.SettingsScreen
+import net.shugo.medicineshield.viewmodel.DailyMedicationViewModel
 import net.shugo.medicineshield.viewmodel.MedicationFormViewModel
 import net.shugo.medicineshield.viewmodel.MedicationListViewModel
-import net.shugo.medicineshield.viewmodel.DailyMedicationViewModel
 import net.shugo.medicineshield.viewmodel.SettingsViewModel
 
 class MainActivity : ComponentActivity() {
@@ -172,7 +173,7 @@ fun MedicineShieldTheme(content: @Composable () -> Unit) {
 @Composable
 fun MedicineShieldApp(
     repository: MedicationRepository,
-    scheduledDateState: androidx.compose.runtime.State<String?>
+    scheduledDateState: State<String?>
 ) {
     val navController = rememberNavController()
     val context = LocalContext.current
@@ -189,7 +190,7 @@ fun MedicineShieldApp(
             // 通知から起動された場合、その日付に移動
             val scheduledDate = scheduledDateState.value  // Composable内でStateを読み取る
             if (scheduledDate != null) {
-                androidx.compose.runtime.LaunchedEffect(scheduledDate) {
+                LaunchedEffect(scheduledDate) {
                     viewModel.setDateFromNotification(scheduledDate)
                 }
             }
