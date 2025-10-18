@@ -184,10 +184,6 @@ class DailyMedicationViewModel(
         justToggledMedId: Long,
         justToggledSeqNum: Int
     ) {
-        // TODO: 将来的には通知IDに日付を含めるべき
-        // 現在は時刻のみでIDを生成しているため、異なる日付の同じ時刻の通知が同じIDを共有する
-        // 例: "2025-10-18 09:00" → 202510180900 のようにすべき
-
         // その時刻の全ての定時薬を取得（頓服薬は除外）
         val allMedsAtTime = _dailyMedications.value.filter {
             it.scheduledTime == time && !it.isAsNeeded
