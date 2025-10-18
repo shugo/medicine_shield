@@ -352,7 +352,8 @@ class MedicationRepository(
                                     doseUnit = validConfig.doseUnit,
                                     isTaken = true,
                                     takenAt = intake.takenAt,
-                                    isAsNeeded = true
+                                    isAsNeeded = true,
+                                    isCanceled = intake.isCanceled
                                 )
                             )
                         }
@@ -369,7 +370,8 @@ class MedicationRepository(
                                 doseUnit = validConfig.doseUnit,
                                 isTaken = false,
                                 takenAt = null,
-                                isAsNeeded = true
+                                isAsNeeded = true,
+                                isCanceled = false
                             )
                         )
                     } else {
@@ -391,7 +393,8 @@ class MedicationRepository(
                                     doseUnit = validConfig.doseUnit,
                                     isTaken = intake?.takenAt != null,
                                     takenAt = intake?.takenAt,
-                                    isAsNeeded = false
+                                    isAsNeeded = false,
+                                    isCanceled = intake?.isCanceled ?: false
                                 )
                             )
                         }
@@ -638,5 +641,64 @@ class MedicationRepository(
      */
     suspend fun getNextNote(currentDate: String): DailyNote? {
         return dailyNoteDao.getNextNote(currentDate)
+    }
+
+    // ========== Cancel/Uncancel Medication Functions ==========
+
+    /**
+     * 服用をキャンセルする
+     */
+    suspend fun cancelIntake(
+        medicationId: Long,
+        sequenceNumber: Int,
+        scheduledDate: String = getCurrentDateString()
+    ) {
+        val existingIntake = medicationIntakeDao.getIntakeByMedicationAndDateTime(
+            medicationId, scheduledDate, sequenceNumber
+        )
+
+        if (existingIntake == null) {
+            // 新規作成（キャンセル状態）
+            medicationIntakeDao.insert(
+                MedicationIntake(
+                    medicationId = medicationId,
+                    sequenceNumber = sequenceNumber,
+                    scheduledDate = scheduledDate,
+                    takenAt = null,
+                    isCanceled = true
+                )
+            )
+        } else {
+            // 更新（キャンセル状態、服用記録はクリア）
+            medicationIntakeDao.update(
+                existingIntake.copy(
+                    takenAt = null,
+                    isCanceled = true,
+                    updatedAt = System.currentTimeMillis()
+                )
+            )
+        }
+    }
+
+    /**
+     * 服用のキャンセルを取り消す
+     */
+    suspend fun uncancelIntake(
+        medicationId: Long,
+        sequenceNumber: Int,
+        scheduledDate: String = getCurrentDateString()
+    ) {
+        val existingIntake = medicationIntakeDao.getIntakeByMedicationAndDateTime(
+            medicationId, scheduledDate, sequenceNumber
+        )
+
+        if (existingIntake != null) {
+            medicationIntakeDao.update(
+                existingIntake.copy(
+                    isCanceled = false,
+                    updatedAt = System.currentTimeMillis()
+                )
+            )
+        }
     }
 }

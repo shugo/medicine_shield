@@ -9,5 +9,6 @@ data class DailyMedicationItem(
     val doseUnit: String? = null,  // 服用量の単位
     val isTaken: Boolean,
     val takenAt: Long? = null,
-    val isAsNeeded: Boolean = false  // 頓服薬フラグ
+    val isAsNeeded: Boolean = false,  // 頓服薬フラグ
+    val isCanceled: Boolean = false  // 服用キャンセルフラグ
 )

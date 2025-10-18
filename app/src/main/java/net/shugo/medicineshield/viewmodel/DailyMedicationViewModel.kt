@@ -206,6 +206,26 @@ class DailyMedicationViewModel(
     }
 
     /**
+     * 服用をキャンセルする
+     */
+    fun cancelMedication(medicationId: Long, sequenceNumber: Int) {
+        viewModelScope.launch {
+            val dateString = DateUtils.formatIsoDate(_selectedDate.value)
+            repository.cancelIntake(medicationId, sequenceNumber, dateString)
+        }
+    }
+
+    /**
+     * 服用のキャンセルを取り消す
+     */
+    fun uncancelMedication(medicationId: Long, sequenceNumber: Int) {
+        viewModelScope.launch {
+            val dateString = DateUtils.formatIsoDate(_selectedDate.value)
+            repository.uncancelIntake(medicationId, sequenceNumber, dateString)
+        }
+    }
+
+    /**
      * 頓服薬を追加服用する
      */
     fun addAsNeededMedication(medicationId: Long) {
