@@ -239,6 +239,9 @@ class NotificationScheduler(
         if (normalizedTargetDate < normalizedStartDate) return false
         if (normalizedEndDate != null && normalizedTargetDate > normalizedEndDate) return false
 
+        // 頓服薬は通知をスケジュールしない
+        if (config.isAsNeeded) return false
+
         return when (config.cycleType) {
             CycleType.DAILY -> true
 
