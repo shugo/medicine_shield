@@ -19,7 +19,7 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.State
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -173,7 +173,7 @@ fun MedicineShieldTheme(content: @Composable () -> Unit) {
 @Composable
 fun MedicineShieldApp(
     repository: MedicationRepository,
-    scheduledDateState: androidx.compose.runtime.MutableState<String?>
+    scheduledDateState: MutableState<String?>
 ) {
     val navController = rememberNavController()
     val context = LocalContext.current
