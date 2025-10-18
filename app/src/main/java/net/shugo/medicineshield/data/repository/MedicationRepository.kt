@@ -693,8 +693,10 @@ class MedicationRepository(
         )
 
         if (existingIntake != null) {
+            // キャンセルを取り消す際は、takenAtもクリアして未服用状態に戻す
             medicationIntakeDao.update(
                 existingIntake.copy(
+                    takenAt = null,
                     isCanceled = false,
                     updatedAt = System.currentTimeMillis()
                 )

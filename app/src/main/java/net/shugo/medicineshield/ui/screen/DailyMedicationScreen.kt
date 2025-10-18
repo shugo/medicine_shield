@@ -539,9 +539,10 @@ fun ScheduledMedicationItem(
     onUpdateTakenAt: (Long, Int, Int, Int) -> Unit
 ) {
     // チェックボックスの状態を決定
+    // isCanceledが優先（データ整合性のため）
     val checkboxState = when {
-        medication.isTaken -> ToggleableState.On        // 服用済み
         medication.isCanceled -> ToggleableState.Indeterminate  // キャンセル済み
+        medication.isTaken -> ToggleableState.On        // 服用済み
         else -> ToggleableState.Off                     // 未服用
     }
 
