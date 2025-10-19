@@ -23,6 +23,7 @@ import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -92,7 +93,7 @@ fun DailyMedicationScreen(
                 actions = {
                     IconButton(onClick = onNavigateToSettings) {
                         Icon(
-                            imageVector = Icons.Filled.Edit,
+                            imageVector = Icons.Filled.Settings,
                             contentDescription = stringResource(R.string.settings)
                         )
                     }
