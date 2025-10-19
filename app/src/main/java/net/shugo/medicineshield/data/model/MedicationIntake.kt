@@ -28,6 +28,7 @@ data class MedicationIntake(
     val sequenceNumber: Int,  // MedicationTimeのsequenceNumberと紐付け
     val scheduledDate: String,  // YYYY-MM-DD format (e.g., "2025-10-09")
     val takenAt: Long? = null,  // timestamp in milliseconds, null = not taken yet
+    val isCanceled: Boolean = false,  // true = user intentionally canceled this intake
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
 )

@@ -12,6 +12,7 @@ import kotlinx.coroutines.launch
 import net.shugo.medicineshield.R
 import net.shugo.medicineshield.data.model.DailyMedicationItem
 import net.shugo.medicineshield.data.model.DailyNote
+import net.shugo.medicineshield.data.model.MedicationIntakeStatus
 import net.shugo.medicineshield.data.repository.MedicationRepository
 import net.shugo.medicineshield.notification.NotificationHelper
 import net.shugo.medicineshield.notification.NotificationScheduler
@@ -194,7 +195,7 @@ class DailyMedicationViewModel(
             if (med.medicationId == justToggledMedId && med.sequenceNumber == justToggledSeqNum) {
                 true // 今トグルした薬は服用済みと仮定
             } else {
-                med.isTaken
+                med.status == MedicationIntakeStatus.TAKEN
             }
         }
 
@@ -202,6 +203,26 @@ class DailyMedicationViewModel(
             // 通知IDを計算して通知を消す
             val notificationId = notificationScheduler.getNotificationIdForTime(time)
             notificationHelper.cancelNotification(notificationId)
+        }
+    }
+
+    /**
+     * 服用をキャンセルする
+     */
+    fun cancelMedication(medicationId: Long, sequenceNumber: Int) {
+        viewModelScope.launch {
+            val dateString = DateUtils.formatIsoDate(_selectedDate.value)
+            repository.cancelIntake(medicationId, sequenceNumber, dateString)
+        }
+    }
+
+    /**
+     * 服用のキャンセルを取り消す
+     */
+    fun uncancelMedication(medicationId: Long, sequenceNumber: Int) {
+        viewModelScope.launch {
+            val dateString = DateUtils.formatIsoDate(_selectedDate.value)
+            repository.uncancelIntake(medicationId, sequenceNumber, dateString)
         }
     }
 

@@ -135,6 +135,11 @@
     <string name="previous_note">前のメモ</string>
     <string name="next_note">次のメモ</string>
 
+    <!-- Medication Cancellation -->
+    <string name="medication_canceled">服用キャンセル済み</string>
+    <string name="cancel_medication">服用をキャンセル</string>
+    <string name="restore_medication">キャンセルを取り消し</string>
+
     <!-- Error Messages -->
     <string name="error_empty_name">お薬の名前を入力してください</string>
     <string name="error_no_times">少なくとも1つの服用時間を設定してください</string>

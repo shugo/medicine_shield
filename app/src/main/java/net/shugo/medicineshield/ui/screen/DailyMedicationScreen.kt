@@ -43,6 +43,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TriStateCheckbox
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
@@ -55,13 +56,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import net.shugo.medicineshield.R
 import net.shugo.medicineshield.data.model.DailyMedicationItem
 import net.shugo.medicineshield.data.model.DailyNote
+import net.shugo.medicineshield.data.model.MedicationIntakeStatus
 import net.shugo.medicineshield.utils.formatDose
 import net.shugo.medicineshield.viewmodel.DailyMedicationViewModel
 import java.util.Calendar
@@ -132,6 +136,12 @@ fun DailyMedicationScreen(
                         medications = dailyMedications,
                         onToggleTaken = { medicationId, sequenceNumber, isTaken ->
                             viewModel.toggleMedicationTaken(medicationId, sequenceNumber, isTaken)
+                        },
+                        onCancelMedication = { medicationId, sequenceNumber ->
+                            viewModel.cancelMedication(medicationId, sequenceNumber)
+                        },
+                        onUncancelMedication = { medicationId, sequenceNumber ->
+                            viewModel.uncancelMedication(medicationId, sequenceNumber)
                         },
                         onAddAsNeeded = { medicationId ->
                             viewModel.addAsNeededMedication(medicationId)
@@ -263,6 +273,8 @@ fun MedicationList(
     selectedDate: Calendar,
     medications: List<DailyMedicationItem>,
     onToggleTaken: (Long, Int, Boolean) -> Unit,
+    onCancelMedication: (Long, Int) -> Unit,
+    onUncancelMedication: (Long, Int) -> Unit,
     onAddAsNeeded: (Long) -> Unit,
     onRemoveAsNeeded: (Long, Int) -> Unit,
     onUpdateTakenAt: (Long, Int, Int, Int) -> Unit,
@@ -305,6 +317,8 @@ fun MedicationList(
                 ScheduledMedicationItem(
                     medication = medication,
                     onToggleTaken = onToggleTaken,
+                    onCancelMedication = onCancelMedication,
+                    onUncancelMedication = onUncancelMedication,
                     onUpdateTakenAt = onUpdateTakenAt
                 )
             }
@@ -429,10 +443,10 @@ private fun BaseMedicationCard(
             .fillMaxWidth()
             .padding(vertical = 4.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (medication.isTaken) {
-                MaterialTheme.colorScheme.surfaceVariant
-            } else {
-                MaterialTheme.colorScheme.surface
+            containerColor = when (medication.status) {
+                MedicationIntakeStatus.CANCELED -> MaterialTheme.colorScheme.errorContainer
+                MedicationIntakeStatus.TAKEN -> MaterialTheme.colorScheme.surfaceVariant
+                MedicationIntakeStatus.UNCHECKED -> MaterialTheme.colorScheme.surface
             }
         )
     ) {
@@ -452,16 +466,30 @@ private fun BaseMedicationCard(
                     Text(
                         text = medication.medicationName,
                         fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium
+                        fontWeight = FontWeight.Medium,
+                        textDecoration = if (medication.status == MedicationIntakeStatus.CANCELED) TextDecoration.LineThrough else null,
+                        color = if (medication.status == MedicationIntakeStatus.CANCELED) {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        } else {
+                            MaterialTheme.colorScheme.onSurface
+                        }
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = formatDose(medication.dose, medication.doseUnit),
                         fontSize = 14.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textDecoration = if (medication.status == MedicationIntakeStatus.CANCELED) TextDecoration.LineThrough else null
                     )
                 }
-                if (medication.isTaken && medication.takenAt != null) {
+                if (medication.status == MedicationIntakeStatus.CANCELED) {
+                    Text(
+                        text = stringResource(R.string.medication_canceled),
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                } else if (medication.status == MedicationIntakeStatus.TAKEN && medication.takenAt != null) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(top = 4.dp)
@@ -507,20 +535,48 @@ private fun BaseMedicationCard(
 fun ScheduledMedicationItem(
     medication: DailyMedicationItem,
     onToggleTaken: (Long, Int, Boolean) -> Unit,
+    onCancelMedication: (Long, Int) -> Unit,
+    onUncancelMedication: (Long, Int) -> Unit,
     onUpdateTakenAt: (Long, Int, Int, Int) -> Unit
 ) {
+    // チェックボックスの状態を決定
+    val checkboxState = when (medication.status) {
+        MedicationIntakeStatus.UNCHECKED -> ToggleableState.Off        // 未服用
+        MedicationIntakeStatus.TAKEN -> ToggleableState.On             // 服用済み
+        MedicationIntakeStatus.CANCELED -> ToggleableState.Indeterminate  // キャンセル済み
+    }
+
     BaseMedicationCard(
         medication = medication,
         onUpdateTakenAt = onUpdateTakenAt,
         actionButton = {
-            Checkbox(
-                checked = medication.isTaken,
-                onCheckedChange = {
-                    onToggleTaken(
-                        medication.medicationId,
-                        medication.sequenceNumber,
-                        medication.isTaken
-                    )
+            TriStateCheckbox(
+                state = checkboxState,
+                onClick = {
+                    when (medication.status) {
+                        MedicationIntakeStatus.UNCHECKED -> {
+                            // 未服用 → 服用済み
+                            onToggleTaken(
+                                medication.medicationId,
+                                medication.sequenceNumber,
+                                false  // 現在は未服用
+                            )
+                        }
+                        MedicationIntakeStatus.TAKEN -> {
+                            // 服用済み → キャンセル済み
+                            onCancelMedication(
+                                medication.medicationId,
+                                medication.sequenceNumber
+                            )
+                        }
+                        MedicationIntakeStatus.CANCELED -> {
+                            // キャンセル済み → 未服用
+                            onUncancelMedication(
+                                medication.medicationId,
+                                medication.sequenceNumber
+                            )
+                        }
+                    }
                 }
             )
         }
@@ -538,7 +594,7 @@ fun AsNeededMedicationItem(
         medication = medication,
         onUpdateTakenAt = onUpdateTakenAt,
         actionButton = {
-            if (medication.isTaken) {
+            if (medication.status == MedicationIntakeStatus.TAKEN) {
                 // 服用済みの場合は削除ボタン
                 IconButton(
                     onClick = {

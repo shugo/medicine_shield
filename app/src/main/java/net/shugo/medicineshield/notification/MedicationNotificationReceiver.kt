@@ -8,6 +8,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import net.shugo.medicineshield.data.database.AppDatabase
+import net.shugo.medicineshield.data.model.MedicationIntakeStatus
 import net.shugo.medicineshield.data.repository.MedicationRepository
 
 class MedicationNotificationReceiver : BroadcastReceiver() {
@@ -32,8 +33,9 @@ class MedicationNotificationReceiver : BroadcastReceiver() {
 
                 // 服薬予定日の薬リストを取得
                 val items = repository.getMedications(scheduledDate).first()
-                val medications = items.filter { it.scheduledTime == time && !it.isTaken }
-                    .map { it.medicationName }
+                val medications = items.filter {
+                    it.scheduledTime == time && it.status != MedicationIntakeStatus.TAKEN
+                }.map { it.medicationName }
 
                 // 通知を表示
                 if (medications.isNotEmpty()) {
