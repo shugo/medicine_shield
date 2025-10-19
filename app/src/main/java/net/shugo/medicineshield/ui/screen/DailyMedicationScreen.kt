@@ -27,7 +27,6 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
@@ -609,12 +608,17 @@ fun AsNeededMedicationItem(
                 }
             } else {
                 // 未服用の場合はチェックボックス
-                Checkbox(
-                    checked = false,
-                    onCheckedChange = {
+                IconButton(
+                    onClick = {
                         onAddIntake(medication.medicationId)
                     }
-                )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = stringResource(R.string.add_as_needed_intake),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
             }
         }
     )
