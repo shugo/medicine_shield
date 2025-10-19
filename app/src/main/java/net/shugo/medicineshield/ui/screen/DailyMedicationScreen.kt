@@ -17,13 +17,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.List
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -93,13 +92,13 @@ fun DailyMedicationScreen(
                 actions = {
                     IconButton(onClick = onNavigateToSettings) {
                         Icon(
-                            imageVector = Icons.Default.Settings,
+                            imageVector = Icons.Filled.Edit,
                             contentDescription = stringResource(R.string.settings)
                         )
                     }
                     IconButton(onClick = onNavigateToMedicationList) {
                         Icon(
-                            imageVector = Icons.Default.List,
+                            imageVector = Icons.AutoMirrored.Filled.List,
                             contentDescription = stringResource(R.string.medication_list)
                         )
                     }
@@ -201,7 +200,7 @@ fun DateNavigationBar(
             // 前日ボタン
             IconButton(onClick = onPreviousDay) {
                 Icon(
-                    imageVector = Icons.Default.KeyboardArrowLeft,
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
                     contentDescription = stringResource(R.string.previous_day),
                     modifier = Modifier.size(32.dp)
                 )
@@ -220,7 +219,7 @@ fun DateNavigationBar(
             // 翌日ボタン
             IconButton(onClick = onNextDay) {
                 Icon(
-                    imageVector = Icons.Default.KeyboardArrowRight,
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                     contentDescription = stringResource(R.string.next_day),
                     modifier = Modifier.size(32.dp)
                 )
@@ -861,7 +860,7 @@ fun DailyNoteSection(
                         modifier = Modifier.weight(1f)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.KeyboardArrowLeft,
+                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
                             contentDescription = null,
                             modifier = Modifier.size(18.dp)
                         )
@@ -883,7 +882,7 @@ fun DailyNoteSection(
                         Text(stringResource(R.string.next_note))
                         Spacer(modifier = Modifier.width(4.dp))
                         Icon(
-                            imageVector = Icons.Default.KeyboardArrowRight,
+                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                             contentDescription = null,
                             modifier = Modifier.size(18.dp)
                         )
