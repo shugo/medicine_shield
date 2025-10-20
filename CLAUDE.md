@@ -14,7 +14,7 @@ MedicineShield is an Android medication management application built with Kotlin
 
 **Package**: `net.shugo.medicineshield`
 **Min SDK**: 24
-**Target SDK**: 35
+**Target SDK**: 36
 
 ## Development Workflow
 
@@ -71,15 +71,16 @@ MedicineShield is an Android medication management application built with Kotlin
 The app follows a clean architecture pattern with clear separation of concerns:
 
 ### Data Layer
-- **Database**: Room database (`AppDatabase`) with version 5, includes migrations from v1
+- **Database**: Room database (`AppDatabase`) with version 11, includes migrations from v1
   - Location: `data/database/AppDatabase.kt`
-  - Entities: `Medication`, `MedicationTime`, `MedicationIntake`, `MedicationConfig`
-  - Migrations: v1→v2 (add intakes), v2→v3 (temporal data), v3→v4 (config separation), v4→v5 (sequence numbers)
+  - Entities: `Medication`, `MedicationTime`, `MedicationIntake`, `MedicationConfig`, `DailyNote`
+  - Migrations: v1→v11 (comprehensive migrations supporting evolving features)
+    - Key migrations: intakes (v2), temporal data (v3), config separation (v4), sequence numbers (v5), dosage tracking (v6-v9), daily notes (v10-v11)
 - **DAOs**: Separate DAOs for each entity in `data/dao/`
-  - `MedicationDao`, `MedicationTimeDao`, `MedicationIntakeDao`, `MedicationConfigDao`
+  - `MedicationDao`, `MedicationTimeDao`, `MedicationIntakeDao`, `MedicationConfigDao`, `DailyNoteDao`
 - **Repository**: Single `MedicationRepository` coordinates all data operations
   - Location: `data/repository/MedicationRepository.kt`
-  - Handles medication CRUD, intake tracking, and daily medication logic
+  - Handles medication CRUD, intake tracking, daily medication logic, and daily notes
 
 ### Domain Models
 - **Medication**: Core medication entity (name only)
@@ -96,19 +97,34 @@ The app follows a clean architecture pattern with clear separation of concerns:
   - Links to medication via `medicationId` and `sequenceNumber` (not time string)
   - `scheduledDate`: Date string (YYYY-MM-DD)
   - `takenAt`: Timestamp when taken (null = not taken)
+  - `canceledAt`: Timestamp when canceled (null = not canceled)
+  - `dose`: Medication dosage amount (Double)
+  - `doseUnit`: Unit for dosage (e.g., "tablets", "ml", "mg")
   - Unique index on `(medicationId, scheduledDate, sequenceNumber)`
+- **DailyNote**: Daily note entity for health observations
+  - `noteDate`: Date string (YYYY-MM-DD) - primary key
+  - `content`: Note text content
+  - `createdAt`/`updatedAt`: Timestamps for note management
+- **MedicationIntakeStatus**: Enum for intake state
+  - `UNCHECKED`: Not yet taken
+  - `TAKEN`: Taken (with takenAt timestamp)
+  - `CANCELED`: Canceled (with canceledAt timestamp)
 - **DailyMedicationItem**: View model for displaying daily medication status
+  - `isAsNeeded`: Boolean flag for PRN (as-needed) medications
+  - `dose`/`doseUnit`: Dosage information
+  - `status`: MedicationIntakeStatus enum
 - **MedicationWithTimes**: Relationship entity combining Medication with its MedicationTimes and MedicationConfigs
 
 ### UI Layer
 - **Navigation**: Single-activity architecture with Jetpack Navigation Compose
-  - Routes: `daily_medication` (start), `medication_list`, `add_medication`, `edit_medication/{id}`
+  - Routes: `daily_medication` (start), `medication_list`, `add_medication`, `edit_medication/{id}`, `settings`
 - **Screens** (in `ui/screen/`):
-  - `DailyMedicationScreen`: Main screen showing today's medications with date navigation
+  - `DailyMedicationScreen`: Main screen showing today's medications with date navigation, Today button, and daily notes
   - `MedicationListScreen`: List all medications with edit/delete
-  - `MedicationFormScreen`: Add/edit medication form (reused for both operations)
+  - `MedicationFormScreen`: Add/edit medication form (reused for both operations) with dosage support
+  - `SettingsScreen`: Settings for notifications, app version, and license information
 - **ViewModels** (in `viewmodel/`):
-  - Each screen has a dedicated ViewModel
+  - Each screen has a dedicated ViewModel (`DailyMedicationViewModel`, `MedicationListViewModel`, `MedicationFormViewModel`, `SettingsViewModel`)
   - Factories defined in `MainActivity.kt` for dependency injection
   - Repository passed via factory pattern
 
@@ -128,24 +144,43 @@ The app follows a clean architecture pattern with clear separation of concerns:
 - **Intake Tracking** (`MedicationRepository:updateIntakeStatus()`):
   - Creates or updates intake records
   - Uses compound key: `(medicationId, scheduledDate, sequenceNumber)`
-  - Supports checking/unchecking medications
+  - Supports three states: UNCHECKED, TAKEN (with takenAt timestamp), CANCELED (with canceledAt timestamp)
+- **As-Needed Medications**:
+  - PRN medications can be added multiple times per day without a fixed schedule
+  - Uses `isAsNeeded` flag in `DailyMedicationItem`
+  - Sequence numbers increment for each added instance
+- **Dosage Tracking**:
+  - Each medication intake can store dosage amount and unit
+  - Supports flexible units (tablets, ml, mg, etc.)
+  - Displayed using `formatDose()` utility function
+- **Daily Notes**:
+  - One note per date (YYYY-MM-DD format)
+  - Stored in separate `daily_notes` table
+  - Accessed via `DailyNoteDao` and managed through `MedicationRepository`
 
 ## Development Notes
 
 ### Database Migrations
-- Current version: 5
-- Migration history:
+- Current version: 11
+- Migration history (key milestones):
   - v1→v2: Add `medication_intakes` table
   - v2→v3: Add temporal validity (`startDate`/`endDate`) to `medication_times`
   - v3→v4: Separate configuration into `medication_configs` table, rename to `validFrom`/`validTo`
   - v4→v5: Add `sequenceNumber` to `medication_times`, update `medication_intakes` to use `sequenceNumber`
+  - v5→v6: Add `canceledAt` to `medication_intakes` for cancel functionality
+  - v6→v7: Add `dose` and `doseUnit` to `medication_intakes`
+  - v7→v8: Add `dose` and `doseUnit` to `medications` table (default dosage)
+  - v8→v9: Add `isAsNeeded` flag to `medications` for PRN medications
+  - v9→v10: Add `daily_notes` table
+  - v10→v11: Schema refinements for daily notes
 - Add new migrations to `AppDatabase.companion.object` when schema changes
-- **Important**: Migration v4→v5 deletes all `medication_intakes` records (history migration too complex)
+- **Important**: Some migrations may delete data when structural changes are too complex to migrate
 
 ### Dependency Injection
 - Currently uses manual DI via ViewModelFactory classes in `MainActivity.kt`
 - Repository instantiated in `MainActivity.onCreate()` and passed to screens
-- All four DAOs (`MedicationDao`, `MedicationTimeDao`, `MedicationIntakeDao`, `MedicationConfigDao`) injected into MedicationRepository constructor
+- All five DAOs (`MedicationDao`, `MedicationTimeDao`, `MedicationIntakeDao`, `MedicationConfigDao`, `DailyNoteDao`) injected into MedicationRepository constructor
+- `SettingsPreferences` used for app settings (notification preferences, etc.)
 
 ### Date Handling
 - All dates stored as timestamps (Long, milliseconds since epoch)
