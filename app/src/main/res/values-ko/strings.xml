@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Medicine Shield</string>
+
+    <!-- Daily Medication Screen -->
+    <string name="daily_medication_title">복약 기록</string>
+    <string name="medication_list">약품 목록</string>
+    <string name="previous_day">전일</string>
+    <string name="next_day">익일</string>
+    <string name="ok">확인</string>
+    <string name="cancel">취소</string>
+    <string name="no_medication_today">오늘 복용할 약이 없습니다</string>
+    <string name="no_medication_future">이 날 복용할 약이 없습니다</string>
+    <string name="no_medication_past">이 날 복용한 약이 없습니다</string>
+    <string name="add_medication_button">약 추가</string>
+    <string name="taken_at">복용 완료 %02d:%02d</string>
+    <string name="edit_taken_time">복용 시각 수정</string>
+    <string name="today">오늘</string>
+    <string name="today_with_date">오늘 %s</string>
+
+    <!-- Medication List Screen -->
+    <string name="medication_list_title">약품 목록</string>
+    <string name="add_medication">약 추가</string>
+    <string name="current_medications">복용 중</string>
+    <string name="past_medications">과거 약품</string>
+    <string name="no_medications">등록된 약품이 없습니다</string>
+    <string name="no_past_medications">과거 약품이 없습니다</string>
+    <string name="edit">편집</string>
+    <string name="delete">삭제</string>
+    <string name="delete_confirmation_title">확인</string>
+    <string name="delete_confirmation_message">복용 이력도 삭제됩니다.\n정말 이 약품을 삭제하시겠습니까?</string>
+    <string name="yes">예</string>
+    <string name="no">아니오</string>
+    <string name="medication_times_label">복용 시간: %s</string>
+    <string name="cycle_label">주기: %s</string>
+    <string name="period_label">기간: %s</string>
+    <string name="period_no_end">%s 〜</string>
+    <string name="period_with_end">%s 〜 %s</string>
+
+    <!-- Medication Form Screen -->
+    <string name="add_medication_title">약 추가</string>
+    <string name="edit_medication_title">약 편집</string>
+    <string name="back">뒤로</string>
+    <string name="medication_name">약품 이름</string>
+    <string name="medication_name_hint">약품 이름 입력</string>
+    <string name="medication_times">복용 시간</string>
+    <string name="add_time">시간 추가</string>
+    <string name="cycle_type">복용 주기</string>
+    <string name="cycle_daily">매일</string>
+    <string name="cycle_weekly">매주</string>
+    <string name="cycle_interval">N일마다</string>
+    <string name="select_days">요일 선택</string>
+    <string name="sunday_short">일</string>
+    <string name="monday_short">월</string>
+    <string name="tuesday_short">화</string>
+    <string name="wednesday_short">수</string>
+    <string name="thursday_short">목</string>
+    <string name="friday_short">금</string>
+    <string name="saturday_short">토</string>
+    <string name="interval_days">일수</string>
+    <string name="start_date">시작일</string>
+    <string name="end_date">종료일</string>
+    <string name="start_date_label">시작일: %s</string>
+    <string name="end_date_label">종료일: %s</string>
+    <string name="end_date_none">종료일: 없음</string>
+    <string name="clear_end_date">종료일 지우기</string>
+    <string name="save">저장</string>
+    <string name="dose">복용량</string>
+    <string name="dose_unit">단위</string>
+
+    <!-- Dose Units -->
+    <string name="dose_unit_none">없음</string>
+    <string name="dose_unit_tab">정</string>
+    <string name="dose_unit_cap">캡슐</string>
+    <string name="dose_unit_pack">포</string>
+    <string name="dose_unit_ml">mL</string>
+    <string name="dose_unit_mg">mg</string>
+    <string name="dose_unit_g">g</string>
+    <string name="dose_unit_drop">방울</string>
+    <string name="dose_unit_puff">회</string>
+    <string name="dose_unit_app">회</string>
+    <string name="dose_unit_custom">사용자 지정</string>
+    <string name="dose_format">× %s%s</string>
+
+    <!-- Cycle Descriptions -->
+    <string name="cycle_daily_full">매일</string>
+    <string name="cycle_weekly_prefix">매주</string>
+    <string name="cycle_interval_format">%s일마다</string>
+    <string name="day_name_separator">·</string>
+
+    <!-- Week Days Full Names -->
+    <string name="sunday">일요일</string>
+    <string name="monday">월요일</string>
+    <string name="tuesday">화요일</string>
+    <string name="wednesday">수요일</string>
+    <string name="thursday">목요일</string>
+    <string name="friday">금요일</string>
+    <string name="saturday">토요일</string>
+
+    <!-- Settings Screen -->
+    <string name="settings">설정</string>
+    <string name="notification_settings">알림 설정</string>
+    <string name="enable_notifications">알림 사용</string>
+    <string name="notification_description">복약 시각에 리마인더 받기</string>
+    <string name="app_info">앱 정보</string>
+    <string name="version">버전</string>
+    <string name="license_info">라이선스 정보</string>
+    <string name="app_license">이 애플리케이션은 MIT-0 라이선스에 따라 공개됩니다.</string>
+    <string name="mit0_license_url">https://licenses.opensource.jp/MIT-0/MIT-0.html</string>
+    <string name="open_source_licenses">오픈 소스 라이선스</string>
+    <string name="license_details">이 애플리케이션은 다음 오픈 소스 라이브러리를 사용합니다:\n\n• Android Jetpack (Apache License 2.0)\n• Kotlin (Apache License 2.0)\n• Room Database (Apache License 2.0)\n• Jetpack Compose (Apache License 2.0)\n• Material Design 3 (Apache License 2.0)</string>
+
+    <!-- Notifications -->
+    <string name="notification_channel_name">복약 리마인더</string>
+    <string name="notification_channel_description">약 복용 시각을 알려드립니다</string>
+    <string name="notification_title">복용 시각입니다 (%s)</string>
+    <string name="notification_message_single">%s 를 복용하세요</string>
+    <string name="notification_message_multiple">%s 를 복용하세요</string>
+    <string name="medication_list_separator">、</string>
+
+    <!-- As-Needed Medication -->
+    <string name="as_needed_medication">임시 복용</string>
+    <string name="as_needed_checkbox">임시 복용약</string>
+    <string name="as_needed_description">필요시 복용</string>
+    <string name="add_as_needed_intake">추가</string>
+    <string name="remove_intake">삭제</string>
+    <string name="taken_count">복용 %d회째</string>
+
+    <!-- Daily Notes -->
+    <string name="note_section_title">메모</string>
+    <string name="add_note">메모 추가</string>
+    <string name="edit_note">메모 편집</string>
+    <string name="delete_note">메모 삭제</string>
+    <string name="note_content">메모</string>
+    <string name="confirm_delete_note">이 메모를 삭제하시겠습니까?</string>
+    <string name="previous_note">이전 메모</string>
+    <string name="next_note">다음 메모</string>
+
+    <!-- Medication Cancellation -->
+    <string name="medication_canceled">복용 취소됨</string>
+    <string name="cancel_medication">복용 취소</string>
+    <string name="restore_medication">취소 되돌리기</string>
+
+    <!-- Error Messages -->
+    <string name="error_empty_name">약품 이름을 입력하세요</string>
+    <string name="error_no_times">최소 1개의 복용 시간을 설정하세요</string>
+    <string name="error_invalid_end_date">종료일은 시작일보다 나중으로 설정하세요</string>
+    <string name="error_no_days_selected">최소 1개의 요일을 선택하세요</string>
+    <string name="error_invalid_interval">1 이상의 일수를 입력하세요</string>
+    <string name="error_invalid_dose">%.1f〜%.1f 범위의 숫자를 입력하세요</string>
+    <string name="error_invalid_start_date_past">편집 시 시작일을 과거 날짜로 변경할 수 없습니다</string>
+    <string name="error_form_has_errors">입력 내용에 오류가 있습니다. 위의 항목을 확인하세요.</string>
+
+    <!-- Language Settings -->
+    <string name="language_settings">언어</string>
+    <string name="language">언어</string>
+    <string name="language_system">시스템 기본값</string>
+    <string name="language_english">English (영어)</string>
+    <string name="language_japanese">日本語 (일본어)</string>
+    <string name="language_chinese_simplified">简体中文 (중국어 간체)</string>
+    <string name="language_chinese_traditional">繁體中文 (중국어 번체)</string>
+    <string name="language_korean">한국어</string>
+    <string name="restart_required">재시작 필요</string>
+    <string name="restart_required_message">언어 변경을 반영하려면 앱을 재시작해야 합니다.</string>
+    <string name="restart_now">지금 재시작</string>
+    <string name="restart_later">나중에</string>
+</resources>

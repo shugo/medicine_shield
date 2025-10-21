@@ -24,6 +24,9 @@ class SettingsViewModel(
     private val _notificationsEnabled = MutableStateFlow(settingsPreferences.isNotificationsEnabled())
     val notificationsEnabled: StateFlow<Boolean> = _notificationsEnabled.asStateFlow()
 
+    private val _currentLanguage = MutableStateFlow(settingsPreferences.getLanguage())
+    val currentLanguage: StateFlow<String> = _currentLanguage.asStateFlow()
+
     val appVersion: String by lazy {
         try {
             val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -58,6 +61,15 @@ class SettingsViewModel(
                 cancelAllNotifications()
             }
         }
+    }
+
+    /**
+     * Set the application language
+     * Note: App restart is required for the change to take effect
+     */
+    fun setLanguage(language: String) {
+        settingsPreferences.setLanguage(language)
+        _currentLanguage.value = language
     }
 
     /**
