@@ -77,7 +77,7 @@
     <string name="dose_unit_mg">mg</string>
     <string name="dose_unit_g">g</string>
     <string name="dose_unit_drop">방울</string>
-    <string name="dose_unit_puff">흡입</string>
+    <string name="dose_unit_puff">회</string>
     <string name="dose_unit_app">회</string>
     <string name="dose_unit_custom">사용자 지정</string>
     <string name="dose_format">× %s%s</string>

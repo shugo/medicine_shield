@@ -77,7 +77,7 @@
     <string name="dose_unit_mg">mg</string>
     <string name="dose_unit_g">g</string>
     <string name="dose_unit_drop">滴</string>
-    <string name="dose_unit_puff">吸</string>
+    <string name="dose_unit_puff">喷</string>
     <string name="dose_unit_app">次</string>
     <string name="dose_unit_custom">自定义</string>
     <string name="dose_format">× %s%s</string>
