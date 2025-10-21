@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Medicine Shield</string>
+
+    <!-- Daily Medication Screen -->
+    <string name="daily_medication_title">每日用藥</string>
+    <string name="medication_list">用藥清單</string>
+    <string name="previous_day">前一天</string>
+    <string name="next_day">後一天</string>
+    <string name="ok">確定</string>
+    <string name="cancel">取消</string>
+    <string name="no_medication_today">今天沒有需要服用的藥物</string>
+    <string name="no_medication_future">這一天沒有需要服用的藥物</string>
+    <string name="no_medication_past">這一天沒有服用任何藥物</string>
+    <string name="add_medication_button">新增藥物</string>
+    <string name="taken_at">已於 %02d:%02d 服用</string>
+    <string name="edit_taken_time">編輯服用時間</string>
+    <string name="today">今天</string>
+    <string name="today_with_date">今天 %s</string>
+
+    <!-- Medication List Screen -->
+    <string name="medication_list_title">藥物</string>
+    <string name="add_medication">新增藥物</string>
+    <string name="current_medications">目前</string>
+    <string name="past_medications">過去的藥物</string>
+    <string name="no_medications">未登記藥物</string>
+    <string name="no_past_medications">沒有過去的藥物</string>
+    <string name="edit">編輯</string>
+    <string name="delete">刪除</string>
+    <string name="delete_confirmation_title">確認</string>
+    <string name="delete_confirmation_message">所有服用記錄也將被刪除。\n您確定要刪除這個藥物嗎？</string>
+    <string name="yes">是</string>
+    <string name="no">否</string>
+    <string name="medication_times_label">時間：%s</string>
+    <string name="cycle_label">週期：%s</string>
+    <string name="period_label">期間：%s</string>
+    <string name="period_no_end">%s ~</string>
+    <string name="period_with_end">%s ~ %s</string>
+
+    <!-- Medication Form Screen -->
+    <string name="add_medication_title">新增藥物</string>
+    <string name="edit_medication_title">編輯藥物</string>
+    <string name="back">返回</string>
+    <string name="medication_name">藥物名稱</string>
+    <string name="medication_name_hint">請輸入藥物名稱</string>
+    <string name="medication_times">服用時間</string>
+    <string name="add_time">新增時間</string>
+    <string name="cycle_type">服用週期</string>
+    <string name="cycle_daily">每日</string>
+    <string name="cycle_weekly">每週</string>
+    <string name="cycle_interval">每N天</string>
+    <string name="select_days">選擇日期</string>
+    <string name="sunday_short">日</string>
+    <string name="monday_short">一</string>
+    <string name="tuesday_short">二</string>
+    <string name="wednesday_short">三</string>
+    <string name="thursday_short">四</string>
+    <string name="friday_short">五</string>
+    <string name="saturday_short">六</string>
+    <string name="interval_days">天</string>
+    <string name="start_date">開始日期</string>
+    <string name="end_date">結束日期</string>
+    <string name="start_date_label">開始日期：%s</string>
+    <string name="end_date_label">結束日期：%s</string>
+    <string name="end_date_none">結束日期：無</string>
+    <string name="clear_end_date">清除結束日期</string>
+    <string name="save">儲存</string>
+    <string name="dose">劑量</string>
+    <string name="dose_unit">單位</string>
+
+    <!-- Dose Units -->
+    <string name="dose_unit_none">無</string>
+    <string name="dose_unit_tab">錠</string>
+    <string name="dose_unit_cap">粒</string>
+    <string name="dose_unit_pack">包</string>
+    <string name="dose_unit_ml">毫升</string>
+    <string name="dose_unit_mg">毫克</string>
+    <string name="dose_unit_g">克</string>
+    <string name="dose_unit_drop">滴</string>
+    <string name="dose_unit_puff">吸</string>
+    <string name="dose_unit_app">次</string>
+    <string name="dose_unit_custom">自訂</string>
+    <string name="dose_format">× %s %s</string>
+
+    <!-- Cycle Descriptions -->
+    <string name="cycle_daily_full">每日</string>
+    <string name="cycle_weekly_prefix">每週</string>
+    <string name="cycle_interval_format">每 %s 天</string>
+    <string name="day_name_separator">、</string>
+
+    <!-- Week Days Full Names -->
+    <string name="sunday">星期日</string>
+    <string name="monday">星期一</string>
+    <string name="tuesday">星期二</string>
+    <string name="wednesday">星期三</string>
+    <string name="thursday">星期四</string>
+    <string name="friday">星期五</string>
+    <string name="saturday">星期六</string>
+
+    <!-- Settings Screen -->
+    <string name="settings">設定</string>
+    <string name="notification_settings">通知設定</string>
+    <string name="enable_notifications">啟用通知</string>
+    <string name="notification_description">在需要服藥時接收提醒</string>
+    <string name="app_info">應用程式資訊</string>
+    <string name="version">版本</string>
+    <string name="license_info">授權資訊</string>
+    <string name="app_license">本應用程式根據 MIT-0 授權條款發布。</string>
+    <string name="mit0_license_url">https://opensource.org/license/mit-0</string>
+    <string name="open_source_licenses">開放原始碼授權</string>
+    <string name="license_details">本應用程式使用以下開放原始碼程式庫：\n\n• Android Jetpack（Apache License 2.0）\n• Kotlin（Apache License 2.0）\n• Room Database（Apache License 2.0）\n• Jetpack Compose（Apache License 2.0）\n• Material Design 3（Apache License 2.0）</string>
+
+    <!-- Notifications -->
+    <string name="notification_channel_name">用藥提醒</string>
+    <string name="notification_channel_description">在需要服藥時通知您</string>
+    <string name="notification_title">服藥時間（%s）</string>
+    <string name="notification_message_single">請服用 %s</string>
+    <string name="notification_message_multiple">請服用 %s</string>
+    <string name="medication_list_separator">、</string>
+
+    <!-- As-Needed Medication -->
+    <string name="as_needed_medication">按需用藥</string>
+    <string name="as_needed_checkbox">按需服用的藥物</string>
+    <string name="as_needed_description">按需服用</string>
+    <string name="add_as_needed_intake">新增</string>
+    <string name="remove_intake">移除</string>
+    <string name="taken_count">已服用 %d 次</string>
+
+    <!-- Daily Notes -->
+    <string name="note_section_title">備註</string>
+    <string name="add_note">新增備註</string>
+    <string name="edit_note">編輯備註</string>
+    <string name="delete_note">刪除備註</string>
+    <string name="note_content">備註</string>
+    <string name="confirm_delete_note">刪除此備註？</string>
+    <string name="previous_note">上一條備註</string>
+    <string name="next_note">下一條備註</string>
+
+    <!-- Medication Cancellation -->
+    <string name="medication_canceled">已取消服藥</string>
+    <string name="cancel_medication">取消服藥</string>
+    <string name="restore_medication">恢復</string>
+
+    <!-- Error Messages -->
+    <string name="error_empty_name">請輸入藥物名稱</string>
+    <string name="error_no_times">請至少設定一個服用時間</string>
+    <string name="error_invalid_end_date">結束日期必須晚於開始日期</string>
+    <string name="error_no_days_selected">請至少選擇一天</string>
+    <string name="error_invalid_interval">請輸入大於或等於1的天數</string>
+    <string name="error_invalid_dose">請輸入 %.1f 到 %.1f 範圍內的數字</string>
+    <string name="error_invalid_start_date_past">編輯時不能將開始日期改為過去的日期</string>
+    <string name="error_form_has_errors">表單中有錯誤。請檢查上述欄位。</string>
+
+    <!-- Language Settings -->
+    <string name="language_settings">語言</string>
+    <string name="language">語言</string>
+    <string name="language_system">系統預設</string>
+    <string name="language_english">English（英語）</string>
+    <string name="language_japanese">日本語（日語）</string>
+    <string name="language_chinese_simplified">简体中文（簡體中文）</string>
+    <string name="language_chinese_traditional">繁體中文</string>
+    <string name="language_korean">한국어（韓語）</string>
+    <string name="restart_required">需要重新啟動</string>
+    <string name="restart_required_message">應用程式需要重新啟動才能使語言變更生效。</string>
+    <string name="restart_now">立即重新啟動</string>
+    <string name="restart_later">稍後</string>
+</resources>

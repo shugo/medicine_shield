@@ -42,6 +42,7 @@ import net.shugo.medicineshield.ui.screen.DailyMedicationScreen
 import net.shugo.medicineshield.ui.screen.MedicationFormScreen
 import net.shugo.medicineshield.ui.screen.MedicationListScreen
 import net.shugo.medicineshield.ui.screen.SettingsScreen
+import net.shugo.medicineshield.utils.LocaleHelper
 import net.shugo.medicineshield.viewmodel.DailyMedicationViewModel
 import net.shugo.medicineshield.viewmodel.MedicationFormViewModel
 import net.shugo.medicineshield.viewmodel.MedicationListViewModel
@@ -62,6 +63,13 @@ class MainActivity : ComponentActivity() {
             val settingsPreferences = SettingsPreferences(this)
             settingsPreferences.setNotificationsEnabled(false)
         }
+    }
+
+    override fun attachBaseContext(newBase: Context) {
+        val settingsPreferences = SettingsPreferences(newBase)
+        val language = settingsPreferences.getLanguage()
+        val context = LocaleHelper.wrap(newBase, language)
+        super.attachBaseContext(context)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
