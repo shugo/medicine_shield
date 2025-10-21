@@ -450,7 +450,7 @@ private fun BaseMedicationCard(
     actionButton: @Composable () -> Unit
 ) {
     var showTimePickerDialog by remember { mutableStateOf(false) }
-    val doseFormat = stringResource(R.string.dose_format, "%s", "%s")
+    val doseFormat = stringResource(R.string.dose_format)
 
     Card(
         modifier = Modifier

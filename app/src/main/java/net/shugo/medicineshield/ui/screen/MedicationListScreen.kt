@@ -172,7 +172,7 @@ fun MedicationCard(
 ) {
     val medication = medicationWithTimes.medication
     val times = medicationWithTimes.times
-    val doseFormat = stringResource(R.string.dose_format, "%s", "%s")
+    val doseFormat = stringResource(R.string.dose_format)
 
     Card(
         modifier = Modifier

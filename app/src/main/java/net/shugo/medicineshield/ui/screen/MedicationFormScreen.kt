@@ -84,7 +84,7 @@ fun MedicationFormScreen(
     var editingTimeIndex by remember { mutableStateOf<Int?>(null) }
     var showStartDatePicker by remember { mutableStateOf(false) }
     var showEndDatePicker by remember { mutableStateOf(false) }
-    val doseFormat = stringResource(R.string.dose_format, "%s", "%s")
+    val doseFormat = stringResource(R.string.dose_format)
 
     Scaffold(
         topBar = {
