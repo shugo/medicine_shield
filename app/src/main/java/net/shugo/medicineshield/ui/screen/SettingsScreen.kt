@@ -46,13 +46,13 @@ import androidx.compose.ui.unit.dp
 import net.shugo.medicineshield.R
 import net.shugo.medicineshield.data.preferences.SettingsPreferences
 import net.shugo.medicineshield.viewmodel.SettingsViewModel
-import kotlin.system.exitProcess
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onRestartApp: () -> Unit,
 ) {
     val notificationsEnabled by viewModel.notificationsEnabled.collectAsState()
     val currentLanguage by viewModel.currentLanguage.collectAsState()
@@ -359,11 +359,7 @@ fun SettingsScreen(
             text = { Text(stringResource(R.string.restart_required_message)) },
             confirmButton = {
                 TextButton(
-                    onClick = {
-                        // Force app restart
-                        android.os.Process.killProcess(android.os.Process.myPid())
-                        exitProcess(0)
-                    }
+                    onClick = onRestartApp
                 ) {
                     Text(stringResource(R.string.restart_now))
                 }

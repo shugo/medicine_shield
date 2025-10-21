@@ -103,7 +103,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    MedicineShieldApp(repository, scheduledDateState)
+                    MedicineShieldApp(repository, scheduledDateState, { restartApp() })
                 }
             }
         }
@@ -149,6 +149,20 @@ class MainActivity : ComponentActivity() {
             scheduler.rescheduleAllNotifications()
         }
     }
+
+    private fun restartApp() {
+        // Create an Intent for the main activity
+        val intent = Intent(applicationContext, MainActivity::class.java)
+
+        // Set flags to clear the existing task and start a new one
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+
+        // Start the new activity
+        startActivity(intent)
+
+        // (Optional) Finish the current activity (SettingsActivity)
+        finish()
+    }
 }
 
 @Composable
@@ -181,7 +195,8 @@ fun MedicineShieldTheme(content: @Composable () -> Unit) {
 @Composable
 fun MedicineShieldApp(
     repository: MedicationRepository,
-    scheduledDateState: MutableState<String?>
+    scheduledDateState: MutableState<String?>,
+    onRestartApp: () -> Unit
 ) {
     val navController = rememberNavController()
     val context = LocalContext.current
@@ -224,7 +239,8 @@ fun MedicineShieldApp(
                 viewModel = viewModel,
                 onNavigateBack = {
                     navController.popBackStack()
-                }
+                },
+                onRestartApp = onRestartApp
             )
         }
 
