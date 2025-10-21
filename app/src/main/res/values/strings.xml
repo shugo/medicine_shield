@@ -80,7 +80,7 @@
     <string name="dose_unit_puff">puff(s)</string>
     <string name="dose_unit_app">app(s)</string>
     <string name="dose_unit_custom">Custom</string>
-    <string name="dose_format">× %s %s"</string>
+    <string name="dose_format">× %s %s</string>
 
     <!-- Cycle Descriptions -->
     <string name="cycle_daily_full">Daily</string>
