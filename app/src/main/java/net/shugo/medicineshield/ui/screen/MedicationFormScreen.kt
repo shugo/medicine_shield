@@ -84,6 +84,7 @@ fun MedicationFormScreen(
     var editingTimeIndex by remember { mutableStateOf<Int?>(null) }
     var showStartDatePicker by remember { mutableStateOf(false) }
     var showEndDatePicker by remember { mutableStateOf(false) }
+    val doseFormat = stringResource(R.string.dose_format, "%s", "%s")
 
     Scaffold(
         topBar = {
@@ -225,7 +226,7 @@ fun MedicationFormScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        "${timeWithSeq.time} ${formatDose(timeWithSeq.dose, formState.doseUnit)}",
+                        "${timeWithSeq.time} ${formatDose(doseFormat, timeWithSeq.dose, formState.doseUnit)}",
                         style = MaterialTheme.typography.bodyLarge,
                         modifier = Modifier
                             .padding(vertical = 12.dp)

@@ -2,11 +2,15 @@ package net.shugo.medicineshield.utils
 
 import java.text.DecimalFormat
 import java.text.ParseException
-import android.annotation.SuppressLint
 
-fun formatDose(dose: Double, doseUnit: String?): String {
-    val doseValue = formatDoseValue(dose)
-    return "× ${doseValue}${doseUnit ?: ""}"
+fun formatDose(doseFormat: String, dose: Double, doseUnit: String?): String {
+    val value = formatDoseValue(dose)
+    val unit = if (value == "1") {
+        doseUnit?.replace(Regex("\\(s\\)$"), "")
+    } else {
+        doseUnit?.replace(Regex("\\(s\\)$"), "s")
+    } ?: ""
+    return String.format(doseFormat, value, unit).trim() // trim in case unit is empty
 }
 
 private fun formatDoseValue(dose: Double): String {

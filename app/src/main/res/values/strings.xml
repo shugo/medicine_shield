@@ -70,16 +70,17 @@
 
     <!-- Dose Units -->
     <string name="dose_unit_none">None</string>
-    <string name="dose_unit_tab">tab</string>
-    <string name="dose_unit_cap">cap</string>
-    <string name="dose_unit_pack">pack</string>
+    <string name="dose_unit_tab">tab(s)</string>
+    <string name="dose_unit_cap">cap(s)</string>
+    <string name="dose_unit_pack">pack(s)</string>
     <string name="dose_unit_ml">mL</string>
     <string name="dose_unit_mg">mg</string>
     <string name="dose_unit_g">g</string>
-    <string name="dose_unit_drop">drop</string>
-    <string name="dose_unit_puff">puff</string>
-    <string name="dose_unit_app">app</string>
+    <string name="dose_unit_drop">drop(s)</string>
+    <string name="dose_unit_puff">puff(s)</string>
+    <string name="dose_unit_app">app(s)</string>
     <string name="dose_unit_custom">Custom</string>
+    <string name="dose_format">× %s %s"</string>
 
     <!-- Cycle Descriptions -->
     <string name="cycle_daily_full">Daily</string>
