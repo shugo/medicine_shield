@@ -450,6 +450,7 @@ private fun BaseMedicationCard(
     actionButton: @Composable () -> Unit
 ) {
     var showTimePickerDialog by remember { mutableStateOf(false) }
+    val doseFormat = stringResource(R.string.dose_format)
 
     Card(
         modifier = Modifier
@@ -489,7 +490,7 @@ private fun BaseMedicationCard(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = formatDose(medication.dose, medication.doseUnit),
+                        text = formatDose(doseFormat, medication.dose, medication.doseUnit),
                         fontSize = 14.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textDecoration = if (medication.status == MedicationIntakeStatus.CANCELED) TextDecoration.LineThrough else null
