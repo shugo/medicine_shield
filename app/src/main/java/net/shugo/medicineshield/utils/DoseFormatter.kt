@@ -3,6 +3,11 @@ package net.shugo.medicineshield.utils
 import java.text.DecimalFormat
 import java.text.ParseException
 
+/**
+ * Formats the dose string, replacing "(s)" in the unit for pluralization.
+ * Assumes doseUnit ends with "(s)" for countable units (e.g., "tablet(s)").
+ * If doseUnit does not end with "(s)", pluralization is not applied.
+ */
 fun formatDose(doseFormat: String, dose: Double, doseUnit: String?): String {
     val value = formatDoseValue(dose)
     val replacement = if (value == "1") "" else "s"
