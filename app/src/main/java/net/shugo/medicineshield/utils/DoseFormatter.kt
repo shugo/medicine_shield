@@ -5,11 +5,8 @@ import java.text.ParseException
 
 fun formatDose(doseFormat: String, dose: Double, doseUnit: String?): String {
     val value = formatDoseValue(dose)
-    val unit = if (value == "1") {
-        doseUnit?.replace(Regex("\\(s\\)$"), "")
-    } else {
-        doseUnit?.replace(Regex("\\(s\\)$"), "s")
-    } ?: ""
+    val replacement = if (value == "1") "" else "s"
+    val unit = doseUnit?.replace(Regex("\\(s\\)$"), replacement) ?: ""
     return String.format(doseFormat, value, unit).trim() // trim in case unit is empty
 }
 
