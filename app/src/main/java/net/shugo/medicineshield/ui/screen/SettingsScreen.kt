@@ -176,116 +176,18 @@ fun SettingsScreen(
                         expanded = showLanguageDropdown,
                         onDismissRequest = { showLanguageDropdown = false }
                     ) {
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.language_system)) },
-                            onClick = {
-                                if (currentLanguage != SettingsPreferences.LANGUAGE_SYSTEM) {
-                                    viewModel.setLanguage(SettingsPreferences.LANGUAGE_SYSTEM)
-                                    showRestartDialog = true
+                        SettingsPreferences.ALL_LANGUAGES.forEach { language ->
+                            DropdownMenuItem(
+                                text = { Text(getLanguageDisplayName(language)) },
+                                onClick = {
+                                    if (currentLanguage != language) {
+                                        viewModel.setLanguage(language)
+                                        showRestartDialog = true
+                                    }
+                                    showLanguageDropdown = false
                                 }
-                                showLanguageDropdown = false
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.language_english)) },
-                            onClick = {
-                                if (currentLanguage != SettingsPreferences.LANGUAGE_ENGLISH) {
-                                    viewModel.setLanguage(SettingsPreferences.LANGUAGE_ENGLISH)
-                                    showRestartDialog = true
-                                }
-                                showLanguageDropdown = false
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.language_japanese)) },
-                            onClick = {
-                                if (currentLanguage != SettingsPreferences.LANGUAGE_JAPANESE) {
-                                    viewModel.setLanguage(SettingsPreferences.LANGUAGE_JAPANESE)
-                                    showRestartDialog = true
-                                }
-                                showLanguageDropdown = false
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.language_chinese_simplified)) },
-                            onClick = {
-                                if (currentLanguage != SettingsPreferences.LANGUAGE_CHINESE_SIMPLIFIED) {
-                                    viewModel.setLanguage(SettingsPreferences.LANGUAGE_CHINESE_SIMPLIFIED)
-                                    showRestartDialog = true
-                                }
-                                showLanguageDropdown = false
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.language_chinese_traditional)) },
-                            onClick = {
-                                if (currentLanguage != SettingsPreferences.LANGUAGE_CHINESE_TRADITIONAL) {
-                                    viewModel.setLanguage(SettingsPreferences.LANGUAGE_CHINESE_TRADITIONAL)
-                                    showRestartDialog = true
-                                }
-                                showLanguageDropdown = false
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.language_korean)) },
-                            onClick = {
-                                if (currentLanguage != SettingsPreferences.LANGUAGE_KOREAN) {
-                                    viewModel.setLanguage(SettingsPreferences.LANGUAGE_KOREAN)
-                                    showRestartDialog = true
-                                }
-                                showLanguageDropdown = false
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.language_french)) },
-                            onClick = {
-                                if (currentLanguage != SettingsPreferences.LANGUAGE_FRENCH) {
-                                    viewModel.setLanguage(SettingsPreferences.LANGUAGE_FRENCH)
-                                    showRestartDialog = true
-                                }
-                                showLanguageDropdown = false
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.language_german)) },
-                            onClick = {
-                                if (currentLanguage != SettingsPreferences.LANGUAGE_GERMAN) {
-                                    viewModel.setLanguage(SettingsPreferences.LANGUAGE_GERMAN)
-                                    showRestartDialog = true
-                                }
-                                showLanguageDropdown = false
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.language_italian)) },
-                            onClick = {
-                                if (currentLanguage != SettingsPreferences.LANGUAGE_ITALIAN) {
-                                    viewModel.setLanguage(SettingsPreferences.LANGUAGE_ITALIAN)
-                                    showRestartDialog = true
-                                }
-                                showLanguageDropdown = false
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.language_spanish)) },
-                            onClick = {
-                                if (currentLanguage != SettingsPreferences.LANGUAGE_SPANISH) {
-                                    viewModel.setLanguage(SettingsPreferences.LANGUAGE_SPANISH)
-                                    showRestartDialog = true
-                                }
-                                showLanguageDropdown = false
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.language_portuguese)) },
-                            onClick = {
-                                if (currentLanguage != SettingsPreferences.LANGUAGE_PORTUGUESE) {
-                                    viewModel.setLanguage(SettingsPreferences.LANGUAGE_PORTUGUESE)
-                                    showRestartDialog = true
-                                }
-                                showLanguageDropdown = false
-                            }
-                        )
+                            )
+                        }
                     }
                 }
             }

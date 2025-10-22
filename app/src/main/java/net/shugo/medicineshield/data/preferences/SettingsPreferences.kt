@@ -28,6 +28,20 @@ class SettingsPreferences(context: Context) {
         const val LANGUAGE_SPANISH = "es"
         const val LANGUAGE_PORTUGUESE = "pt"
         private const val DEFAULT_LANGUAGE = LANGUAGE_SYSTEM
+
+        val ALL_LANGUAGES = arrayOf(
+            LANGUAGE_SYSTEM,
+            LANGUAGE_ENGLISH,
+            LANGUAGE_JAPANESE,
+            LANGUAGE_CHINESE_SIMPLIFIED,
+            LANGUAGE_CHINESE_TRADITIONAL,
+            LANGUAGE_KOREAN,
+            LANGUAGE_FRENCH,
+            LANGUAGE_GERMAN,
+            LANGUAGE_ITALIAN,
+            LANGUAGE_SPANISH,
+            LANGUAGE_PORTUGUESE
+        )
     }
 
     /**
