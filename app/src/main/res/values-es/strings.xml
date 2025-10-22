@@ -163,7 +163,7 @@
     <string name="language_french">Français (Francés)</string>
     <string name="language_german">Deutsch (Alemán)</string>
     <string name="language_italian">Italiano (Italiano)</string>
-    <string name="language_spanish">Español (Spanish)</string>
+    <string name="language_spanish">Español</string>
     <string name="language_portuguese">Português (Portugués)</string>
     <string name="restart_required">Reinicio requerido</string>
     <string name="restart_required_message">La aplicación debe reiniciarse para que el cambio de idioma surta efecto.</string>

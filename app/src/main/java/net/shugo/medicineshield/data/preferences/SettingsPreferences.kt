@@ -29,19 +29,19 @@ class SettingsPreferences(context: Context) {
         const val LANGUAGE_PORTUGUESE = "pt"
         private const val DEFAULT_LANGUAGE = LANGUAGE_SYSTEM
 
-        // System, English, and other languages in alphabetical order
+        // System, English, and other languages in alphabetical language code order
         val ALL_LANGUAGES = arrayOf(
-            LANGUAGE_SYSTEM,
-            LANGUAGE_ENGLISH,
-            LANGUAGE_CHINESE_SIMPLIFIED,
-            LANGUAGE_CHINESE_TRADITIONAL,
-            LANGUAGE_FRENCH,
-            LANGUAGE_GERMAN,
-            LANGUAGE_ITALIAN,
-            LANGUAGE_JAPANESE,
-            LANGUAGE_KOREAN,
-            LANGUAGE_PORTUGUESE,
-            LANGUAGE_SPANISH
+            LANGUAGE_SYSTEM,                // system
+            LANGUAGE_ENGLISH,               // en
+            LANGUAGE_GERMAN,                // de
+            LANGUAGE_SPANISH,               // es
+            LANGUAGE_FRENCH,                // fr
+            LANGUAGE_ITALIAN,               // it
+            LANGUAGE_JAPANESE,              // ja
+            LANGUAGE_KOREAN,                // ko
+            LANGUAGE_PORTUGUESE,            // pt
+            LANGUAGE_CHINESE_SIMPLIFIED,    // zh-CN
+            LANGUAGE_CHINESE_TRADITIONAL    // zh-TW
         )
     }
 

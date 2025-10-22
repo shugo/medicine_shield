@@ -160,6 +160,11 @@
     <string name="language_chinese_simplified">简体中文 (簡體中文)</string>
     <string name="language_chinese_traditional">繁體中文</string>
     <string name="language_korean">한국어 (韓語)</string>
+    <string name="language_french">Français (法語)</string>
+    <string name="language_german">Deutsch (德語)</string>
+    <string name="language_italian">Italiano (義大利語)</string>
+    <string name="language_spanish">Español (西班牙語)</string>
+    <string name="language_portuguese">Português (葡萄牙語)</string>
     <string name="restart_required">需要重新啟動</string>
     <string name="restart_required_message">需要重新啟動應用程式才能使語言變更生效。</string>
     <string name="restart_now">立即重新啟動</string>
