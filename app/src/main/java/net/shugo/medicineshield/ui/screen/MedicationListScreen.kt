@@ -40,6 +40,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import net.shugo.medicineshield.R
@@ -173,6 +174,11 @@ fun MedicationCard(
     val medication = medicationWithTimes.medication
     val times = medicationWithTimes.times
     val doseFormat = stringResource(R.string.dose_format)
+    val timeParser = SimpleDateFormat("HH:mm", Locale.ROOT)
+    val context = LocalContext.current
+    val timeFormatter = remember(context) {
+        DateFormat.getTimeFormat(context)
+    }
 
     Card(
         modifier = Modifier
@@ -214,7 +220,13 @@ fun MedicationCard(
                 val timesText = if (config.isAsNeeded) {
                     "${stringResource(R.string.as_needed_medication)} ${formatDose(doseFormat, config.dose, config.doseUnit)}"
                 } else {
-                    times.joinToString(", ") { "${it.time} ${formatDose(doseFormat, it.dose, config.doseUnit)}" }
+                    times.joinToString(", ") {
+                        val time = timeParser.parse(it.time)
+                        val formattedTime = time?.let {
+                            timeFormatter.format(it)
+                        } ?: "00:00"
+                        "$formattedTime ${formatDose(doseFormat, it.dose, config.doseUnit)}"
+                    }
                 }
                 Text(
                     stringResource(R.string.medication_times_label, timesText),

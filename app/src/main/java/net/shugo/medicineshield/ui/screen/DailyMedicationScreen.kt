@@ -1,5 +1,6 @@
 package net.shugo.medicineshield.ui.screen
 
+import android.text.format.DateFormat
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -55,6 +56,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.font.FontWeight
@@ -63,12 +65,14 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import net.shugo.medicineshield.R
+import net.shugo.medicineshield.R.string.taken_at
 import net.shugo.medicineshield.data.model.DailyMedicationItem
 import net.shugo.medicineshield.data.model.DailyNote
 import net.shugo.medicineshield.data.model.MedicationIntakeStatus
 import net.shugo.medicineshield.utils.formatDose
 import net.shugo.medicineshield.viewmodel.DailyMedicationViewModel
 import java.util.Calendar
+import java.util.Date
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -451,6 +455,10 @@ private fun BaseMedicationCard(
 ) {
     var showTimePickerDialog by remember { mutableStateOf(false) }
     val doseFormat = stringResource(R.string.dose_format)
+    val context = LocalContext.current
+    val timeFormatter = remember(context) {
+        DateFormat.getTimeFormat(context)
+    }
 
     Card(
         modifier = Modifier
@@ -508,8 +516,9 @@ private fun BaseMedicationCard(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(top = 4.dp)
                     ) {
+                        val time = timeFormatter.format(Date(medication.takenAt))
                         Text(
-                            text = formatTakenTime(medication.takenAt),
+                            text = stringResource(taken_at, time),
                             fontSize = 12.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -671,17 +680,6 @@ fun TimePickerDialog(
         text = {
             TimePicker(state = timePickerState)
         }
-    )
-}
-
-@Composable
-fun formatTakenTime(timestamp: Long): String {
-    val calendar = Calendar.getInstance()
-    calendar.timeInMillis = timestamp
-    return stringResource(
-        R.string.taken_at,
-        calendar.get(Calendar.HOUR_OF_DAY),
-        calendar.get(Calendar.MINUTE)
     )
 }
 

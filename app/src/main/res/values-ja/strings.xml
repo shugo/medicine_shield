@@ -13,7 +13,7 @@
     <string name="no_medication_future">この日に飲むお薬はありません</string>
     <string name="no_medication_past">この日に飲んだお薬はありません</string>
     <string name="add_medication_button">お薬を追加する</string>
-    <string name="taken_at">服用済み %02d:%02d</string>
+    <string name="taken_at">服用済み %s</string>
     <string name="edit_taken_time">服用時刻を編集</string>
     <string name="today">今日</string>
     <string name="today_with_date">今日 %s</string>
