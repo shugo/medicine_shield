@@ -1,6 +1,5 @@
 package net.shugo.medicineshield.ui.screen
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,29 +11,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuAnchorType
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -46,22 +35,16 @@ import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import net.shugo.medicineshield.R
-import net.shugo.medicineshield.data.preferences.SettingsPreferences
 import net.shugo.medicineshield.viewmodel.SettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel,
-    onNavigateBack: () -> Unit,
-    onRestartApp: () -> Unit,
+    onNavigateBack: () -> Unit
 ) {
     val notificationsEnabled by viewModel.notificationsEnabled.collectAsState()
-    val currentLanguage by viewModel.currentLanguage.collectAsState()
     val context = LocalContext.current
-
-    var showLanguageDropdown by remember { mutableStateOf(false) }
-    var showRestartDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -126,76 +109,6 @@ fun SettingsScreen(
                             viewModel.setNotificationsEnabled(enabled)
                         }
                     )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Language Settings Section
-            Text(
-                text = stringResource(R.string.language_settings),
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { showLanguageDropdown = true }
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        ExposedDropdownMenuBox(
-                            expanded = showLanguageDropdown,
-                            onExpandedChange = { showLanguageDropdown = it }
-                        ) {
-                            OutlinedTextField(
-                                value = getLanguageDisplayName(currentLanguage),
-                                onValueChange = {},
-                                readOnly = true,
-                                label = { Text(stringResource(R.string.language)) },
-                                trailingIcon = {
-                                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = showLanguageDropdown)
-                                },
-                                colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
-                                modifier = Modifier
-                                    .menuAnchor(
-                                        ExposedDropdownMenuAnchorType.PrimaryNotEditable,
-                                        true
-                                    )
-                                    .fillMaxWidth()
-                            )
-
-                            ExposedDropdownMenu(
-                                expanded = showLanguageDropdown,
-                                onDismissRequest = { showLanguageDropdown = false }
-                            ) {
-                                SettingsPreferences.ALL_LANGUAGES.forEach { language ->
-                                    DropdownMenuItem(
-                                        text = { Text(getLanguageDisplayName(language)) },
-                                        onClick = {
-                                            if (currentLanguage != language) {
-                                                viewModel.setLanguage(language)
-                                                showRestartDialog = true
-                                            }
-                                            showLanguageDropdown = false
-                                        }
-                                    )
-                                }
-                            }
-                        }
-                    }
                 }
             }
 
@@ -308,49 +221,5 @@ fun SettingsScreen(
                 }
             }
         }
-    }
-
-    // Restart dialog
-    if (showRestartDialog) {
-        AlertDialog(
-            onDismissRequest = { showRestartDialog = false },
-            title = { Text(stringResource(R.string.restart_required)) },
-            text = { Text(stringResource(R.string.restart_required_message)) },
-            confirmButton = {
-                TextButton(
-                    onClick = onRestartApp
-                ) {
-                    Text(stringResource(R.string.restart_now))
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { showRestartDialog = false }
-                ) {
-                    Text(stringResource(R.string.restart_later))
-                }
-            }
-        )
-    }
-}
-
-/**
- * Get the display name for a language code
- */
-@Composable
-private fun getLanguageDisplayName(languageCode: String): String {
-    return when (languageCode) {
-        SettingsPreferences.LANGUAGE_SYSTEM -> stringResource(R.string.language_system)
-        SettingsPreferences.LANGUAGE_ENGLISH -> stringResource(R.string.language_english)
-        SettingsPreferences.LANGUAGE_JAPANESE -> stringResource(R.string.language_japanese)
-        SettingsPreferences.LANGUAGE_CHINESE_SIMPLIFIED -> stringResource(R.string.language_chinese_simplified)
-        SettingsPreferences.LANGUAGE_CHINESE_TRADITIONAL -> stringResource(R.string.language_chinese_traditional)
-        SettingsPreferences.LANGUAGE_KOREAN -> stringResource(R.string.language_korean)
-        SettingsPreferences.LANGUAGE_FRENCH -> stringResource(R.string.language_french)
-        SettingsPreferences.LANGUAGE_GERMAN -> stringResource(R.string.language_german)
-        SettingsPreferences.LANGUAGE_ITALIAN -> stringResource(R.string.language_italian)
-        SettingsPreferences.LANGUAGE_SPANISH -> stringResource(R.string.language_spanish)
-        SettingsPreferences.LANGUAGE_PORTUGUESE -> stringResource(R.string.language_portuguese)
-        else -> stringResource(R.string.language_system)
     }
 }

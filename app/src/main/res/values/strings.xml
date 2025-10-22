@@ -150,23 +150,4 @@
     <string name="error_invalid_dose">Please enter a number in the range of %.1f to %.1f.</string>
     <string name="error_invalid_start_date_past">Cannot change the start date to a past date when editing</string>
     <string name="error_form_has_errors">There are errors in the form. Please check the fields above.</string>
-
-    <!-- Language Settings -->
-    <string name="language_settings">Language</string>
-    <string name="language">Language</string>
-    <string name="language_system">System Default</string>
-    <string name="language_english">English</string>
-    <string name="language_japanese">日本語 (Japanese)</string>
-    <string name="language_chinese_simplified">简体中文 (Simplified Chinese)</string>
-    <string name="language_chinese_traditional">繁體中文 (Traditional Chinese)</string>
-    <string name="language_korean">한국어 (Korean)</string>
-    <string name="language_french">Français (French)</string>
-    <string name="language_german">Deutsch (German)</string>
-    <string name="language_italian">Italiano (Italian)</string>
-    <string name="language_spanish">Español (Spanish)</string>
-    <string name="language_portuguese">Português (Portuguese)</string>
-    <string name="restart_required">Restart Required</string>
-    <string name="restart_required_message">The app needs to restart for the language change to take effect.</string>
-    <string name="restart_now">Restart Now</string>
-    <string name="restart_later">Later</string>
 </resources>
