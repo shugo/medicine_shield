@@ -15,8 +15,8 @@ android {
         applicationId = "net.shugo.medicineshield"
         minSdk = 24
         targetSdk = 36
-        versionCode = 5
-        versionName = "5"
+        versionCode = 6
+        versionName = "6"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
