@@ -90,7 +90,7 @@ fun DailyMedicationScreen(
 
     // Configuration変更（言語変更など）を検出して表示を更新
     val configuration = LocalConfiguration.current
-    LaunchedEffect(configuration) {
+    LaunchedEffect(configuration.locales) {
         viewModel.refreshData()
     }
 
