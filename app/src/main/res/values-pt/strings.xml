@@ -70,15 +70,15 @@
 
     <!-- Dose Units -->
     <string name="dose_unit_none">Nenhuma</string>
-    <string name="dose_unit_tab">comprimido(s)</string>
-    <string name="dose_unit_cap">cápsula(s)</string>
-    <string name="dose_unit_pack">saqueta(s)</string>
+    <string name="dose_unit_tab">comp.</string>
+    <string name="dose_unit_cap">cáps.</string>
+    <string name="dose_unit_pack">saq.</string>
     <string name="dose_unit_ml">mL</string>
     <string name="dose_unit_mg">mg</string>
     <string name="dose_unit_g">g</string>
-    <string name="dose_unit_drop">gota(s)</string>
-    <string name="dose_unit_puff">inalação/ões</string>
-    <string name="dose_unit_app">aplicação/ões</string>
+    <string name="dose_unit_drop">gts.</string>
+    <string name="dose_unit_puff">inal.</string>
+    <string name="dose_unit_app">aplic.</string>
     <string name="dose_unit_custom">Personalizado</string>
     <string name="dose_format">× %s %s</string>
 

@@ -70,15 +70,15 @@
 
     <!-- Dose Units -->
     <string name="dose_unit_none">Nessuna</string>
-    <string name="dose_unit_tab">compressa/e</string>
-    <string name="dose_unit_cap">capsula/e</string>
-    <string name="dose_unit_pack">bustina/e</string>
+    <string name="dose_unit_tab">cp.</string>
+    <string name="dose_unit_cap">cps.</string>
+    <string name="dose_unit_pack">bust.</string>
     <string name="dose_unit_ml">mL</string>
     <string name="dose_unit_mg">mg</string>
     <string name="dose_unit_g">g</string>
-    <string name="dose_unit_drop">goccia/e</string>
+    <string name="dose_unit_drop">gtt</string>
     <string name="dose_unit_puff">puff</string>
-    <string name="dose_unit_app">applicazione/i</string>
+    <string name="dose_unit_app">appl.</string>
     <string name="dose_unit_custom">Personalizzato</string>
     <string name="dose_format">× %s %s</string>
 

@@ -70,15 +70,15 @@
 
     <!-- Dose Units -->
     <string name="dose_unit_none">Keine</string>
-    <string name="dose_unit_tab">Tablette(n)</string>
-    <string name="dose_unit_cap">Kapsel(n)</string>
-    <string name="dose_unit_pack">Beutel</string>
+    <string name="dose_unit_tab">Tbl.</string>
+    <string name="dose_unit_cap">Kps.</string>
+    <string name="dose_unit_pack">Btl.</string>
     <string name="dose_unit_ml">mL</string>
     <string name="dose_unit_mg">mg</string>
     <string name="dose_unit_g">g</string>
-    <string name="dose_unit_drop">Tropfen</string>
-    <string name="dose_unit_puff">Stoß/Stöße</string>
-    <string name="dose_unit_app">Anwendung(en)</string>
+    <string name="dose_unit_drop">Tr.</string>
+    <string name="dose_unit_puff">Hub</string>
+    <string name="dose_unit_app">Anw.</string>
     <string name="dose_unit_custom">Benutzerdefiniert</string>
     <string name="dose_format">× %s %s</string>
 
