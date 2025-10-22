@@ -12,16 +12,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -154,39 +156,44 @@ fun SettingsScreen(
                     Column(
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text(
-                            text = stringResource(R.string.language),
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = getLanguageDisplayName(currentLanguage),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-
-                    Icon(
-                        imageVector = Icons.Default.KeyboardArrowDown,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    DropdownMenu(
-                        expanded = showLanguageDropdown,
-                        onDismissRequest = { showLanguageDropdown = false }
-                    ) {
-                        SettingsPreferences.ALL_LANGUAGES.forEach { language ->
-                            DropdownMenuItem(
-                                text = { Text(getLanguageDisplayName(language)) },
-                                onClick = {
-                                    if (currentLanguage != language) {
-                                        viewModel.setLanguage(language)
-                                        showRestartDialog = true
-                                    }
-                                    showLanguageDropdown = false
-                                }
+                        ExposedDropdownMenuBox(
+                            expanded = showLanguageDropdown,
+                            onExpandedChange = { showLanguageDropdown = it }
+                        ) {
+                            OutlinedTextField(
+                                value = getLanguageDisplayName(currentLanguage),
+                                onValueChange = {},
+                                readOnly = true,
+                                label = { Text(stringResource(R.string.language)) },
+                                trailingIcon = {
+                                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = showLanguageDropdown)
+                                },
+                                colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+                                modifier = Modifier
+                                    .menuAnchor(
+                                        ExposedDropdownMenuAnchorType.PrimaryNotEditable,
+                                        true
+                                    )
+                                    .fillMaxWidth()
                             )
+
+                            ExposedDropdownMenu(
+                                expanded = showLanguageDropdown,
+                                onDismissRequest = { showLanguageDropdown = false }
+                            ) {
+                                SettingsPreferences.ALL_LANGUAGES.forEach { language ->
+                                    DropdownMenuItem(
+                                        text = { Text(getLanguageDisplayName(language)) },
+                                        onClick = {
+                                            if (currentLanguage != language) {
+                                                viewModel.setLanguage(language)
+                                                showRestartDialog = true
+                                            }
+                                            showLanguageDropdown = false
+                                        }
+                                    )
+                                }
+                            }
                         }
                     }
                 }
