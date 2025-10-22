@@ -176,7 +176,8 @@ fun MedicationCard(
     val doseFormat = stringResource(R.string.dose_format)
     val timeParser = SimpleDateFormat("HH:mm", Locale.ROOT)
     val context = LocalContext.current
-    val timeFormatter = remember(context) {
+    // Use remember without a key to automatically reflect current system settings
+    val timeFormatter = remember {
         DateFormat.getTimeFormat(context)
     }
 
