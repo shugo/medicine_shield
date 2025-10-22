@@ -13,36 +13,6 @@ class SettingsPreferences(context: Context) {
         private const val PREFS_NAME = "medicine_shield_settings"
         private const val KEY_NOTIFICATIONS_ENABLED = "notifications_enabled"
         private const val DEFAULT_NOTIFICATIONS_ENABLED = true
-        private const val KEY_LANGUAGE = "language"
-
-        // Language constants
-        const val LANGUAGE_SYSTEM = "system"
-        const val LANGUAGE_ENGLISH = "en"
-        const val LANGUAGE_JAPANESE = "ja"
-        const val LANGUAGE_CHINESE_SIMPLIFIED = "zh-CN"
-        const val LANGUAGE_CHINESE_TRADITIONAL = "zh-TW"
-        const val LANGUAGE_KOREAN = "ko"
-        const val LANGUAGE_FRENCH = "fr"
-        const val LANGUAGE_GERMAN = "de"
-        const val LANGUAGE_ITALIAN = "it"
-        const val LANGUAGE_SPANISH = "es"
-        const val LANGUAGE_PORTUGUESE = "pt"
-        private const val DEFAULT_LANGUAGE = LANGUAGE_SYSTEM
-
-        // System, English, and other languages in alphabetical language code order
-        val ALL_LANGUAGES = arrayOf(
-            LANGUAGE_SYSTEM,                // system
-            LANGUAGE_ENGLISH,               // en
-            LANGUAGE_GERMAN,                // de
-            LANGUAGE_SPANISH,               // es
-            LANGUAGE_FRENCH,                // fr
-            LANGUAGE_ITALIAN,               // it
-            LANGUAGE_JAPANESE,              // ja
-            LANGUAGE_KOREAN,                // ko
-            LANGUAGE_PORTUGUESE,            // pt
-            LANGUAGE_CHINESE_SIMPLIFIED,    // zh-CN
-            LANGUAGE_CHINESE_TRADITIONAL    // zh-TW
-        )
     }
 
     /**
@@ -58,26 +28,6 @@ class SettingsPreferences(context: Context) {
     fun setNotificationsEnabled(enabled: Boolean) {
         sharedPreferences.edit()
             .putBoolean(KEY_NOTIFICATIONS_ENABLED, enabled)
-            .apply()
-    }
-
-    /**
-     * Get the current language setting
-     * Returns one of: LANGUAGE_SYSTEM, LANGUAGE_ENGLISH, LANGUAGE_JAPANESE,
-     * LANGUAGE_CHINESE_SIMPLIFIED, LANGUAGE_CHINESE_TRADITIONAL, LANGUAGE_KOREAN,
-     * LANGUAGE_FRENCH, LANGUAGE_GERMAN, LANGUAGE_ITALIAN, LANGUAGE_SPANISH, LANGUAGE_PORTUGUESE
-     */
-    fun getLanguage(): String {
-        return sharedPreferences.getString(KEY_LANGUAGE, DEFAULT_LANGUAGE) ?: DEFAULT_LANGUAGE
-    }
-
-    /**
-     * Set the language preference
-     * @param language One of the LANGUAGE_* constants
-     */
-    fun setLanguage(language: String) {
-        sharedPreferences.edit()
-            .putString(KEY_LANGUAGE, language)
             .apply()
     }
 }

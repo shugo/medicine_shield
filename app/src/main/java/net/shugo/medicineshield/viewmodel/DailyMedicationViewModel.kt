@@ -13,12 +13,10 @@ import net.shugo.medicineshield.R
 import net.shugo.medicineshield.data.model.DailyMedicationItem
 import net.shugo.medicineshield.data.model.DailyNote
 import net.shugo.medicineshield.data.model.MedicationIntakeStatus
-import net.shugo.medicineshield.data.preferences.SettingsPreferences
 import net.shugo.medicineshield.data.repository.MedicationRepository
 import net.shugo.medicineshield.notification.NotificationHelper
 import net.shugo.medicineshield.notification.NotificationScheduler
 import net.shugo.medicineshield.utils.DateUtils
-import net.shugo.medicineshield.utils.LocaleHelper
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -109,12 +107,7 @@ class DailyMedicationViewModel(
 
         val dateText = dateFormat.format(calendar.time)
         _displayDateText.value = if (isToday) {
-            // Wrap application context with configured language to get localized string
-            val application = getApplication<Application>()
-            val settingsPreferences = SettingsPreferences(application)
-            val language = settingsPreferences.getLanguage()
-            val localizedContext = LocaleHelper.wrap(application, language)
-            localizedContext.getString(R.string.today_with_date, dateText)
+            getApplication<Application>().getString(R.string.today_with_date, dateText)
         } else {
             dateText
         }

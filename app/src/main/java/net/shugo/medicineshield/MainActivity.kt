@@ -43,7 +43,6 @@ import net.shugo.medicineshield.ui.screen.DailyMedicationScreen
 import net.shugo.medicineshield.ui.screen.MedicationFormScreen
 import net.shugo.medicineshield.ui.screen.MedicationListScreen
 import net.shugo.medicineshield.ui.screen.SettingsScreen
-import net.shugo.medicineshield.utils.LocaleHelper
 import net.shugo.medicineshield.viewmodel.DailyMedicationViewModel
 import net.shugo.medicineshield.viewmodel.MedicationFormViewModel
 import net.shugo.medicineshield.viewmodel.MedicationListViewModel
@@ -64,13 +63,6 @@ class MainActivity : ComponentActivity() {
             val settingsPreferences = SettingsPreferences(this)
             settingsPreferences.setNotificationsEnabled(false)
         }
-    }
-
-    override fun attachBaseContext(newBase: Context) {
-        val settingsPreferences = SettingsPreferences(newBase)
-        val language = settingsPreferences.getLanguage()
-        val context = LocaleHelper.wrap(newBase, language)
-        super.attachBaseContext(context)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -104,7 +96,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    MedicineShieldApp(repository, scheduledDateState, { restartApp() })
+                    MedicineShieldApp(repository, scheduledDateState)
                 }
             }
         }
@@ -150,20 +142,6 @@ class MainActivity : ComponentActivity() {
             scheduler.rescheduleAllNotifications()
         }
     }
-
-    private fun restartApp() {
-        // Create an Intent for the main activity
-        val intent = Intent(applicationContext, MainActivity::class.java)
-
-        // Set flags to clear the existing task and start a new one
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-
-        // Start the new activity
-        startActivity(intent)
-
-        // (Optional) Finish the current activity (SettingsActivity)
-        finish()
-    }
 }
 
 @Composable
@@ -205,8 +183,7 @@ fun NavController.safePopBackStack() {
 @Composable
 fun MedicineShieldApp(
     repository: MedicationRepository,
-    scheduledDateState: MutableState<String?>,
-    onRestartApp: () -> Unit
+    scheduledDateState: MutableState<String?>
 ) {
     val navController = rememberNavController()
     val context = LocalContext.current
@@ -247,8 +224,7 @@ fun MedicineShieldApp(
             )
             SettingsScreen(
                 viewModel = viewModel,
-                onNavigateBack = { navController.safePopBackStack() },
-                onRestartApp = onRestartApp
+                onNavigateBack = { navController.safePopBackStack() }
             )
         }
 

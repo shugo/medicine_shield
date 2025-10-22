@@ -150,23 +150,4 @@
     <string name="error_invalid_dose">%.1f〜%.1fの範囲の数値を入力してください</string>
     <string name="error_invalid_start_date_past">編集時は開始日を過去の日付に変更できません</string>
     <string name="error_form_has_errors">入力内容に誤りがあります。上記の項目を確認してください。</string>
-
-    <!-- Language Settings -->
-    <string name="language_settings">言語</string>
-    <string name="language">言語</string>
-    <string name="language_system">システムデフォルト</string>
-    <string name="language_english">English (英語)</string>
-    <string name="language_japanese">日本語</string>
-    <string name="language_chinese_simplified">简体中文 (簡体字中国語)</string>
-    <string name="language_chinese_traditional">繁體中文 (繁体字中国語)</string>
-    <string name="language_korean">한국어 (韓国語)</string>
-    <string name="language_french">Français (フランス語)</string>
-    <string name="language_german">Deutsch (ドイツ語)</string>
-    <string name="language_italian">Italiano (イタリア語)</string>
-    <string name="language_spanish">Español (スペイン語)</string>
-    <string name="language_portuguese">Português (ポルトガル語)</string>
-    <string name="restart_required">再起動が必要です</string>
-    <string name="restart_required_message">言語変更を反映するにはアプリを再起動する必要があります。</string>
-    <string name="restart_now">今すぐ再起動</string>
-    <string name="restart_later">後で</string>
 </resources>

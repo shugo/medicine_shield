@@ -150,23 +150,4 @@
     <string name="error_invalid_dose">Bitte geben Sie eine Zahl im Bereich von %.1f bis %.1f ein.</string>
     <string name="error_invalid_start_date_past">Das Startdatum kann beim Bearbeiten nicht auf ein vergangenes Datum geändert werden</string>
     <string name="error_form_has_errors">Das Formular enthält Fehler. Bitte überprüfen Sie die obigen Felder.</string>
-
-    <!-- Language Settings -->
-    <string name="language_settings">Sprache</string>
-    <string name="language">Sprache</string>
-    <string name="language_system">Systemstandard</string>
-    <string name="language_english">English (Englisch)</string>
-    <string name="language_japanese">日本語 (Japanisch)</string>
-    <string name="language_chinese_simplified">简体中文 (Vereinfachtes Chinesisch)</string>
-    <string name="language_chinese_traditional">繁體中文 (Traditionelles Chinesisch)</string>
-    <string name="language_korean">한국어 (Koreanisch)</string>
-    <string name="language_french">Français (Französisch)</string>
-    <string name="language_german">Deutsch</string>
-    <string name="language_italian">Italiano (Italienisch)</string>
-    <string name="language_spanish">Español (Spanisch)</string>
-    <string name="language_portuguese">Português (Portugiesisch)</string>
-    <string name="restart_required">Neustart erforderlich</string>
-    <string name="restart_required_message">Die App muss neu gestartet werden, damit die Sprachänderung wirksam wird.</string>
-    <string name="restart_now">Jetzt neu starten</string>
-    <string name="restart_later">Später</string>
 </resources>
