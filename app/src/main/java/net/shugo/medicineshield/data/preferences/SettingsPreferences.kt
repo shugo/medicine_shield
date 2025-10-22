@@ -22,6 +22,11 @@ class SettingsPreferences(context: Context) {
         const val LANGUAGE_CHINESE_SIMPLIFIED = "zh-CN"
         const val LANGUAGE_CHINESE_TRADITIONAL = "zh-TW"
         const val LANGUAGE_KOREAN = "ko"
+        const val LANGUAGE_FRENCH = "fr"
+        const val LANGUAGE_GERMAN = "de"
+        const val LANGUAGE_ITALIAN = "it"
+        const val LANGUAGE_SPANISH = "es"
+        const val LANGUAGE_PORTUGUESE = "pt"
         private const val DEFAULT_LANGUAGE = LANGUAGE_SYSTEM
     }
 
@@ -44,7 +49,8 @@ class SettingsPreferences(context: Context) {
     /**
      * Get the current language setting
      * Returns one of: LANGUAGE_SYSTEM, LANGUAGE_ENGLISH, LANGUAGE_JAPANESE,
-     * LANGUAGE_CHINESE_SIMPLIFIED, LANGUAGE_CHINESE_TRADITIONAL, LANGUAGE_KOREAN
+     * LANGUAGE_CHINESE_SIMPLIFIED, LANGUAGE_CHINESE_TRADITIONAL, LANGUAGE_KOREAN,
+     * LANGUAGE_FRENCH, LANGUAGE_GERMAN, LANGUAGE_ITALIAN, LANGUAGE_SPANISH, LANGUAGE_PORTUGUESE
      */
     fun getLanguage(): String {
         return sharedPreferences.getString(KEY_LANGUAGE, DEFAULT_LANGUAGE) ?: DEFAULT_LANGUAGE

@@ -16,7 +16,7 @@ object LocaleHelper {
      * If language is "system", returns the original context without modification.
      *
      * @param context The base context to wrap
-     * @param language Language code (e.g., "en", "ja", "zh-CN", "zh-TW", "ko", or "system")
+     * @param language Language code (e.g., "en", "ja", "zh-CN", "zh-TW", "ko", "fr", "de", "it", "es", "pt", or "system")
      * @return Context configured with the specified locale
      */
     fun wrap(context: Context, language: String): Context {
@@ -37,7 +37,7 @@ object LocaleHelper {
      * Converts a language code string to a Locale object.
      * Supports language codes with region variants (e.g., "zh-CN", "zh-TW").
      *
-     * @param language Language code (e.g., "en", "ja", "zh-CN", "zh-TW", "ko")
+     * @param language Language code (e.g., "en", "ja", "zh-CN", "zh-TW", "ko", "fr", "de", "it", "es", "pt")
      * @return Locale object corresponding to the language code
      */
     fun getLocale(language: String): Locale {
@@ -47,6 +47,11 @@ object LocaleHelper {
             "ko" -> Locale.KOREAN
             "ja" -> Locale.JAPANESE
             "en" -> Locale.ENGLISH
+            "fr" -> Locale.FRENCH
+            "de" -> Locale.GERMAN
+            "it" -> Locale.ITALIAN
+            "es" -> Locale.Builder().setLanguage("es").build()
+            "pt" -> Locale.Builder().setLanguage("pt").build()
             else -> {
                 // Handle generic language-country codes using Locale.Builder
                 val parts = language.split("-")

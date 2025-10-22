@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Medicine Shield</string>
+
+    <!-- Daily Medication Screen -->
+    <string name="daily_medication_title">Tägliche Medikamente</string>
+    <string name="medication_list">Medikamentenliste</string>
+    <string name="previous_day">Vorheriger Tag</string>
+    <string name="next_day">Nächster Tag</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Abbrechen</string>
+    <string name="no_medication_today">Keine Medikamente für heute</string>
+    <string name="no_medication_future">Keine Medikamente für diesen Tag</string>
+    <string name="no_medication_past">Keine Medikamente an diesem Tag eingenommen</string>
+    <string name="add_medication_button">Medikament hinzufügen</string>
+    <string name="taken_at">Eingenommen um %02d:%02d</string>
+    <string name="edit_taken_time">Einnahmezeit bearbeiten</string>
+    <string name="today">Heute</string>
+    <string name="today_with_date">Heute %s</string>
+
+    <!-- Medication List Screen -->
+    <string name="medication_list_title">Medikamente</string>
+    <string name="add_medication">Medikament hinzufügen</string>
+    <string name="current_medications">Aktuell</string>
+    <string name="past_medications">Vergangene Medikamente</string>
+    <string name="no_medications">Keine Medikamente registriert</string>
+    <string name="no_past_medications">Keine vergangenen Medikamente</string>
+    <string name="edit">Bearbeiten</string>
+    <string name="delete">Löschen</string>
+    <string name="delete_confirmation_title">Bestätigen</string>
+    <string name="delete_confirmation_message">Alle Einnahmehistorien werden ebenfalls gelöscht.\nSind Sie sicher, dass Sie dieses Medikament löschen möchten?</string>
+    <string name="yes">Ja</string>
+    <string name="no">Nein</string>
+    <string name="medication_times_label">Zeiten: %s</string>
+    <string name="cycle_label">Zyklus: %s</string>
+    <string name="period_label">Zeitraum: %s</string>
+    <string name="period_no_end">%s ~</string>
+    <string name="period_with_end">%s ~ %s</string>
+
+    <!-- Medication Form Screen -->
+    <string name="add_medication_title">Medikament hinzufügen</string>
+    <string name="edit_medication_title">Medikament bearbeiten</string>
+    <string name="back">Zurück</string>
+    <string name="medication_name">Medikamentenname</string>
+    <string name="medication_name_hint">Medikamentennamen eingeben</string>
+    <string name="medication_times">Einnahmezeiten</string>
+    <string name="add_time">Zeit hinzufügen</string>
+    <string name="cycle_type">Dosierungszyklus</string>
+    <string name="cycle_daily">Täglich</string>
+    <string name="cycle_weekly">Wöchentlich</string>
+    <string name="cycle_interval">Alle N Tage</string>
+    <string name="select_days">Tage auswählen</string>
+    <string name="sunday_short">So</string>
+    <string name="monday_short">Mo</string>
+    <string name="tuesday_short">Di</string>
+    <string name="wednesday_short">Mi</string>
+    <string name="thursday_short">Do</string>
+    <string name="friday_short">Fr</string>
+    <string name="saturday_short">Sa</string>
+    <string name="interval_days">Tage</string>
+    <string name="start_date">Startdatum</string>
+    <string name="end_date">Enddatum</string>
+    <string name="start_date_label">Startdatum: %s</string>
+    <string name="end_date_label">Enddatum: %s</string>
+    <string name="end_date_none">Enddatum: Keines</string>
+    <string name="clear_end_date">Enddatum löschen</string>
+    <string name="save">Speichern</string>
+    <string name="dose">Dosis</string>
+    <string name="dose_unit">Einheit</string>
+
+    <!-- Dose Units -->
+    <string name="dose_unit_none">Keine</string>
+    <string name="dose_unit_tab">Tablette(n)</string>
+    <string name="dose_unit_cap">Kapsel(n)</string>
+    <string name="dose_unit_pack">Beutel</string>
+    <string name="dose_unit_ml">mL</string>
+    <string name="dose_unit_mg">mg</string>
+    <string name="dose_unit_g">g</string>
+    <string name="dose_unit_drop">Tropfen</string>
+    <string name="dose_unit_puff">Stoß/Stöße</string>
+    <string name="dose_unit_app">Anwendung(en)</string>
+    <string name="dose_unit_custom">Benutzerdefiniert</string>
+    <string name="dose_format">× %s %s</string>
+
+    <!-- Cycle Descriptions -->
+    <string name="cycle_daily_full">Täglich</string>
+    <string name="cycle_weekly_prefix">Jeden</string>
+    <string name="cycle_interval_format">Alle %s Tage</string>
+    <string name="day_name_separator">,&#160;</string>
+
+    <!-- Week Days Full Names -->
+    <string name="sunday">Sonntag</string>
+    <string name="monday">Montag</string>
+    <string name="tuesday">Dienstag</string>
+    <string name="wednesday">Mittwoch</string>
+    <string name="thursday">Donnerstag</string>
+    <string name="friday">Freitag</string>
+    <string name="saturday">Samstag</string>
+
+    <!-- Settings Screen -->
+    <string name="settings">Einstellungen</string>
+    <string name="notification_settings">Benachrichtigungseinstellungen</string>
+    <string name="enable_notifications">Benachrichtigungen aktivieren</string>
+    <string name="notification_description">Erinnerungen erhalten, wenn es Zeit ist, Medikamente einzunehmen</string>
+    <string name="app_info">App-Informationen</string>
+    <string name="version">Version</string>
+    <string name="license_info">Lizenzinformationen</string>
+    <string name="app_license">Diese Anwendung wird unter der MIT-0-Lizenz veröffentlicht.</string>
+    <string name="mit0_license_url">https://opensource.org/license/mit-0</string>
+    <string name="open_source_licenses">Open-Source-Lizenzen</string>
+    <string name="license_details">Diese Anwendung verwendet die folgenden Open-Source-Bibliotheken:\n\n• Android Jetpack (Apache-Lizenz 2.0)\n• Kotlin (Apache-Lizenz 2.0)\n• Room Database (Apache-Lizenz 2.0)\n• Jetpack Compose (Apache-Lizenz 2.0)\n• Material Design 3 (Apache-Lizenz 2.0)</string>
+
+    <!-- Notifications -->
+    <string name="notification_channel_name">Medikamentenerinnerungen</string>
+    <string name="notification_channel_description">Benachrichtigt Sie, wenn es Zeit ist, Ihre Medikamente einzunehmen</string>
+    <string name="notification_title">Zeit, Medikamente einzunehmen (%s)</string>
+    <string name="notification_message_single">Bitte nehmen Sie %s ein</string>
+    <string name="notification_message_multiple">Bitte nehmen Sie %s ein</string>
+    <string name="medication_list_separator">,&#160;</string>
+
+    <!-- As-Needed Medication -->
+    <string name="as_needed_medication">Bei Bedarf</string>
+    <string name="as_needed_checkbox">Bedarfsmedikament</string>
+    <string name="as_needed_description">Bei Bedarf einnehmen</string>
+    <string name="add_as_needed_intake">Hinzufügen</string>
+    <string name="remove_intake">Entfernen</string>
+    <string name="taken_count">%d Mal eingenommen</string>
+
+    <!-- Daily Notes -->
+    <string name="note_section_title">Notiz</string>
+    <string name="add_note">Notiz hinzufügen</string>
+    <string name="edit_note">Notiz bearbeiten</string>
+    <string name="delete_note">Notiz löschen</string>
+    <string name="note_content">Notiz</string>
+    <string name="confirm_delete_note">Diese Notiz löschen?</string>
+    <string name="previous_note">Vorherige Notiz</string>
+    <string name="next_note">Nächste Notiz</string>
+
+    <!-- Medication Cancellation -->
+    <string name="medication_canceled">Einnahme abgebrochen</string>
+    <string name="cancel_medication">Einnahme abbrechen</string>
+    <string name="restore_medication">Wiederherstellen</string>
+
+    <!-- Error Messages -->
+    <string name="error_empty_name">Bitte geben Sie einen Medikamentennamen ein</string>
+    <string name="error_no_times">Bitte legen Sie mindestens eine Einnahmezeit fest</string>
+    <string name="error_invalid_end_date">Das Enddatum muss nach dem Startdatum liegen</string>
+    <string name="error_no_days_selected">Bitte wählen Sie mindestens einen Tag aus</string>
+    <string name="error_invalid_interval">Bitte geben Sie eine Anzahl von Tagen größer oder gleich 1 ein</string>
+    <string name="error_invalid_dose">Bitte geben Sie eine Zahl im Bereich von %.1f bis %.1f ein.</string>
+    <string name="error_invalid_start_date_past">Das Startdatum kann beim Bearbeiten nicht auf ein vergangenes Datum geändert werden</string>
+    <string name="error_form_has_errors">Das Formular enthält Fehler. Bitte überprüfen Sie die obigen Felder.</string>
+
+    <!-- Language Settings -->
+    <string name="language_settings">Sprache</string>
+    <string name="language">Sprache</string>
+    <string name="language_system">Systemstandard</string>
+    <string name="language_english">English</string>
+    <string name="language_japanese">日本語 (Japanisch)</string>
+    <string name="language_chinese_simplified">简体中文 (Vereinfachtes Chinesisch)</string>
+    <string name="language_chinese_traditional">繁體中文 (Traditionelles Chinesisch)</string>
+    <string name="language_korean">한국어 (Koreanisch)</string>
+    <string name="language_french">Français (Französisch)</string>
+    <string name="language_german">Deutsch (German)</string>
+    <string name="language_italian">Italiano (Italienisch)</string>
+    <string name="language_spanish">Español (Spanisch)</string>
+    <string name="language_portuguese">Português (Portugiesisch)</string>
+    <string name="restart_required">Neustart erforderlich</string>
+    <string name="restart_required_message">Die App muss neu gestartet werden, damit die Sprachänderung wirksam wird.</string>
+    <string name="restart_now">Jetzt neu starten</string>
+    <string name="restart_later">Später</string>
+</resources>

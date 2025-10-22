@@ -236,6 +236,56 @@ fun SettingsScreen(
                                 showLanguageDropdown = false
                             }
                         )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.language_french)) },
+                            onClick = {
+                                if (currentLanguage != SettingsPreferences.LANGUAGE_FRENCH) {
+                                    viewModel.setLanguage(SettingsPreferences.LANGUAGE_FRENCH)
+                                    showRestartDialog = true
+                                }
+                                showLanguageDropdown = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.language_german)) },
+                            onClick = {
+                                if (currentLanguage != SettingsPreferences.LANGUAGE_GERMAN) {
+                                    viewModel.setLanguage(SettingsPreferences.LANGUAGE_GERMAN)
+                                    showRestartDialog = true
+                                }
+                                showLanguageDropdown = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.language_italian)) },
+                            onClick = {
+                                if (currentLanguage != SettingsPreferences.LANGUAGE_ITALIAN) {
+                                    viewModel.setLanguage(SettingsPreferences.LANGUAGE_ITALIAN)
+                                    showRestartDialog = true
+                                }
+                                showLanguageDropdown = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.language_spanish)) },
+                            onClick = {
+                                if (currentLanguage != SettingsPreferences.LANGUAGE_SPANISH) {
+                                    viewModel.setLanguage(SettingsPreferences.LANGUAGE_SPANISH)
+                                    showRestartDialog = true
+                                }
+                                showLanguageDropdown = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.language_portuguese)) },
+                            onClick = {
+                                if (currentLanguage != SettingsPreferences.LANGUAGE_PORTUGUESE) {
+                                    viewModel.setLanguage(SettingsPreferences.LANGUAGE_PORTUGUESE)
+                                    showRestartDialog = true
+                                }
+                                showLanguageDropdown = false
+                            }
+                        )
                     }
                 }
             }
@@ -387,6 +437,11 @@ private fun getLanguageDisplayName(languageCode: String): String {
         SettingsPreferences.LANGUAGE_CHINESE_SIMPLIFIED -> stringResource(R.string.language_chinese_simplified)
         SettingsPreferences.LANGUAGE_CHINESE_TRADITIONAL -> stringResource(R.string.language_chinese_traditional)
         SettingsPreferences.LANGUAGE_KOREAN -> stringResource(R.string.language_korean)
+        SettingsPreferences.LANGUAGE_FRENCH -> stringResource(R.string.language_french)
+        SettingsPreferences.LANGUAGE_GERMAN -> stringResource(R.string.language_german)
+        SettingsPreferences.LANGUAGE_ITALIAN -> stringResource(R.string.language_italian)
+        SettingsPreferences.LANGUAGE_SPANISH -> stringResource(R.string.language_spanish)
+        SettingsPreferences.LANGUAGE_PORTUGUESE -> stringResource(R.string.language_portuguese)
         else -> stringResource(R.string.language_system)
     }
 }

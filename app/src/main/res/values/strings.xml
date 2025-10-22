@@ -160,6 +160,11 @@
     <string name="language_chinese_simplified">简体中文 (Chinese Simplified)</string>
     <string name="language_chinese_traditional">繁體中文 (Chinese Traditional)</string>
     <string name="language_korean">한국어 (Korean)</string>
+    <string name="language_french">Français (French)</string>
+    <string name="language_german">Deutsch (German)</string>
+    <string name="language_italian">Italiano (Italian)</string>
+    <string name="language_spanish">Español (Spanish)</string>
+    <string name="language_portuguese">Português (Portuguese)</string>
     <string name="restart_required">Restart Required</string>
     <string name="restart_required_message">The app needs to restart for the language change to take effect.</string>
     <string name="restart_now">Restart Now</string>
