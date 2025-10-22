@@ -56,6 +56,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -85,6 +86,12 @@ fun MedicationFormScreen(
     var showStartDatePicker by remember { mutableStateOf(false) }
     var showEndDatePicker by remember { mutableStateOf(false) }
     val doseFormat = stringResource(R.string.dose_format)
+    val timeParser = SimpleDateFormat("HH:mm", Locale.ROOT)
+    val context = LocalContext.current
+    // Use remember without a key to automatically reflect current system settings
+    val timeFormatter = remember {
+        DateFormat.getTimeFormat(context)
+    }
 
     Scaffold(
         topBar = {
@@ -220,13 +227,15 @@ fun MedicationFormScreen(
                 }
 
                 itemsIndexed(formState.times) { index, timeWithSeq ->
+                    val time = timeParser.parse(timeWithSeq.time)
+                    val formattedTime = time?.let { timeFormatter.format(it) } ?: "00:00"
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        "${timeWithSeq.time} ${formatDose(doseFormat, timeWithSeq.dose, formState.doseUnit)}",
+                        "$formattedTime ${formatDose(doseFormat, timeWithSeq.dose, formState.doseUnit)}",
                         style = MaterialTheme.typography.bodyLarge,
                         modifier = Modifier
                             .padding(vertical = 12.dp)

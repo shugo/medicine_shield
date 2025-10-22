@@ -13,7 +13,7 @@
     <string name="no_medication_future">No medications for this day</string>
     <string name="no_medication_past">No medications taken on this day</string>
     <string name="add_medication_button">Add Medication</string>
-    <string name="taken_at">Taken at %02d:%02d</string>
+    <string name="taken_at">Taken at %s</string>
     <string name="edit_taken_time">Edit taken time</string>
     <string name="today">Today</string>
     <string name="today_with_date">Today %s</string>
