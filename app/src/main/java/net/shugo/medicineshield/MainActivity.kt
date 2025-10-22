@@ -27,6 +27,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -192,6 +193,15 @@ fun MedicineShieldTheme(content: @Composable () -> Unit) {
     )
 }
 
+/**
+ * Safely pops the back stack, preventing the start destination from being popped
+ */
+fun NavController.safePopBackStack() {
+    if (previousBackStackEntry != null) {
+        popBackStack()
+    }
+}
+
 @Composable
 fun MedicineShieldApp(
     repository: MedicationRepository,
@@ -237,9 +247,7 @@ fun MedicineShieldApp(
             )
             SettingsScreen(
                 viewModel = viewModel,
-                onNavigateBack = {
-                    navController.popBackStack()
-                },
+                onNavigateBack = { navController.safePopBackStack() },
                 onRestartApp = onRestartApp
             )
         }
@@ -250,9 +258,7 @@ fun MedicineShieldApp(
             )
             MedicationListScreen(
                 viewModel = viewModel,
-                onNavigateBack = {
-                    navController.popBackStack()
-                },
+                onNavigateBack = { navController.safePopBackStack() },
                 onAddMedication = {
                     navController.navigate("add_medication")
                 },
@@ -269,9 +275,7 @@ fun MedicineShieldApp(
             MedicationFormScreen(
                 viewModel = viewModel,
                 isEdit = false,
-                onNavigateBack = {
-                    navController.popBackStack()
-                }
+                onNavigateBack = { navController.safePopBackStack() }
             )
         }
 
@@ -287,9 +291,7 @@ fun MedicineShieldApp(
             MedicationFormScreen(
                 viewModel = viewModel,
                 isEdit = true,
-                onNavigateBack = {
-                    navController.popBackStack()
-                }
+                onNavigateBack = { navController.safePopBackStack() }
             )
         }
     }
