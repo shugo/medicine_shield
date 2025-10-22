@@ -515,8 +515,7 @@ fun TimeAndDosePickerDialog(
 
     val timePickerState = rememberTimePickerState(
         initialHour = initialHour ?: 0,
-        initialMinute = initialMinute ?: 0,
-        is24Hour = true
+        initialMinute = initialMinute ?: 0
     )
 
     var doseText by remember { mutableStateOf(formatDoseInput(initialDose)) }
