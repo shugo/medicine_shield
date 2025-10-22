@@ -56,6 +56,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.state.ToggleableState
@@ -86,6 +87,12 @@ fun DailyMedicationScreen(
     val selectedDate by viewModel.selectedDate.collectAsState()
     val dailyNote by viewModel.dailyNote.collectAsState()
     val scrollToNote by viewModel.scrollToNote.collectAsState()
+
+    // Configuration変更（言語変更など）を検出して表示を更新
+    val configuration = LocalConfiguration.current
+    LaunchedEffect(configuration) {
+        viewModel.refreshData()
+    }
 
     var showDatePicker by remember { mutableStateOf(false) }
 

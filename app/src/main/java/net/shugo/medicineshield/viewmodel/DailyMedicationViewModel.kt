@@ -19,7 +19,6 @@ import net.shugo.medicineshield.notification.NotificationScheduler
 import net.shugo.medicineshield.utils.DateUtils
 import java.text.SimpleDateFormat
 import java.util.Calendar
-import java.util.Locale
 
 class DailyMedicationViewModel(
     application: Application,
@@ -95,10 +94,11 @@ class DailyMedicationViewModel(
     private fun updateDisplayDate() {
         val calendar = _selectedDate.value
 
-        // ロケールに応じた最適な日付パターンを取得
-        val locale = Locale.getDefault()
-        val pattern = DateFormat.getBestDateTimePattern(locale, "yMdE")
-        val dateFormat = SimpleDateFormat(pattern, locale)
+        // Applicationの現在のConfigurationから最新のロケールを取得
+        val appContext = getApplication<Application>()
+        val currentLocale = appContext.resources.configuration.locales[0]
+        val pattern = DateFormat.getBestDateTimePattern(currentLocale, "yMdE")
+        val dateFormat = SimpleDateFormat(pattern, currentLocale)
 
         // 今日かどうかチェック
         val today = Calendar.getInstance()
@@ -107,7 +107,7 @@ class DailyMedicationViewModel(
 
         val dateText = dateFormat.format(calendar.time)
         _displayDateText.value = if (isToday) {
-            getApplication<Application>().getString(R.string.today_with_date, dateText)
+            appContext.getString(R.string.today_with_date, dateText)
         } else {
             dateText
         }
