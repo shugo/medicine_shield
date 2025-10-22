@@ -13,7 +13,7 @@
     <string name="no_medication_future">Keine Medikamente für diesen Tag</string>
     <string name="no_medication_past">Keine Medikamente an diesem Tag eingenommen</string>
     <string name="add_medication_button">Medikament hinzufügen</string>
-    <string name="taken_at">Eingenommen um %02d:%02d</string>
+    <string name="taken_at">Eingenommen um %s</string>
     <string name="edit_taken_time">Einnahmezeit bearbeiten</string>
     <string name="today">Heute</string>
     <string name="today_with_date">Heute %s</string>

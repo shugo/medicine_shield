@@ -65,7 +65,6 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import net.shugo.medicineshield.R
-import net.shugo.medicineshield.R.string.taken_at
 import net.shugo.medicineshield.data.model.DailyMedicationItem
 import net.shugo.medicineshield.data.model.DailyNote
 import net.shugo.medicineshield.data.model.MedicationIntakeStatus
@@ -519,7 +518,7 @@ private fun BaseMedicationCard(
                     ) {
                         val time = timeFormatter.format(Date(medication.takenAt))
                         Text(
-                            text = stringResource(taken_at, time),
+                            text = stringResource(R.string.taken_at, time),
                             fontSize = 12.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
