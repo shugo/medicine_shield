@@ -24,6 +24,22 @@ android {
         }
     }
 
+    androidResources {
+        // Supported languages
+        localeFilters += listOf(
+            "en",     // English
+            "ja",     // Japanese
+            "ko",     // Korean
+            "zh-rCN", // Chinese Simplified
+            "zh-rTW", // Chinese Traditional
+            "fr",     // French
+            "de",     // German
+            "it",     // Italian
+            "es",     // Spanish
+            "pt"      // Portuguese
+        )
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false

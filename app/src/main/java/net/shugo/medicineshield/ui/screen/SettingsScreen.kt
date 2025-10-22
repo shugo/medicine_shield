@@ -12,16 +12,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -154,88 +156,45 @@ fun SettingsScreen(
                     Column(
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text(
-                            text = stringResource(R.string.language),
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = getLanguageDisplayName(currentLanguage),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                        ExposedDropdownMenuBox(
+                            expanded = showLanguageDropdown,
+                            onExpandedChange = { showLanguageDropdown = it }
+                        ) {
+                            OutlinedTextField(
+                                value = getLanguageDisplayName(currentLanguage),
+                                onValueChange = {},
+                                readOnly = true,
+                                label = { Text(stringResource(R.string.language)) },
+                                trailingIcon = {
+                                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = showLanguageDropdown)
+                                },
+                                colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+                                modifier = Modifier
+                                    .menuAnchor(
+                                        ExposedDropdownMenuAnchorType.PrimaryNotEditable,
+                                        true
+                                    )
+                                    .fillMaxWidth()
+                            )
 
-                    Icon(
-                        imageVector = Icons.Default.KeyboardArrowDown,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    DropdownMenu(
-                        expanded = showLanguageDropdown,
-                        onDismissRequest = { showLanguageDropdown = false }
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.language_system)) },
-                            onClick = {
-                                if (currentLanguage != SettingsPreferences.LANGUAGE_SYSTEM) {
-                                    viewModel.setLanguage(SettingsPreferences.LANGUAGE_SYSTEM)
-                                    showRestartDialog = true
+                            ExposedDropdownMenu(
+                                expanded = showLanguageDropdown,
+                                onDismissRequest = { showLanguageDropdown = false }
+                            ) {
+                                SettingsPreferences.ALL_LANGUAGES.forEach { language ->
+                                    DropdownMenuItem(
+                                        text = { Text(getLanguageDisplayName(language)) },
+                                        onClick = {
+                                            if (currentLanguage != language) {
+                                                viewModel.setLanguage(language)
+                                                showRestartDialog = true
+                                            }
+                                            showLanguageDropdown = false
+                                        }
+                                    )
                                 }
-                                showLanguageDropdown = false
                             }
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.language_english)) },
-                            onClick = {
-                                if (currentLanguage != SettingsPreferences.LANGUAGE_ENGLISH) {
-                                    viewModel.setLanguage(SettingsPreferences.LANGUAGE_ENGLISH)
-                                    showRestartDialog = true
-                                }
-                                showLanguageDropdown = false
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.language_japanese)) },
-                            onClick = {
-                                if (currentLanguage != SettingsPreferences.LANGUAGE_JAPANESE) {
-                                    viewModel.setLanguage(SettingsPreferences.LANGUAGE_JAPANESE)
-                                    showRestartDialog = true
-                                }
-                                showLanguageDropdown = false
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.language_chinese_simplified)) },
-                            onClick = {
-                                if (currentLanguage != SettingsPreferences.LANGUAGE_CHINESE_SIMPLIFIED) {
-                                    viewModel.setLanguage(SettingsPreferences.LANGUAGE_CHINESE_SIMPLIFIED)
-                                    showRestartDialog = true
-                                }
-                                showLanguageDropdown = false
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.language_chinese_traditional)) },
-                            onClick = {
-                                if (currentLanguage != SettingsPreferences.LANGUAGE_CHINESE_TRADITIONAL) {
-                                    viewModel.setLanguage(SettingsPreferences.LANGUAGE_CHINESE_TRADITIONAL)
-                                    showRestartDialog = true
-                                }
-                                showLanguageDropdown = false
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.language_korean)) },
-                            onClick = {
-                                if (currentLanguage != SettingsPreferences.LANGUAGE_KOREAN) {
-                                    viewModel.setLanguage(SettingsPreferences.LANGUAGE_KOREAN)
-                                    showRestartDialog = true
-                                }
-                                showLanguageDropdown = false
-                            }
-                        )
+                        }
                     }
                 }
             }
@@ -387,6 +346,11 @@ private fun getLanguageDisplayName(languageCode: String): String {
         SettingsPreferences.LANGUAGE_CHINESE_SIMPLIFIED -> stringResource(R.string.language_chinese_simplified)
         SettingsPreferences.LANGUAGE_CHINESE_TRADITIONAL -> stringResource(R.string.language_chinese_traditional)
         SettingsPreferences.LANGUAGE_KOREAN -> stringResource(R.string.language_korean)
+        SettingsPreferences.LANGUAGE_FRENCH -> stringResource(R.string.language_french)
+        SettingsPreferences.LANGUAGE_GERMAN -> stringResource(R.string.language_german)
+        SettingsPreferences.LANGUAGE_ITALIAN -> stringResource(R.string.language_italian)
+        SettingsPreferences.LANGUAGE_SPANISH -> stringResource(R.string.language_spanish)
+        SettingsPreferences.LANGUAGE_PORTUGUESE -> stringResource(R.string.language_portuguese)
         else -> stringResource(R.string.language_system)
     }
 }
