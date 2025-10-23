@@ -329,7 +329,7 @@ class MedicationRepository(
             val intakeMap = intakeList.associateBy { "${it.medicationId}_${it.sequenceNumber}" }
 
             // dateStringをタイムスタンプに変換
-            val targetDate = parseDateString(dateString) ?: 0
+            val targetDate = parseDateString(dateString) ?: return@combine emptyList<DailyMedicationItem>()
 
             // 薬IDごとに時刻とConfigをグループ化
             val timesByMedicationId = allTimes.groupBy { it.medicationId }
