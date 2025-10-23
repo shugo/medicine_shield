@@ -427,7 +427,7 @@ fun MedicationFormScreen(
                 editingTimeIndex = null
             },
             onConfirm = { hour, minute, dose ->
-                val timeString = String.format("%02d:%02d", hour, minute)
+                val timeString = String.format(Locale.ROOT, "%02d:%02d", hour, minute)
                 if (editingTimeIndex != null) {
                     viewModel.updateTime(editingTimeIndex!!, timeString, dose)
                 } else {
@@ -752,7 +752,7 @@ fun DoseUnitSelector(
 
     // カスタム単位入力ダイアログ
     if (showCustomDialog) {
-        var customUnitText by remember { mutableStateOf(if (isCustomUnit) selectedUnit ?: "" else "") }
+        var customUnitText by remember { mutableStateOf(if (isCustomUnit) selectedUnit else "") }
 
         AlertDialog(
             onDismissRequest = { showCustomDialog = false },
