@@ -26,7 +26,7 @@ interface MedicationTimeDao {
     @Query("""
         SELECT * FROM medication_times
         WHERE medicationId = :medicationId
-        AND validTo > strftime('%Y-%m-%d', 'now')
+        AND validTo > strftime('%Y-%m-%d', 'now', 'localtime')
         ORDER BY sequenceNumber ASC
     """)
     suspend fun getCurrentTimesForMedication(medicationId: Long): List<MedicationTime>

@@ -13,7 +13,7 @@ interface MedicationConfigDao {
     @Query("""
         SELECT * FROM medication_configs
         WHERE medicationId = :medicationId
-        AND validTo > strftime('%Y-%m-%d', 'now')
+        AND validTo > strftime('%Y-%m-%d', 'now', 'localtime')
         ORDER BY validFrom DESC
         LIMIT 1
     """)
