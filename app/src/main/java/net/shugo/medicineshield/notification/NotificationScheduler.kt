@@ -238,14 +238,12 @@ class NotificationScheduler(
         val calendar = Calendar.getInstance()
         calendar.timeInMillis = targetDate
 
-        // 日付のみで比較するため、時刻を00:00:00にリセット
-        val normalizedTargetDate = DateUtils.normalizeToStartOfDay(targetDate)
-        val normalizedStartDate = DateUtils.normalizeToStartOfDay(config.medicationStartDate)
-        val normalizedEndDate = config.medicationEndDate?.let { DateUtils.normalizeToStartOfDay(it) }
+        // targetDateをyyyy-MM-dd形式の文字列に変換
+        val targetDateString = dateFormatter.format(Date(targetDate))
 
-        // 期間チェック
-        if (normalizedTargetDate < normalizedStartDate) return false
-        if (normalizedEndDate != null && normalizedTargetDate > normalizedEndDate) return false
+        // 期間チェック（String型での比較、yyyy-MM-ddは辞書順で比較可能）
+        if (targetDateString < config.medicationStartDate) return false
+        if (config.medicationEndDate != null && targetDateString > config.medicationEndDate) return false
 
         // 頓服薬は通知をスケジュールしない
         if (config.isAsNeeded) return false
@@ -263,7 +261,8 @@ class NotificationScheduler(
             CycleType.INTERVAL -> {
                 // N日ごとチェック
                 val intervalDays = config.cycleValue?.toIntOrNull() ?: return false
-                val daysSinceStart = ((normalizedTargetDate - normalizedStartDate) / (1000 * 60 * 60 * 24)).toInt()
+                val startDateTimestamp = dateFormatter.parse(config.medicationStartDate)?.time ?: return false
+                val daysSinceStart = ((targetDate - startDateTimestamp) / (1000 * 60 * 60 * 24)).toInt()
                 daysSinceStart % intervalDays == 0
             }
         }

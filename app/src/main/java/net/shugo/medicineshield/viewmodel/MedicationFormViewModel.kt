@@ -62,7 +62,14 @@ class MedicationFormViewModel(
             medicationWithTimes?.let { mwt ->
                 // 現在有効なConfigを取得
                 val currentConfig = mwt.config
-                val originalStartDate = currentConfig?.medicationStartDate ?: System.currentTimeMillis()
+
+                // String型の日付をLong型に変換
+                val originalStartDate = currentConfig?.medicationStartDate?.let {
+                    parseDateString(it)
+                } ?: System.currentTimeMillis()
+                val endDate = currentConfig?.medicationEndDate?.let {
+                    parseDateString(it)
+                }
 
                 val timesWithSeq = mwt.times.map {
                     TimeWithSequence(it.sequenceNumber, it.time, it.dose)
@@ -76,7 +83,7 @@ class MedicationFormViewModel(
                     cycleType = currentConfig?.cycleType ?: CycleType.DAILY,
                     cycleValue = currentConfig?.cycleValue,
                     startDate = originalStartDate,
-                    endDate = currentConfig?.medicationEndDate,
+                    endDate = endDate,
                     originalStartDate = originalStartDate,
                     isAsNeeded = currentConfig?.isAsNeeded ?: false,
                     defaultDoseText = formatDoseInput(currentConfig?.dose ?: 1.0),
@@ -285,5 +292,13 @@ class MedicationFormViewModel(
 
     fun resetForm() {
         _formState.value = MedicationFormState()
+    }
+
+    /**
+     * yyyy-MM-dd形式の文字列をLong型のタイムスタンプに変換
+     */
+    private fun parseDateString(dateString: String): Long {
+        val calendar = DateUtils.parseIsoDate(dateString)
+        return calendar?.timeInMillis ?: System.currentTimeMillis()
     }
 }

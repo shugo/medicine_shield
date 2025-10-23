@@ -79,24 +79,28 @@ class MedicationRepository(
         val medication = Medication(name = name)
         val medicationId = medicationDao.insert(medication)
 
-        // 2. MedicationConfigを作成
-        // 初期登録時はvalidFrom = 0（過去すべての日付で有効）
+        // 2. Long型の日付をString型（yyyy-MM-dd）に変換
+        val startDateString = formatDateString(startDate)
+        val endDateString = endDate?.let { formatDateString(it) }
+
+        // 3. MedicationConfigを作成
+        // 初期登録時はvalidFrom = "0000-01-01"（過去すべての日付で有効）
         val config = MedicationConfig(
             medicationId = medicationId,
             cycleType = cycleType,
             cycleValue = cycleValue,
-            medicationStartDate = startDate,
-            medicationEndDate = endDate,
+            medicationStartDate = startDateString,
+            medicationEndDate = endDateString,
             isAsNeeded = isAsNeeded,
             dose = defaultDose,
             doseUnit = doseUnit,
-            validFrom = 0,
+            validFrom = "0000-01-01",
             validTo = null
         )
         medicationConfigDao.insert(config)
 
-        // 3. MedicationTimeを作成（sequenceNumberを1から割り当て）
-        // 初期登録時はvalidFrom = 0（過去すべての日付で有効）
+        // 4. MedicationTimeを作成（sequenceNumberを1から割り当て）
+        // 初期登録時はvalidFrom = "0000-01-01"（過去すべての日付で有効）
         // 頓服の場合は時刻が空でもOK
         if (timesWithDose.isNotEmpty()) {
             val medicationTimes = timesWithDose.mapIndexed { index, (time, dose) ->
@@ -105,7 +109,7 @@ class MedicationRepository(
                     sequenceNumber = index + 1,
                     time = time,
                     dose = dose,
-                    validFrom = 0,
+                    validFrom = "0000-01-01",
                     validTo = null
                 )
             }
@@ -128,7 +132,11 @@ class MedicationRepository(
         doseUnit: String? = null  // 服用量の単位
     ) {
         val now = System.currentTimeMillis()
-        val today = DateUtils.normalizeToStartOfDay(now)
+        val today = formatDateString(now)  // yyyy-MM-dd形式の今日の日付
+
+        // Long型の日付をString型に変換
+        val startDateString = formatDateString(startDate)
+        val endDateString = endDate?.let { formatDateString(it) }
 
         // 1. Medicationの名前を更新
         val medication = medicationDao.getMedicationById(medicationId) ?: return
@@ -139,16 +147,15 @@ class MedicationRepository(
         if (currentConfig != null) {
             val configChanged = currentConfig.cycleType != cycleType ||
                     currentConfig.cycleValue != cycleValue ||
-                    currentConfig.medicationStartDate != startDate ||
-                    currentConfig.medicationEndDate != endDate ||
+                    currentConfig.medicationStartDate != startDateString ||
+                    currentConfig.medicationEndDate != endDateString ||
                     currentConfig.isAsNeeded != isAsNeeded ||
                     currentConfig.dose != defaultDose ||
                     currentConfig.doseUnit != doseUnit
 
             // isAsNeededが変更された場合、今日以降の服用履歴を削除
             if (currentConfig.isAsNeeded != isAsNeeded) {
-                val todayString = getDateString(today)
-                medicationIntakeDao.deleteIntakesFromDate(medicationId, todayString)
+                medicationIntakeDao.deleteIntakesFromDate(medicationId, today)
 
                 // isAsNeededがtrueに変更された場合（定時→頓服）、現在有効なMedicationTimesを無効化
                 if (isAsNeeded) {
@@ -183,8 +190,8 @@ class MedicationRepository(
                     medicationId = medicationId,
                     cycleType = cycleType,
                     cycleValue = cycleValue,
-                    medicationStartDate = startDate,
-                    medicationEndDate = endDate,
+                    medicationStartDate = startDateString,
+                    medicationEndDate = endDateString,
                     isAsNeeded = isAsNeeded,
                     dose = defaultDose,
                     doseUnit = doseUnit,
@@ -195,17 +202,17 @@ class MedicationRepository(
             }
         } else {
             // 存在しない場合は新規作成（最初のConfigとして）
-            // validFrom = 0にすることで過去すべての日付で有効
+            // validFrom = "0000-01-01"にすることで過去すべての日付で有効
             val newConfig = MedicationConfig(
                 medicationId = medicationId,
                 cycleType = cycleType,
                 cycleValue = cycleValue,
-                medicationStartDate = startDate,
-                medicationEndDate = endDate,
+                medicationStartDate = startDateString,
+                medicationEndDate = endDateString,
                 isAsNeeded = isAsNeeded,
                 dose = defaultDose,
                 doseUnit = doseUnit,
-                validFrom = 0,
+                validFrom = "0000-01-01",
                 validTo = null
             )
             medicationConfigDao.insert(newConfig)
@@ -223,18 +230,19 @@ class MedicationRepository(
 
         // 削除する時刻（sequenceNumberが新しいリストにない）
         val timesToEnd = currentTimes.filter { it.sequenceNumber !in newMap }
-        val todayString = getDateString(today)
         timesToEnd.forEach { oldTime ->
             // 今日のMedicationIntakeが存在するかチェック
             val todayIntake = medicationIntakeDao.getIntakeByMedicationAndDateTime(
-                medicationId, todayString, oldTime.sequenceNumber
+                medicationId, today, oldTime.sequenceNumber
             )
 
-            // Intakeが存在する場合は翌日の00:00:00、存在しない場合は今日の00:00:00
+            // Intakeが存在する場合は翌日、存在しない場合は今日
             val validToDate = if (todayIntake != null) {
-                today + (24 * 60 * 60 * 1000)  // 翌日の00:00:00
+                // 翌日の日付を計算
+                val tomorrowTimestamp = parseDateString(today) + (24 * 60 * 60 * 1000)
+                formatDateString(tomorrowTimestamp)
             } else {
-                today  // 今日の00:00:00
+                today
             }
 
             medicationTimeDao.update(
@@ -471,14 +479,12 @@ class MedicationRepository(
         val calendar = Calendar.getInstance()
         calendar.timeInMillis = targetDate
 
-        // 日付のみで比較するため、時刻を00:00:00にリセット
-        val normalizedTargetDate = DateUtils.normalizeToStartOfDay(targetDate)
-        val normalizedStartDate = DateUtils.normalizeToStartOfDay(config.medicationStartDate)
-        val normalizedEndDate = config.medicationEndDate?.let { DateUtils.normalizeToStartOfDay(it) }
+        // targetDateをyyyy-MM-dd形式の文字列に変換
+        val targetDateString = formatDateString(targetDate)
 
-        // 期間チェック
-        if (normalizedTargetDate < normalizedStartDate) return false
-        if (normalizedEndDate != null && normalizedTargetDate > normalizedEndDate) return false
+        // 期間チェック（String型での比較、yyyy-MM-ddは辞書順で比較可能）
+        if (targetDateString < config.medicationStartDate) return false
+        if (config.medicationEndDate != null && targetDateString > config.medicationEndDate) return false
 
         // 頓服薬チェック
         if (config.isAsNeeded) return true
@@ -496,7 +502,9 @@ class MedicationRepository(
             CycleType.INTERVAL -> {
                 // N日ごとチェック
                 val intervalDays = config.cycleValue?.toIntOrNull() ?: return false
-                val daysSinceStart = ((normalizedTargetDate - normalizedStartDate) / (1000 * 60 * 60 * 24)).toInt()
+                val startDateTimestamp = parseDateString(config.medicationStartDate)
+                val targetTimestamp = parseDateString(targetDateString)
+                val daysSinceStart = ((targetTimestamp - startDateTimestamp) / (1000 * 60 * 60 * 24)).toInt()
                 daysSinceStart % intervalDays == 0
             }
         }
@@ -515,6 +523,13 @@ class MedicationRepository(
     private fun getDateString(timestamp: Long): String {
         val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
         return dateFormatter.format(Date(timestamp))
+    }
+
+    /**
+     * Long型のタイムスタンプをyyyy-MM-dd形式の文字列に変換
+     */
+    private fun formatDateString(timestamp: Long): String {
+        return getDateString(timestamp)
     }
 
     /**
