@@ -46,10 +46,10 @@ import androidx.compose.ui.unit.dp
 import net.shugo.medicineshield.R
 import net.shugo.medicineshield.data.model.CycleType
 import net.shugo.medicineshield.data.model.MedicationWithTimes
+import net.shugo.medicineshield.utils.DateUtils
 import net.shugo.medicineshield.utils.formatDose
 import net.shugo.medicineshield.viewmodel.MedicationListViewModel
 import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -260,8 +260,16 @@ fun MedicationCard(
                 val locale = Locale.getDefault()
                 val pattern = DateFormat.getBestDateTimePattern(locale, "yMd")
                 val dateFormat = SimpleDateFormat(pattern, locale)
-                val startDateStr = dateFormat.format(Date(config.medicationStartDate))
-                val endDateStr = config.medicationEndDate?.let { dateFormat.format(Date(it)) }
+                val startDate = DateUtils.parseIsoDate(config.medicationStartDate)
+                val startDateStr = startDate?.let {
+                    dateFormat.format(it.time)
+                } ?: "????-??-??"
+                val endDateStr = if (config.medicationEndDate == DateUtils.MAX_DATE) {
+                    null
+                } else {
+                    val endDate = DateUtils.parseIsoDate(config.medicationEndDate)
+                    endDate?.let { dateFormat.format(it.time) }
+                }
                 val periodText = if (endDateStr != null) {
                     stringResource(R.string.period_with_end, startDateStr, endDateStr)
                 } else {
