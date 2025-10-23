@@ -497,7 +497,13 @@ fun WeekdaySelector(
                         }
                         onDaysChanged(newDays)
                     },
-                    label = { Text(dayName) },
+                    label = {
+                        Text(
+                            text = dayName,
+                            softWrap = false,
+                            maxLines = 1
+                        )
+                    },
                     modifier = Modifier.weight(1f)
                 )
             }
