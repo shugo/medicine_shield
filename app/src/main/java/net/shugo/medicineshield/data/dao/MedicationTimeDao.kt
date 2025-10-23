@@ -1,6 +1,11 @@
 package net.shugo.medicineshield.data.dao
 
-import androidx.room.*
+import androidx.room.Dao
+import androidx.room.Delete
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 import net.shugo.medicineshield.data.model.MedicationTime
 
@@ -17,24 +22,24 @@ interface MedicationTimeDao {
 
     /**
      * 指定された日付に有効な時刻を取得
-     * validFrom <= targetDate AND (validTo IS NULL OR validTo > targetDate)
+     * validFrom <= targetDate AND validTo > targetDate
      */
     @Query("""
         SELECT * FROM medication_times
         WHERE medicationId = :medicationId
         AND validFrom <= :targetDate
-        AND (validTo IS NULL OR validTo > :targetDate)
+        AND validTo > :targetDate
         ORDER BY sequenceNumber ASC
     """)
     suspend fun getTimesForMedicationOnDate(medicationId: Long, targetDate: Long): List<MedicationTime>
 
     /**
-     * 現在有効な時刻を取得（validTo = null）
+     * 現在有効な時刻を取得（validTo > today）
      */
     @Query("""
         SELECT * FROM medication_times
         WHERE medicationId = :medicationId
-        AND validTo IS NULL
+        AND validTo > strftime('%Y-%m-%d', 'now')
         ORDER BY sequenceNumber ASC
     """)
     suspend fun getCurrentTimesForMedication(medicationId: Long): List<MedicationTime>
