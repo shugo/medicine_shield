@@ -21,19 +21,6 @@ interface MedicationTimeDao {
     fun getAllTimesFlow(): Flow<List<MedicationTime>>
 
     /**
-     * 指定された日付に有効な時刻を取得
-     * validFrom <= targetDate AND validTo > targetDate
-     */
-    @Query("""
-        SELECT * FROM medication_times
-        WHERE medicationId = :medicationId
-        AND validFrom <= :targetDate
-        AND validTo > :targetDate
-        ORDER BY sequenceNumber ASC
-    """)
-    suspend fun getTimesForMedicationOnDate(medicationId: Long, targetDate: Long): List<MedicationTime>
-
-    /**
      * 現在有効な時刻を取得（validTo > today）
      */
     @Query("""
