@@ -243,7 +243,7 @@ class NotificationScheduler(
 
         // 期間チェック（String型での比較、yyyy-MM-ddは辞書順で比較可能）
         if (targetDateString < config.medicationStartDate) return false
-        if (config.medicationEndDate != null && targetDateString > config.medicationEndDate) return false
+        if (targetDateString > config.medicationEndDate) return false
 
         // 頓服薬は通知をスケジュールしない
         if (config.isAsNeeded) return false

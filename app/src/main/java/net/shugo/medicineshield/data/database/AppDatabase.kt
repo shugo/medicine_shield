@@ -314,9 +314,9 @@ abstract class AppDatabase : RoomDatabase() {
 
         private val MIGRATION_11_12 = object : Migration(11, 12) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                // ========== medication_configs テーブルの変換 (Long → String) ==========
+                // ========== medication_configs テーブルの変換 (Long → String, NOT NULL制約追加) ==========
 
-                // 1. 新しいテーブルを作成
+                // 1. 新しいテーブルを作成（medicationEndDate, validToもNOT NULLに）
                 db.execSQL(
                     """
                     CREATE TABLE medication_configs_new (
@@ -325,12 +325,12 @@ abstract class AppDatabase : RoomDatabase() {
                         cycleType TEXT NOT NULL,
                         cycleValue TEXT,
                         medicationStartDate TEXT NOT NULL,
-                        medicationEndDate TEXT,
+                        medicationEndDate TEXT NOT NULL,
                         isAsNeeded INTEGER NOT NULL DEFAULT 0,
                         dose REAL NOT NULL DEFAULT 1.0,
                         doseUnit TEXT,
                         validFrom TEXT NOT NULL,
-                        validTo TEXT,
+                        validTo TEXT NOT NULL,
                         createdAt INTEGER NOT NULL,
                         updatedAt INTEGER NOT NULL,
                         FOREIGN KEY(medicationId) REFERENCES medications(id) ON DELETE CASCADE
@@ -338,7 +338,7 @@ abstract class AppDatabase : RoomDatabase() {
                     """.trimIndent()
                 )
 
-                // 2. 既存データを変換してコピー（タイムスタンプ → yyyy-MM-dd）
+                // 2. 既存データを変換してコピー（タイムスタンプ → yyyy-MM-dd、NULL → 最大値）
                 db.execSQL(
                     """
                     INSERT INTO medication_configs_new
@@ -350,14 +350,14 @@ abstract class AppDatabase : RoomDatabase() {
                         strftime('%Y-%m-%d', medicationStartDate / 1000, 'unixepoch', 'localtime'),
                         CASE WHEN medicationEndDate IS NOT NULL
                              THEN strftime('%Y-%m-%d', medicationEndDate / 1000, 'unixepoch', 'localtime')
-                             ELSE NULL END,
+                             ELSE '9999-12-31' END,
                         isAsNeeded,
                         dose,
                         doseUnit,
                         strftime('%Y-%m-%d', validFrom / 1000, 'unixepoch', 'localtime'),
                         CASE WHEN validTo IS NOT NULL
                              THEN strftime('%Y-%m-%d', validTo / 1000, 'unixepoch', 'localtime')
-                             ELSE NULL END,
+                             ELSE '9999-12-31' END,
                         createdAt,
                         updatedAt
                     FROM medication_configs
@@ -374,9 +374,9 @@ abstract class AppDatabase : RoomDatabase() {
                 db.execSQL("CREATE INDEX index_medication_configs_medicationId ON medication_configs(medicationId)")
                 db.execSQL("CREATE INDEX index_medication_configs_medicationId_validFrom_validTo ON medication_configs(medicationId, validFrom, validTo)")
 
-                // ========== medication_times テーブルの変換 (Long → String) ==========
+                // ========== medication_times テーブルの変換 (Long → String, NOT NULL制約追加) ==========
 
-                // 1. 新しいテーブルを作成
+                // 1. 新しいテーブルを作成（validToもNOT NULLに）
                 db.execSQL(
                     """
                     CREATE TABLE medication_times_new (
@@ -386,7 +386,7 @@ abstract class AppDatabase : RoomDatabase() {
                         time TEXT NOT NULL,
                         dose REAL NOT NULL DEFAULT 1.0,
                         validFrom TEXT NOT NULL,
-                        validTo TEXT,
+                        validTo TEXT NOT NULL,
                         createdAt INTEGER NOT NULL,
                         updatedAt INTEGER NOT NULL,
                         FOREIGN KEY(medicationId) REFERENCES medications(id) ON DELETE CASCADE
@@ -394,7 +394,7 @@ abstract class AppDatabase : RoomDatabase() {
                     """.trimIndent()
                 )
 
-                // 2. 既存データを変換してコピー（タイムスタンプ → yyyy-MM-dd）
+                // 2. 既存データを変換してコピー（タイムスタンプ → yyyy-MM-dd、NULL → 最大値）
                 db.execSQL(
                     """
                     INSERT INTO medication_times_new
@@ -407,7 +407,7 @@ abstract class AppDatabase : RoomDatabase() {
                         strftime('%Y-%m-%d', validFrom / 1000, 'unixepoch', 'localtime'),
                         CASE WHEN validTo IS NOT NULL
                              THEN strftime('%Y-%m-%d', validTo / 1000, 'unixepoch', 'localtime')
-                             ELSE NULL END,
+                             ELSE '9999-12-31' END,
                         createdAt,
                         updatedAt
                     FROM medication_times

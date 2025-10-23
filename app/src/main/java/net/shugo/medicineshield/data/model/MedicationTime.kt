@@ -28,7 +28,7 @@ data class MedicationTime(
     val time: String,  // HH:mm format (e.g., "09:00", "14:30")
     val dose: Double = 1.0,  // 服用量（デフォルト: 1.0）
     val validFrom: String,  // このレコードが有効になった日付（yyyy-MM-dd形式）
-    val validTo: String? = null,  // このレコードが無効になった日付（yyyy-MM-dd形式、null=現在も有効）
+    val validTo: String = net.shugo.medicineshield.utils.DateUtils.MAX_DATE,  // このレコードが無効になった日付（yyyy-MM-dd形式、デフォルト=最大値）
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
 )

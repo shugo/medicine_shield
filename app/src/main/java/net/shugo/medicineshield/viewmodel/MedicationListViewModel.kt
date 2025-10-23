@@ -40,9 +40,9 @@ class MedicationListViewModel(
             list.filter { medWithTimes ->
                 // 現在有効なConfigを取得
                 val currentConfig = medWithTimes.getCurrentConfig()
-                // endDateがnullまたは今日以降なら「服用中」
+                // endDateが今日以降なら「服用中」（MAX_DATEの場合も含む）
                 currentConfig?.let { config ->
-                    config.medicationEndDate == null || config.medicationEndDate >= today
+                    config.medicationEndDate >= today
                 } ?: false
             }
         }
@@ -59,9 +59,9 @@ class MedicationListViewModel(
             list.filter { medWithTimes ->
                 // 現在有効なConfigを取得
                 val currentConfig = medWithTimes.getCurrentConfig()
-                // endDateが存在し、今日より前なら「過去のお薬」
+                // endDateが今日より前なら「過去のお薬」
                 currentConfig?.let { config ->
-                    config.medicationEndDate != null && config.medicationEndDate < today
+                    config.medicationEndDate < today
                 } ?: false
             }
         }

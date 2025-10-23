@@ -67,8 +67,9 @@ class MedicationFormViewModel(
                 val originalStartDate = currentConfig?.medicationStartDate?.let {
                     parseDateString(it)
                 } ?: System.currentTimeMillis()
+                // medicationEndDateがMAX_DATEの場合はnullに変換（終了日なし）
                 val endDate = currentConfig?.medicationEndDate?.let {
-                    parseDateString(it)
+                    if (it == DateUtils.MAX_DATE) null else parseDateString(it)
                 }
 
                 val timesWithSeq = mwt.times.map {

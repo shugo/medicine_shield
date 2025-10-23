@@ -2,6 +2,7 @@ package net.shugo.medicineshield.data.model
 
 import androidx.room.Embedded
 import androidx.room.Relation
+import net.shugo.medicineshield.utils.DateUtils
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -31,7 +32,7 @@ data class MedicationWithTimes(
      * @return 現在有効なMedicationTimeのリスト（時刻順にソート済み）
      */
     fun getCurrentTimes(): List<MedicationTime> {
-        return times.filter { it.validTo == null }.sortedBy { it.time }
+        return times.filter { it.validTo == DateUtils.MAX_DATE }.sortedBy { it.time }
     }
 
     /**
@@ -42,7 +43,7 @@ data class MedicationWithTimes(
     fun getTimesForDate(targetDate: Long): List<MedicationTime> {
         val targetDateString = formatDateString(targetDate)
         return times
-            .filter { it.validFrom <= targetDateString && (it.validTo == null || it.validTo > targetDateString) }
+            .filter { it.validFrom <= targetDateString && it.validTo > targetDateString }
             .sortedBy { it.time }
     }
 
@@ -52,7 +53,7 @@ data class MedicationWithTimes(
      */
     fun getCurrentConfig(): MedicationConfig? {
         return configs
-            .filter { it.validTo == null }
+            .filter { it.validTo == DateUtils.MAX_DATE }
             .maxByOrNull { it.validFrom }
     }
 
@@ -64,7 +65,7 @@ data class MedicationWithTimes(
     fun getConfigForDate(targetDate: Long): MedicationConfig? {
         val targetDateString = formatDateString(targetDate)
         return configs
-            .filter { it.validFrom <= targetDateString && (it.validTo == null || it.validTo > targetDateString) }
+            .filter { it.validFrom <= targetDateString && it.validTo > targetDateString }
             .maxByOrNull { it.validFrom }
     }
 

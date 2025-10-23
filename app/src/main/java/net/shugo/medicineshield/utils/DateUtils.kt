@@ -9,6 +9,16 @@ import java.util.Locale
  */
 object DateUtils {
     /**
+     * 日付の最小値（過去すべての日付で有効を表す）
+     */
+    const val MIN_DATE = "0000-01-01"
+
+    /**
+     * 日付の最大値（未来永劫有効を表す）
+     */
+    const val MAX_DATE = "9999-12-31"
+
+    /**
      * タイムスタンプを日付の開始時刻(00:00:00.000)に正規化
      * @param timestamp 対象のタイムスタンプ
      * @return 日付の開始時刻のタイムスタンプ

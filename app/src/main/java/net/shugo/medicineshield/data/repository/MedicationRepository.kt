@@ -43,7 +43,7 @@ class MedicationRepository(
                 MedicationWithTimes(
                     medication = mwt.medication,
                     times = mwt.getCurrentTimes(),
-                    configs = mwt.configs.filter { it.validTo == null }
+                    configs = mwt.configs.filter { it.validTo == DateUtils.MAX_DATE }
                 )
             }
         }
@@ -60,7 +60,7 @@ class MedicationRepository(
         return MedicationWithTimes(
             medication = mwt.medication,
             times = mwt.getCurrentTimes(),
-            configs = mwt.configs.filter { it.validTo == null }
+            configs = mwt.configs.filter { it.validTo == DateUtils.MAX_DATE }
         )
     }
 
@@ -81,10 +81,10 @@ class MedicationRepository(
 
         // 2. Long型の日付をString型（yyyy-MM-dd）に変換
         val startDateString = formatDateString(startDate)
-        val endDateString = endDate?.let { formatDateString(it) }
+        val endDateString = endDate?.let { formatDateString(it) } ?: DateUtils.MAX_DATE
 
         // 3. MedicationConfigを作成
-        // 初期登録時はvalidFrom = "0000-01-01"（過去すべての日付で有効）
+        // 初期登録時はvalidFrom = MIN_DATE（過去すべての日付で有効）
         val config = MedicationConfig(
             medicationId = medicationId,
             cycleType = cycleType,
@@ -94,13 +94,13 @@ class MedicationRepository(
             isAsNeeded = isAsNeeded,
             dose = defaultDose,
             doseUnit = doseUnit,
-            validFrom = "0000-01-01",
-            validTo = null
+            validFrom = DateUtils.MIN_DATE,
+            validTo = DateUtils.MAX_DATE
         )
         medicationConfigDao.insert(config)
 
         // 4. MedicationTimeを作成（sequenceNumberを1から割り当て）
-        // 初期登録時はvalidFrom = "0000-01-01"（過去すべての日付で有効）
+        // 初期登録時はvalidFrom = MIN_DATE（過去すべての日付で有効）
         // 頓服の場合は時刻が空でもOK
         if (timesWithDose.isNotEmpty()) {
             val medicationTimes = timesWithDose.mapIndexed { index, (time, dose) ->
@@ -109,8 +109,8 @@ class MedicationRepository(
                     sequenceNumber = index + 1,
                     time = time,
                     dose = dose,
-                    validFrom = "0000-01-01",
-                    validTo = null
+                    validFrom = DateUtils.MIN_DATE,
+                    validTo = DateUtils.MAX_DATE
                 )
             }
             medicationTimeDao.insertAll(medicationTimes)
@@ -136,7 +136,7 @@ class MedicationRepository(
 
         // Long型の日付をString型に変換
         val startDateString = formatDateString(startDate)
-        val endDateString = endDate?.let { formatDateString(it) }
+        val endDateString = endDate?.let { formatDateString(it) } ?: DateUtils.MAX_DATE
 
         // 1. Medicationの名前を更新
         val medication = medicationDao.getMedicationById(medicationId) ?: return
@@ -196,13 +196,13 @@ class MedicationRepository(
                     dose = defaultDose,
                     doseUnit = doseUnit,
                     validFrom = today,
-                    validTo = null
+                    validTo = DateUtils.MAX_DATE
                 )
                 medicationConfigDao.insert(newConfig)
             }
         } else {
             // 存在しない場合は新規作成（最初のConfigとして）
-            // validFrom = "0000-01-01"にすることで過去すべての日付で有効
+            // validFrom = MIN_DATEにすることで過去すべての日付で有効
             val newConfig = MedicationConfig(
                 medicationId = medicationId,
                 cycleType = cycleType,
@@ -212,8 +212,8 @@ class MedicationRepository(
                 isAsNeeded = isAsNeeded,
                 dose = defaultDose,
                 doseUnit = doseUnit,
-                validFrom = "0000-01-01",
-                validTo = null
+                validFrom = DateUtils.MIN_DATE,
+                validTo = DateUtils.MAX_DATE
             )
             medicationConfigDao.insert(newConfig)
         }
@@ -266,7 +266,7 @@ class MedicationRepository(
                         time = newTime,
                         dose = newDose,
                         validFrom = today,  // 今日から有効
-                        validTo = null
+                        validTo = DateUtils.MAX_DATE
                     )
                 )
             } else if (currentTime.time != newTime || currentTime.dose != newDose) {
@@ -292,7 +292,7 @@ class MedicationRepository(
                         time = newTime,
                         dose = newDose,
                         validFrom = today,  // 今日から有効
-                        validTo = null
+                        validTo = DateUtils.MAX_DATE
                     )
                 )
             }
@@ -484,7 +484,7 @@ class MedicationRepository(
 
         // 期間チェック（String型での比較、yyyy-MM-ddは辞書順で比較可能）
         if (targetDateString < config.medicationStartDate) return false
-        if (config.medicationEndDate != null && targetDateString > config.medicationEndDate) return false
+        if (targetDateString > config.medicationEndDate) return false
 
         // 頓服薬チェック
         if (config.isAsNeeded) return true
