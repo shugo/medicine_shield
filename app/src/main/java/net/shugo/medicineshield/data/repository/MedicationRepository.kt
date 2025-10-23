@@ -239,8 +239,13 @@ class MedicationRepository(
             // Intakeが存在する場合は翌日、存在しない場合は今日
             val validToDate = if (todayIntake != null) {
                 // 翌日の日付を計算
-                val tomorrowTimestamp = parseDateString(today) + (24 * 60 * 60 * 1000)
-                formatDateString(tomorrowTimestamp)
+                val todayTimestamp = parseDateString(today)
+                if (todayTimestamp == null) {
+                    today
+                } else {
+                    val tomorrowTimestamp = todayTimestamp + (24 * 60 * 60 * 1000)
+                    formatDateString(tomorrowTimestamp)
+                }
             } else {
                 today
             }
@@ -324,7 +329,7 @@ class MedicationRepository(
             val intakeMap = intakeList.associateBy { "${it.medicationId}_${it.sequenceNumber}" }
 
             // dateStringをタイムスタンプに変換
-            val targetDate = parseDateString(dateString)
+            val targetDate = parseDateString(dateString) ?: 0
 
             // 薬IDごとに時刻とConfigをグループ化
             val timesByMedicationId = allTimes.groupBy { it.medicationId }
@@ -504,8 +509,13 @@ class MedicationRepository(
                 val intervalDays = config.cycleValue?.toIntOrNull() ?: return false
                 val startDateTimestamp = parseDateString(config.medicationStartDate)
                 val targetTimestamp = parseDateString(targetDateString)
-                val daysSinceStart = ((targetTimestamp - startDateTimestamp) / (1000 * 60 * 60 * 24)).toInt()
-                daysSinceStart % intervalDays == 0
+                if (startDateTimestamp == null || targetTimestamp == null) {
+                    false
+                } else {
+                    val daysSinceStart =
+                        ((targetTimestamp - startDateTimestamp) / (1000 * 60 * 60 * 24)).toInt()
+                    daysSinceStart % intervalDays == 0
+                }
             }
         }
     }
@@ -514,33 +524,26 @@ class MedicationRepository(
      * 現在の日付を YYYY-MM-DD 形式で取得
      */
     private fun getCurrentDateString(): String {
-        return getDateString(System.currentTimeMillis())
-    }
-
-    /**
-     * 指定されたタイムスタンプを YYYY-MM-DD 形式に変換
-     */
-    private fun getDateString(timestamp: Long): String {
-        val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
-        return dateFormatter.format(Date(timestamp))
+        return formatDateString(System.currentTimeMillis())
     }
 
     /**
      * Long型のタイムスタンプをyyyy-MM-dd形式の文字列に変換
      */
     private fun formatDateString(timestamp: Long): String {
-        return getDateString(timestamp)
+        val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
+        return dateFormatter.format(Date(timestamp))
     }
 
     /**
      * YYYY-MM-DD 形式の文字列をタイムスタンプに変換
      */
-    private fun parseDateString(dateString: String): Long {
+    private fun parseDateString(dateString: String): Long? {
         val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
         return try {
-            dateFormatter.parse(dateString)?.time ?: System.currentTimeMillis()
+            dateFormatter.parse(dateString)?.time
         } catch (e: Exception) {
-            System.currentTimeMillis()
+            null
         }
     }
 
