@@ -20,7 +20,7 @@ import net.shugo.medicineshield.data.model.MedicationTime
 
 @Database(
     entities = [Medication::class, MedicationTime::class, MedicationIntake::class, MedicationConfig::class, DailyNote::class],
-    version = 11,
+    version = 12,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -312,6 +312,120 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_11_12 = object : Migration(11, 12) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // ========== medication_configs テーブルの変換 (Long → String, NOT NULL制約追加) ==========
+
+                // 1. 新しいテーブルを作成（medicationEndDate, validToもNOT NULLに）
+                db.execSQL(
+                    """
+                    CREATE TABLE medication_configs_new (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        medicationId INTEGER NOT NULL,
+                        cycleType TEXT NOT NULL,
+                        cycleValue TEXT,
+                        medicationStartDate TEXT NOT NULL,
+                        medicationEndDate TEXT NOT NULL,
+                        isAsNeeded INTEGER NOT NULL DEFAULT 0,
+                        dose REAL NOT NULL DEFAULT 1.0,
+                        doseUnit TEXT,
+                        validFrom TEXT NOT NULL,
+                        validTo TEXT NOT NULL,
+                        createdAt INTEGER NOT NULL,
+                        updatedAt INTEGER NOT NULL,
+                        FOREIGN KEY(medicationId) REFERENCES medications(id) ON DELETE CASCADE
+                    )
+                    """.trimIndent()
+                )
+
+                // 2. 既存データを変換してコピー（タイムスタンプ → yyyy-MM-dd、NULL → 最大値）
+                db.execSQL(
+                    """
+                    INSERT INTO medication_configs_new
+                    SELECT
+                        id,
+                        medicationId,
+                        cycleType,
+                        cycleValue,
+                        strftime('%Y-%m-%d', medicationStartDate / 1000, 'unixepoch', 'localtime'),
+                        CASE WHEN medicationEndDate IS NOT NULL
+                             THEN strftime('%Y-%m-%d', medicationEndDate / 1000, 'unixepoch', 'localtime')
+                             ELSE '9999-12-31' END,
+                        isAsNeeded,
+                        dose,
+                        doseUnit,
+                        strftime('%Y-%m-%d', validFrom / 1000, 'unixepoch', 'localtime'),
+                        CASE WHEN validTo IS NOT NULL
+                             THEN strftime('%Y-%m-%d', validTo / 1000, 'unixepoch', 'localtime')
+                             ELSE '9999-12-31' END,
+                        createdAt,
+                        updatedAt
+                    FROM medication_configs
+                    """.trimIndent()
+                )
+
+                // 3. 古いテーブルを削除
+                db.execSQL("DROP TABLE medication_configs")
+
+                // 4. 新しいテーブルをリネーム
+                db.execSQL("ALTER TABLE medication_configs_new RENAME TO medication_configs")
+
+                // 5. インデックスを再作成
+                db.execSQL("CREATE INDEX index_medication_configs_medicationId ON medication_configs(medicationId)")
+                db.execSQL("CREATE INDEX index_medication_configs_medicationId_validFrom_validTo ON medication_configs(medicationId, validFrom, validTo)")
+
+                // ========== medication_times テーブルの変換 (Long → String, NOT NULL制約追加) ==========
+
+                // 1. 新しいテーブルを作成（validToもNOT NULLに）
+                db.execSQL(
+                    """
+                    CREATE TABLE medication_times_new (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        medicationId INTEGER NOT NULL,
+                        sequenceNumber INTEGER NOT NULL,
+                        time TEXT NOT NULL,
+                        dose REAL NOT NULL DEFAULT 1.0,
+                        validFrom TEXT NOT NULL,
+                        validTo TEXT NOT NULL,
+                        createdAt INTEGER NOT NULL,
+                        updatedAt INTEGER NOT NULL,
+                        FOREIGN KEY(medicationId) REFERENCES medications(id) ON DELETE CASCADE
+                    )
+                    """.trimIndent()
+                )
+
+                // 2. 既存データを変換してコピー（タイムスタンプ → yyyy-MM-dd、NULL → 最大値）
+                db.execSQL(
+                    """
+                    INSERT INTO medication_times_new
+                    SELECT
+                        id,
+                        medicationId,
+                        sequenceNumber,
+                        time,
+                        dose,
+                        strftime('%Y-%m-%d', validFrom / 1000, 'unixepoch', 'localtime'),
+                        CASE WHEN validTo IS NOT NULL
+                             THEN strftime('%Y-%m-%d', validTo / 1000, 'unixepoch', 'localtime')
+                             ELSE '9999-12-31' END,
+                        createdAt,
+                        updatedAt
+                    FROM medication_times
+                    """.trimIndent()
+                )
+
+                // 3. 古いテーブルを削除
+                db.execSQL("DROP TABLE medication_times")
+
+                // 4. 新しいテーブルをリネーム
+                db.execSQL("ALTER TABLE medication_times_new RENAME TO medication_times")
+
+                // 5. インデックスを再作成
+                db.execSQL("CREATE INDEX index_medication_times_medicationId ON medication_times(medicationId)")
+                db.execSQL("CREATE INDEX index_medication_times_medicationId_validFrom_validTo ON medication_times(medicationId, validFrom, validTo)")
+            }
+        }
+
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -319,7 +433,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "medicine_shield_database"
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12)
                     .build()
                 INSTANCE = instance
                 instance

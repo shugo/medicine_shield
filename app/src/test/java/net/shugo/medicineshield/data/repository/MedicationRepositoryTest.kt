@@ -21,6 +21,7 @@ import net.shugo.medicineshield.data.model.MedicationConfig
 import net.shugo.medicineshield.data.model.MedicationIntake
 import net.shugo.medicineshield.data.model.MedicationIntakeStatus
 import net.shugo.medicineshield.data.model.MedicationTime
+import net.shugo.medicineshield.utils.DateUtils
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -64,7 +65,8 @@ class MedicationRepositoryTest {
         val name = "Sample Med"
         val cycleType = CycleType.DAILY
         val cycleValue: String? = null
-        val startDate = parseDate("2025-10-01")
+        val startDateString = "2025-10-01"
+        val startDate = parseDate(startDateString)
         val endDate: Long? = null
         val times = listOf("08:00" to 1.0, "20:00" to 1.0)
         val medicationId = 1L
@@ -82,8 +84,8 @@ class MedicationRepositoryTest {
         coVerify { medicationConfigDao.insert(match {
             it.medicationId == medicationId &&
             it.cycleType == cycleType &&
-            it.medicationStartDate == startDate &&
-            it.validTo == null
+            it.medicationStartDate == startDateString &&
+            it.validTo == DateUtils.MAX_DATE
         }) }
         coVerify {
             medicationTimeDao.insertAll(match { list ->
@@ -91,11 +93,11 @@ class MedicationRepositoryTest {
                 list[0].medicationId == medicationId &&
                 list[0].sequenceNumber == 1 &&
                 list[0].time == "08:00" &&
-                list[0].validTo == null &&
+                list[0].validTo == DateUtils.MAX_DATE &&
                 list[1].medicationId == medicationId &&
                 list[1].sequenceNumber == 2 &&
                 list[1].time == "20:00" &&
-                list[1].validTo == null
+                list[1].validTo == DateUtils.MAX_DATE
             })
         }
     }
@@ -107,16 +109,17 @@ class MedicationRepositoryTest {
         val name = "Updated Med"
         val cycleType = CycleType.DAILY
         val cycleValue: String? = null
-        val startDate = parseDate("2025-10-01")
+        val startDateString = "2025-10-01"
+        val startDate = parseDate(startDateString)
         val endDate: Long? = null
         val existingConfig = MedicationConfig(
             id = 1, medicationId = medicationId, cycleType = CycleType.DAILY,
-            cycleValue = null, medicationStartDate = startDate, medicationEndDate = null,
-            validFrom = 0, validTo = null
+            cycleValue = null, medicationStartDate = startDateString, medicationEndDate = DateUtils.MAX_DATE,
+            validFrom = DateUtils.MIN_DATE, validTo = DateUtils.MAX_DATE
         )
         val existingTimes = listOf(
-            MedicationTime(id = 1, medicationId = medicationId, sequenceNumber = 1, time = "08:00", validFrom = 0, validTo = null),
-            MedicationTime(id = 2, medicationId = medicationId, sequenceNumber = 2, time = "20:00", validFrom = 0, validTo = null)
+            MedicationTime(id = 1, medicationId = medicationId, sequenceNumber = 1, time = "08:00", validFrom = DateUtils.MIN_DATE, validTo = DateUtils.MAX_DATE),
+            MedicationTime(id = 2, medicationId = medicationId, sequenceNumber = 2, time = "20:00", validFrom = DateUtils.MIN_DATE, validTo = DateUtils.MAX_DATE)
         )
         val newTimes = listOf(Triple(1, "09:00", 1.0), Triple(2, "21:00", 1.0))
 
@@ -136,8 +139,136 @@ class MedicationRepositoryTest {
         // Then
         coVerify { medicationDao.update(match { it.id == medicationId && it.name == name }) }
         coVerify { medicationTimeDao.getCurrentTimesForMedication(medicationId) }
-        coVerify(exactly = 2) { medicationTimeDao.update(match { it.validTo != null }) } // Set validTo for 08:00 and 20:00
+        coVerify(exactly = 2) { medicationTimeDao.update(match { it.validTo != DateUtils.MAX_DATE }) } // Set validTo for 08:00 and 20:00
         coVerify(exactly = 2) { medicationTimeDao.insert(any()) } // Insert 09:00 and 21:00
+    }
+
+    @Test
+    fun `updateMedicationWithTimes should update existing config not create duplicate when DAO returns valid config`() = runTest {
+        // Given - このテストは、DAOが正しく現在有効なconfigを取得できた場合の動作を確認する
+        // バグがあると、getCurrentConfigForMedicationがnullを返し、validFrom=MIN_DATEの新規configが作成されてしまう
+        val medicationId = 1L
+        val startDate = parseDate("2025-10-01")
+
+        val medication = Medication(id = medicationId, name = "Old Med")
+        val existingConfig = MedicationConfig(
+            id = 1, medicationId = medicationId, cycleType = CycleType.DAILY,
+            cycleValue = null, medicationStartDate = "2025-10-01", medicationEndDate = DateUtils.MAX_DATE,
+            validFrom = DateUtils.MIN_DATE, validTo = DateUtils.MAX_DATE
+        )
+
+        coEvery { medicationDao.getMedicationById(medicationId) } returns medication
+        coEvery { medicationDao.update(any()) } just Runs
+        coEvery { medicationTimeDao.getCurrentTimesForMedication(medicationId) } returns emptyList()
+        coEvery { medicationConfigDao.getCurrentConfigForMedication(medicationId) } returns existingConfig
+        coEvery { medicationConfigDao.insert(any()) } returns 2L
+        coEvery { medicationConfigDao.update(any()) } just Runs
+
+        // When - cycleTypeを変更（DAILY -> WEEKLY）
+        repository.updateMedicationWithTimes(
+            medicationId, "Med Updated", CycleType.WEEKLY, "1,2,3", startDate, null, emptyList()
+        )
+
+        // Then - 既存のconfigを無効化し、新しいconfigを作成する（今日からvalidFrom）
+        coVerify(exactly = 1) { medicationConfigDao.update(match { it.validTo != DateUtils.MAX_DATE }) }
+        coVerify(exactly = 1) { medicationConfigDao.insert(match { it.validFrom != DateUtils.MIN_DATE }) }
+    }
+
+    @Test
+    fun `updateMedicationWithTimes should create config with MIN_DATE validFrom when DAO returns null config`() = runTest {
+        // Given - このテストは、getCurrentConfigForMedicationがnullを返した場合の動作を確認する
+        // これは正常なケース（初回の設定時）だが、バグがあるとDAOが不正にnullを返してしまう
+        val medicationId = 1L
+        val cycleType = CycleType.DAILY
+        val startDate = parseDate("2025-10-01")
+
+        val medication = Medication(id = medicationId, name = "Med")
+
+        coEvery { medicationDao.getMedicationById(medicationId) } returns medication
+        coEvery { medicationDao.update(any()) } just Runs
+        coEvery { medicationTimeDao.getCurrentTimesForMedication(medicationId) } returns emptyList()
+        coEvery { medicationConfigDao.getCurrentConfigForMedication(medicationId) } returns null
+        coEvery { medicationConfigDao.insert(any()) } returns 1L
+
+        // When
+        repository.updateMedicationWithTimes(
+            medicationId, "Med", cycleType, null, startDate, null, emptyList()
+        )
+
+        // Then - 新規作成（validFrom = MIN_DATE）
+        coVerify(exactly = 0) { medicationConfigDao.update(any()) }
+        coVerify(exactly = 1) { medicationConfigDao.insert(match { it.validFrom == DateUtils.MIN_DATE }) }
+    }
+
+    @Test
+    fun `updateMedicationWithTimes should update existing times not create duplicates when DAO returns valid times`() = runTest {
+        // Given - このテストは、DAOが正しく現在有効なtimesを取得できた場合の動作を確認する
+        // バグがあると、getCurrentTimesForMedicationが空リストを返し、timeが追加され続ける
+        val medicationId = 1L
+        val cycleType = CycleType.DAILY
+        val startDate = parseDate("2025-10-01")
+
+        val medication = Medication(id = medicationId, name = "Med")
+        val config = MedicationConfig(
+            id = 1, medicationId = medicationId, cycleType = CycleType.DAILY,
+            cycleValue = null, medicationStartDate = "2025-10-01", medicationEndDate = DateUtils.MAX_DATE,
+            validFrom = DateUtils.MIN_DATE, validTo = DateUtils.MAX_DATE
+        )
+
+        val existingTime = MedicationTime(
+            id = 1, medicationId = medicationId, sequenceNumber = 1,
+            time = "08:00", validFrom = DateUtils.MIN_DATE, validTo = DateUtils.MAX_DATE
+        )
+
+        coEvery { medicationDao.getMedicationById(medicationId) } returns medication
+        coEvery { medicationDao.update(any()) } just Runs
+        coEvery { medicationConfigDao.getCurrentConfigForMedication(medicationId) } returns config
+        coEvery { medicationTimeDao.getCurrentTimesForMedication(medicationId) } returns listOf(existingTime)
+        coEvery { medicationTimeDao.update(any()) } just Runs
+        coEvery { medicationTimeDao.insert(any()) } returns 2L
+        coEvery { medicationIntakeDao.getIntakeByMedicationAndDateTime(any(), any(), any()) } returns null
+
+        // When - 時刻を変更（08:00 -> 09:00）
+        repository.updateMedicationWithTimes(
+            medicationId, "Med", cycleType, null, startDate, null,
+            listOf(Triple(1, "09:00", 1.0))
+        )
+
+        // Then - 古いtimeが無効化され、新しいtimeが作成される（今日からvalidFrom）
+        coVerify(exactly = 1) { medicationTimeDao.update(match { it.id == 1L && it.validTo != DateUtils.MAX_DATE }) }
+        coVerify(exactly = 1) { medicationTimeDao.insert(match { it.validFrom != DateUtils.MIN_DATE }) }
+    }
+
+    @Test
+    fun `updateMedicationWithTimes should create new times with today validFrom when DAO returns empty times`() = runTest {
+        // Given - このテストは、getCurrentTimesForMedicationが空リストを返した場合の動作を確認する
+        // バグがあるとDAOが不正に空リストを返してしまい、既存のtimeが無効化されない
+        val medicationId = 1L
+        val cycleType = CycleType.DAILY
+        val startDate = parseDate("2025-10-01")
+
+        val medication = Medication(id = medicationId, name = "Med")
+        val config = MedicationConfig(
+            id = 1, medicationId = medicationId, cycleType = CycleType.DAILY,
+            cycleValue = null, medicationStartDate = "2025-10-01", medicationEndDate = DateUtils.MAX_DATE,
+            validFrom = DateUtils.MIN_DATE, validTo = DateUtils.MAX_DATE
+        )
+
+        coEvery { medicationDao.getMedicationById(medicationId) } returns medication
+        coEvery { medicationDao.update(any()) } just Runs
+        coEvery { medicationConfigDao.getCurrentConfigForMedication(medicationId) } returns config
+        coEvery { medicationTimeDao.getCurrentTimesForMedication(medicationId) } returns emptyList()
+        coEvery { medicationTimeDao.insert(any()) } returns 1L
+
+        // When - 新しい時刻を追加
+        repository.updateMedicationWithTimes(
+            medicationId, "Med", cycleType, null, startDate, null,
+            listOf(Triple(1, "08:00", 1.0))
+        )
+
+        // Then - 新規作成（validFrom = 今日）
+        coVerify(exactly = 0) { medicationTimeDao.update(any()) }
+        coVerify(exactly = 1) { medicationTimeDao.insert(match { it.validFrom != DateUtils.MIN_DATE }) }
     }
 
     @Test
@@ -177,13 +308,13 @@ class MedicationRepositoryTest {
             id = 1,
             medicationId = 1,
             cycleType = CycleType.DAILY,
-            medicationStartDate = parseDate("2025-10-01"),
-            validFrom = 0,
-            validTo = null
+            medicationStartDate = "2025-10-01",
+            validFrom = DateUtils.MIN_DATE,
+            validTo = DateUtils.MAX_DATE
         )
         val times = listOf(
-            MedicationTime(id = 1, medicationId = 1, sequenceNumber = 1, time = "20:00", validFrom = 0, validTo = null),
-            MedicationTime(id = 2, medicationId = 1, sequenceNumber = 2, time = "08:00", validFrom = 0, validTo = null)
+            MedicationTime(id = 1, medicationId = 1, sequenceNumber = 1, time = "20:00", validFrom = DateUtils.MIN_DATE, validTo = DateUtils.MAX_DATE),
+            MedicationTime(id = 2, medicationId = 1, sequenceNumber = 2, time = "08:00", validFrom = DateUtils.MIN_DATE, validTo = DateUtils.MAX_DATE)
         )
         val intake = MedicationIntake(
             id = 1,
@@ -224,22 +355,22 @@ class MedicationRepositoryTest {
             medicationId = 1,
             cycleType = CycleType.WEEKLY,
             cycleValue = "5", // Friday only
-            medicationStartDate = parseDate("2025-10-01"),
-            validFrom = 0,
-            validTo = null
+            medicationStartDate = "2025-10-01",
+            validFrom = DateUtils.MIN_DATE,
+            validTo = DateUtils.MAX_DATE
         )
         val mondayConfig = createSampleConfig(
             id = 2,
             medicationId = 2,
             cycleType = CycleType.WEEKLY,
             cycleValue = "1", // Monday only
-            medicationStartDate = parseDate("2025-10-01"),
-            validFrom = 0,
-            validTo = null
+            medicationStartDate = "2025-10-01",
+            validFrom = DateUtils.MIN_DATE,
+            validTo = DateUtils.MAX_DATE
         )
         val times = listOf(
-            MedicationTime(id = 1, medicationId = 1, sequenceNumber = 1, time = "08:00", validFrom = 0, validTo = null),
-            MedicationTime(id = 2, medicationId = 2, sequenceNumber = 1, time = "08:00", validFrom = 0, validTo = null)
+            MedicationTime(id = 1, medicationId = 1, sequenceNumber = 1, time = "08:00", validFrom = DateUtils.MIN_DATE, validTo = DateUtils.MAX_DATE),
+            MedicationTime(id = 2, medicationId = 2, sequenceNumber = 1, time = "08:00", validFrom = DateUtils.MIN_DATE, validTo = DateUtils.MAX_DATE)
         )
 
         every { medicationDao.getAllMedications() } returns flowOf(listOf(fridayMedication, mondayMedication))
@@ -266,12 +397,12 @@ class MedicationRepositoryTest {
             medicationId = 1,
             cycleType = CycleType.INTERVAL,
             cycleValue = "3",
-            medicationStartDate = parseDate("2025-10-01"),
-            validFrom = 0,
-            validTo = null
+            medicationStartDate = "2025-10-01",
+            validFrom = DateUtils.MIN_DATE,
+            validTo = DateUtils.MAX_DATE
         )
         val times = listOf(
-            MedicationTime(id = 1, medicationId = 1, sequenceNumber = 1, time = "08:00", validFrom = 0, validTo = null)
+            MedicationTime(id = 1, medicationId = 1, sequenceNumber = 1, time = "08:00", validFrom = DateUtils.MIN_DATE, validTo = DateUtils.MAX_DATE)
         )
 
         every { medicationDao.getAllMedications() } returns flowOf(listOf(medication))
@@ -302,13 +433,13 @@ class MedicationRepositoryTest {
             id = 1,
             medicationId = 1,
             cycleType = CycleType.DAILY,
-            medicationStartDate = parseDate("2025-10-05"),
-            medicationEndDate = parseDate("2025-10-15"),
-            validFrom = 0,
-            validTo = null
+            medicationStartDate = "2025-10-05",
+            medicationEndDate = "2025-10-15",
+            validFrom = DateUtils.MIN_DATE,
+            validTo = DateUtils.MAX_DATE
         )
         val times = listOf(
-            MedicationTime(id = 1, medicationId = 1, sequenceNumber = 1, time = "08:00", validFrom = 0, validTo = null)
+            MedicationTime(id = 1, medicationId = 1, sequenceNumber = 1, time = "08:00", validFrom = DateUtils.MIN_DATE, validTo = DateUtils.MAX_DATE)
         )
 
         every { medicationDao.getAllMedications() } returns flowOf(listOf(medication))
@@ -343,13 +474,13 @@ class MedicationRepositoryTest {
             id = 1,
             medicationId = 1,
             isAsNeeded = true,
-            medicationStartDate = parseDate("2025-10-05"),
-            medicationEndDate = parseDate("2025-10-15"),
-            validFrom = 0,
-            validTo = null
+            medicationStartDate = "2025-10-05",
+            medicationEndDate = "2025-10-15",
+            validFrom = DateUtils.MIN_DATE,
+            validTo = DateUtils.MAX_DATE
         )
         val times = listOf(
-            MedicationTime(id = 1, medicationId = 1, sequenceNumber = 1, time = "08:00", validFrom = 0, validTo = null)
+            MedicationTime(id = 1, medicationId = 1, sequenceNumber = 1, time = "08:00", validFrom = DateUtils.MIN_DATE, validTo = DateUtils.MAX_DATE)
         )
 
         every { medicationDao.getAllMedications() } returns flowOf(listOf(medication))
@@ -385,14 +516,14 @@ class MedicationRepositoryTest {
             id = 1,
             medicationId = 1,
             cycleType = CycleType.DAILY,
-            medicationStartDate = parseDate("2025-10-01"),
-            validFrom = 0,
-            validTo = null
+            medicationStartDate = "2025-10-01",
+            validFrom = DateUtils.MIN_DATE,
+            validTo = DateUtils.MAX_DATE
         )
         // Times that were valid yesterday (including 08:00 which was deleted today)
         val times = listOf(
-            MedicationTime(id = 1, medicationId = 1, sequenceNumber = 1, time = "08:00", validFrom = 0, validTo = parseDate("2025-10-10")),
-            MedicationTime(id = 2, medicationId = 1, sequenceNumber = 2, time = "20:00", validFrom = 0, validTo = null)
+            MedicationTime(id = 1, medicationId = 1, sequenceNumber = 1, time = "08:00", validFrom = DateUtils.MIN_DATE, validTo = "2025-10-10"),
+            MedicationTime(id = 2, medicationId = 1, sequenceNumber = 2, time = "20:00", validFrom = DateUtils.MIN_DATE, validTo = DateUtils.MAX_DATE)
         )
 
         every { medicationDao.getAllMedications() } returns flowOf(listOf(medication))
@@ -419,14 +550,14 @@ class MedicationRepositoryTest {
             id = 1,
             medicationId = 1,
             cycleType = CycleType.DAILY,
-            medicationStartDate = parseDate("2025-10-01"),
-            validFrom = 0,
-            validTo = null
+            medicationStartDate = "2025-10-01",
+            validFrom = DateUtils.MIN_DATE,
+            validTo = DateUtils.MAX_DATE
         )
         // Only 08:00 was valid yesterday (18:00 starts from 2025-10-10)
         val times = listOf(
-            MedicationTime(id = 1, medicationId = 1, sequenceNumber = 1, time = "08:00", validFrom = 0, validTo = null),
-            MedicationTime(id = 2, medicationId = 1, sequenceNumber = 2, time = "18:00", validFrom = parseDate("2025-10-10"), validTo = null)
+            MedicationTime(id = 1, medicationId = 1, sequenceNumber = 1, time = "08:00", validFrom = DateUtils.MIN_DATE, validTo = DateUtils.MAX_DATE),
+            MedicationTime(id = 2, medicationId = 1, sequenceNumber = 2, time = "18:00", validFrom = "2025-10-10", validTo = DateUtils.MAX_DATE)
         )
 
         every { medicationDao.getAllMedications() } returns flowOf(listOf(medication))
@@ -587,10 +718,10 @@ class MedicationRepositoryTest {
         isAsNeeded: Boolean = false,
         cycleType: CycleType = CycleType.DAILY,
         cycleValue: String? = null,
-        medicationStartDate: Long = System.currentTimeMillis(),
-        medicationEndDate: Long? = null,
-        validFrom: Long = 0,
-        validTo: Long? = null
+        medicationStartDate: String = DateUtils.MIN_DATE,
+        medicationEndDate: String = DateUtils.MAX_DATE,
+        validFrom: String = DateUtils.MIN_DATE,
+        validTo: String = DateUtils.MAX_DATE
     ): MedicationConfig {
         return MedicationConfig(
             id = id,
