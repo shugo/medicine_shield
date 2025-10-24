@@ -24,10 +24,8 @@ import net.shugo.medicineshield.data.model.MedicationTime
 import net.shugo.medicineshield.utils.DateUtils
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import java.time.LocalDate
@@ -325,8 +323,8 @@ class MedicationRepositoryTest {
         )
 
         every { medicationDao.getAllMedications() } returns flowOf(listOf(medication))
-        every { medicationTimeDao.getAllTimesFlow() } returns flowOf(times)
-        every { medicationConfigDao.getAllConfigsFlow() } returns flowOf(listOf(config))
+        every { medicationTimeDao.getAllTimesFlowOnDate(dateString) } returns flowOf(times)
+        every { medicationConfigDao.getAllConfigsFlowOnDate(dateString) } returns flowOf(listOf(config))
         every { medicationIntakeDao.getIntakesByDate(dateString) } returns flowOf(listOf(intake))
 
         // When & Then
@@ -374,8 +372,8 @@ class MedicationRepositoryTest {
         )
 
         every { medicationDao.getAllMedications() } returns flowOf(listOf(fridayMedication, mondayMedication))
-        every { medicationTimeDao.getAllTimesFlow() } returns flowOf(times)
-        every { medicationConfigDao.getAllConfigsFlow() } returns flowOf(listOf(fridayConfig, mondayConfig))
+        every { medicationTimeDao.getAllTimesFlowOnDate(dateString) } returns flowOf(times)
+        every { medicationConfigDao.getAllConfigsFlowOnDate(dateString) } returns flowOf(listOf(fridayConfig, mondayConfig))
         every { medicationIntakeDao.getIntakesByDate(dateString) } returns flowOf(emptyList())
 
         // When & Then
@@ -406,8 +404,8 @@ class MedicationRepositoryTest {
         )
 
         every { medicationDao.getAllMedications() } returns flowOf(listOf(medication))
-        every { medicationTimeDao.getAllTimesFlow() } returns flowOf(times)
-        every { medicationConfigDao.getAllConfigsFlow() } returns flowOf(listOf(config))
+        every { medicationTimeDao.getAllTimesFlowOnDate(any()) } returns flowOf(times)
+        every { medicationConfigDao.getAllConfigsFlowOnDate(any()) } returns flowOf(listOf(config))
         every { medicationIntakeDao.getIntakesByDate(any()) } returns flowOf(emptyList())
 
         // Test day 9 (should appear)
@@ -443,8 +441,8 @@ class MedicationRepositoryTest {
         )
 
         every { medicationDao.getAllMedications() } returns flowOf(listOf(medication))
-        every { medicationTimeDao.getAllTimesFlow() } returns flowOf(times)
-        every { medicationConfigDao.getAllConfigsFlow() } returns flowOf(listOf(config))
+        every { medicationTimeDao.getAllTimesFlowOnDate(any()) } returns flowOf(times)
+        every { medicationConfigDao.getAllConfigsFlowOnDate(any()) } returns flowOf(listOf(config))
         every { medicationIntakeDao.getIntakesByDate(any()) } returns flowOf(emptyList())
 
         // Before start date
@@ -484,8 +482,8 @@ class MedicationRepositoryTest {
         )
 
         every { medicationDao.getAllMedications() } returns flowOf(listOf(medication))
-        every { medicationTimeDao.getAllTimesFlow() } returns flowOf(times)
-        every { medicationConfigDao.getAllConfigsFlow() } returns flowOf(listOf(config))
+        every { medicationTimeDao.getAllTimesFlowOnDate(any()) } returns flowOf(times)
+        every { medicationConfigDao.getAllConfigsFlowOnDate(any()) } returns flowOf(listOf(config))
         every { medicationIntakeDao.getIntakesByDate(any()) } returns flowOf(emptyList())
 
         // Before start date
@@ -527,8 +525,8 @@ class MedicationRepositoryTest {
         )
 
         every { medicationDao.getAllMedications() } returns flowOf(listOf(medication))
-        every { medicationTimeDao.getAllTimesFlow() } returns flowOf(times)
-        every { medicationConfigDao.getAllConfigsFlow() } returns flowOf(listOf(config))
+        every { medicationTimeDao.getAllTimesFlowOnDate(yesterday) } returns flowOf(times)
+        every { medicationConfigDao.getAllConfigsFlowOnDate(yesterday) } returns flowOf(listOf(config))
         every { medicationIntakeDao.getIntakesByDate(yesterday) } returns flowOf(emptyList())
 
         // When & Then
@@ -555,14 +553,15 @@ class MedicationRepositoryTest {
             validTo = DateUtils.MAX_DATE
         )
         // Only 08:00 was valid yesterday (18:00 starts from 2025-10-10)
+        // Filtered by getAllTimesFlowOnDate() using WHERE
         val times = listOf(
-            MedicationTime(id = 1, medicationId = 1, sequenceNumber = 1, time = "08:00", validFrom = DateUtils.MIN_DATE, validTo = DateUtils.MAX_DATE),
-            MedicationTime(id = 2, medicationId = 1, sequenceNumber = 2, time = "18:00", validFrom = "2025-10-10", validTo = DateUtils.MAX_DATE)
+            MedicationTime(id = 1, medicationId = 1, sequenceNumber = 1, time = "08:00", validFrom = DateUtils.MIN_DATE, validTo = DateUtils.MAX_DATE)
+            // MedicationTime(id = 2, medicationId = 1, sequenceNumber = 2, time = "18:00", validFrom = "2025-10-10", validTo = DateUtils.MAX_DATE)
         )
 
         every { medicationDao.getAllMedications() } returns flowOf(listOf(medication))
-        every { medicationTimeDao.getAllTimesFlow() } returns flowOf(times)
-        every { medicationConfigDao.getAllConfigsFlow() } returns flowOf(listOf(config))
+        every { medicationTimeDao.getAllTimesFlowOnDate(yesterday) } returns flowOf(times)
+        every { medicationConfigDao.getAllConfigsFlowOnDate(yesterday) } returns flowOf(listOf(config))
         every { medicationIntakeDao.getIntakesByDate(yesterday) } returns flowOf(emptyList())
 
         // When & Then
