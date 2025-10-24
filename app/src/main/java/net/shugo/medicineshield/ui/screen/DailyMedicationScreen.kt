@@ -71,8 +71,9 @@ import net.shugo.medicineshield.data.model.DailyNote
 import net.shugo.medicineshield.data.model.MedicationIntakeStatus
 import net.shugo.medicineshield.utils.formatDose
 import net.shugo.medicineshield.viewmodel.DailyMedicationViewModel
+import java.text.SimpleDateFormat
 import java.util.Calendar
-import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -325,6 +326,13 @@ fun MedicationList(
     // LazyListStateを作成
     val listState = rememberLazyListState()
 
+    val timeParser = SimpleDateFormat("HH:mm", Locale.ROOT)
+    val context = LocalContext.current
+    // Use remember without a key to automatically reflect current system settings
+    val timeFormatter = remember {
+        DateFormat.getTimeFormat(context)
+    }
+
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
@@ -332,8 +340,11 @@ fun MedicationList(
     ) {
         // 定時薬のセクション
         groupedScheduledMeds.forEach { (time, items) ->
+            val date = timeParser.parse(time)
+            val timeText = date?.let { timeFormatter.format(it) } ?: "??:??"
+
             item {
-                TimeHeader(time)
+                TimeHeader(timeText)
             }
 
             items(items) { medication ->
