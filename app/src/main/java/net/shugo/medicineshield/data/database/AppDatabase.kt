@@ -20,7 +20,7 @@ import net.shugo.medicineshield.data.model.MedicationTime
 
 @Database(
     entities = [Medication::class, MedicationTime::class, MedicationIntake::class, MedicationConfig::class, DailyNote::class],
-    version = 12,
+    version = 13,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -426,6 +426,59 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_12_13 = object : Migration(12, 13) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // ========== medication_intakes テーブルの変換 (takenAt: Long → String HH:mm) ==========
+
+                // 1. 新しいテーブルを作成（takenAtをTEXTに）
+                db.execSQL(
+                    """
+                    CREATE TABLE medication_intakes_new (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        medicationId INTEGER NOT NULL,
+                        sequenceNumber INTEGER NOT NULL,
+                        scheduledDate TEXT NOT NULL,
+                        takenAt TEXT,
+                        isCanceled INTEGER NOT NULL DEFAULT 0,
+                        createdAt INTEGER NOT NULL,
+                        updatedAt INTEGER NOT NULL,
+                        FOREIGN KEY(medicationId) REFERENCES medications(id) ON DELETE CASCADE
+                    )
+                    """.trimIndent()
+                )
+
+                // 2. 既存データを変換してコピー（タイムスタンプ → HH:mm）
+                db.execSQL(
+                    """
+                    INSERT INTO medication_intakes_new
+                    SELECT
+                        id,
+                        medicationId,
+                        sequenceNumber,
+                        scheduledDate,
+                        CASE WHEN takenAt IS NOT NULL
+                             THEN strftime('%H:%M', takenAt / 1000, 'unixepoch', 'localtime')
+                             ELSE NULL END,
+                        isCanceled,
+                        createdAt,
+                        updatedAt
+                    FROM medication_intakes
+                    """.trimIndent()
+                )
+
+                // 3. 古いテーブルを削除
+                db.execSQL("DROP TABLE medication_intakes")
+
+                // 4. 新しいテーブルをリネーム
+                db.execSQL("ALTER TABLE medication_intakes_new RENAME TO medication_intakes")
+
+                // 5. インデックスを再作成
+                db.execSQL("CREATE INDEX index_medication_intakes_medicationId ON medication_intakes(medicationId)")
+                db.execSQL("CREATE INDEX index_medication_intakes_scheduledDate ON medication_intakes(scheduledDate)")
+                db.execSQL("CREATE UNIQUE INDEX index_medication_intakes_medicationId_scheduledDate_sequenceNumber ON medication_intakes(medicationId, scheduledDate, sequenceNumber)")
+            }
+        }
+
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -433,7 +486,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "medicine_shield_database"
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13)
                     .build()
                 INSTANCE = instance
                 instance

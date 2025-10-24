@@ -321,7 +321,7 @@ class MedicationRepositoryTest {
             medicationId = 1,
             sequenceNumber = 2,
             scheduledDate = dateString,
-            takenAt = System.currentTimeMillis()
+            takenAt = "09:30"
         )
 
         every { medicationDao.getAllMedications() } returns flowOf(listOf(medication))
@@ -644,7 +644,7 @@ class MedicationRepositoryTest {
             medicationId = medicationId,
             sequenceNumber = sequenceNumber,
             scheduledDate = scheduledDate,
-            takenAt = System.currentTimeMillis()
+            takenAt = "10:30"
         )
 
         coEvery {

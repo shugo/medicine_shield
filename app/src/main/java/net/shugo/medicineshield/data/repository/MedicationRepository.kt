@@ -452,14 +452,14 @@ class MedicationRepository(
                         medicationId = medicationId,
                         sequenceNumber = sequenceNumber,
                         scheduledDate = scheduledDate,
-                        takenAt = System.currentTimeMillis()
+                        takenAt = getCurrentTimeString()
                     )
                 )
             } else {
                 // 更新
                 medicationIntakeDao.update(
                     existingIntake.copy(
-                        takenAt = System.currentTimeMillis(),
+                        takenAt = getCurrentTimeString(),
                         updatedAt = System.currentTimeMillis()
                     )
                 )
@@ -548,6 +548,14 @@ class MedicationRepository(
     }
 
     /**
+     * 現在の時刻を HH:mm 形式で取得
+     */
+    private fun getCurrentTimeString(): String {
+        val timeFormatter = SimpleDateFormat("HH:mm", Locale.ROOT)
+        return timeFormatter.format(Date(System.currentTimeMillis()))
+    }
+
+    /**
      * 頓服薬の服用記録を追加
      */
     suspend fun addAsNeededIntake(
@@ -564,7 +572,7 @@ class MedicationRepository(
                 medicationId = medicationId,
                 sequenceNumber = nextSequenceNumber,
                 scheduledDate = scheduledDate,
-                takenAt = System.currentTimeMillis()
+                takenAt = getCurrentTimeString()
             )
         )
     }
@@ -591,7 +599,7 @@ class MedicationRepository(
     suspend fun updateIntakeTakenAt(
         medicationId: Long,
         sequenceNumber: Int,
-        newTakenAt: Long,
+        newTakenAt: String,  // HH:mm format
         scheduledDate: String = getCurrentDateString()
     ) {
         val existingIntake = medicationIntakeDao.getIntakeByMedicationAndDateTime(

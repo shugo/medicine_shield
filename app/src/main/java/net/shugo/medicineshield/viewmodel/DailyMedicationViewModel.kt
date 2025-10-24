@@ -252,13 +252,8 @@ class DailyMedicationViewModel(
     fun updateTakenAt(medicationId: Long, sequenceNumber: Int, hour: Int, minute: Int) {
         viewModelScope.launch {
             val dateString = DateUtils.formatIsoDate(_selectedDate.value)
-            // 選択された日付の指定時刻にタイムスタンプを設定
-            val calendar = _selectedDate.value.clone() as Calendar
-            calendar.set(Calendar.HOUR_OF_DAY, hour)
-            calendar.set(Calendar.MINUTE, minute)
-            calendar.set(Calendar.SECOND, 0)
-            calendar.set(Calendar.MILLISECOND, 0)
-            val newTakenAt = calendar.timeInMillis
+            // HH:mm形式の文字列を作成
+            val newTakenAt = String.format("%02d:%02d", hour, minute)
             repository.updateIntakeTakenAt(medicationId, sequenceNumber, newTakenAt, dateString)
         }
     }
