@@ -523,9 +523,8 @@ private fun BaseMedicationCard(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(top = 4.dp)
                     ) {
-                        val time = timeFormatter.format(Date(medication.takenAt))
                         Text(
-                            text = stringResource(R.string.taken_at, time),
+                            text = stringResource(R.string.taken_at, medication.takenAt),
                             fontSize = 12.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -551,7 +550,7 @@ private fun BaseMedicationCard(
 
     if (showTimePickerDialog && medication.takenAt != null) {
         TimePickerDialog(
-            initialTimestamp = medication.takenAt,
+            initialTime = medication.takenAt,
             onConfirm = { hour, minute ->
                 onUpdateTakenAt(medication.medicationId, medication.sequenceNumber, hour, minute)
                 showTimePickerDialog = false
@@ -658,16 +657,18 @@ fun AsNeededMedicationItem(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TimePickerDialog(
-    initialTimestamp: Long,
+    initialTime: String,  // HH:mm format
     onConfirm: (hour: Int, minute: Int) -> Unit,
     onDismiss: () -> Unit
 ) {
-    val calendar = Calendar.getInstance()
-    calendar.timeInMillis = initialTimestamp
+    // HH:mm形式の文字列をパース
+    val timeParts = initialTime.split(":")
+    val initialHour = timeParts.getOrNull(0)?.toIntOrNull() ?: 0
+    val initialMinute = timeParts.getOrNull(1)?.toIntOrNull() ?: 0
 
     val timePickerState = rememberTimePickerState(
-        initialHour = calendar.get(Calendar.HOUR_OF_DAY),
-        initialMinute = calendar.get(Calendar.MINUTE)
+        initialHour = initialHour,
+        initialMinute = initialMinute
     )
 
     AlertDialog(

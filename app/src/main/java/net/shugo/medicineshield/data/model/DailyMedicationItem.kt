@@ -8,6 +8,6 @@ data class DailyMedicationItem(
     val dose: Double = 1.0,  // 服用量
     val doseUnit: String? = null,  // 服用量の単位
     val status: MedicationIntakeStatus,  // 服用状態（未服用・服用済み・キャンセル済み）
-    val takenAt: Long? = null,  // 服用時刻（statusがTAKENの場合のみ有効）
+    val takenAt: String? = null,  // 服用時刻 HH:mm format（statusがTAKENの場合のみ有効）
     val isAsNeeded: Boolean = false  // 頓服薬フラグ
 )
