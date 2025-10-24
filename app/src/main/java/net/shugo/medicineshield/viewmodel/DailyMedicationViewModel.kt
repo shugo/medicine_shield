@@ -19,6 +19,7 @@ import net.shugo.medicineshield.notification.NotificationScheduler
 import net.shugo.medicineshield.utils.DateUtils
 import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Locale
 
 class DailyMedicationViewModel(
     application: Application,
@@ -253,7 +254,7 @@ class DailyMedicationViewModel(
         viewModelScope.launch {
             val dateString = DateUtils.formatIsoDate(_selectedDate.value)
             // HH:mm形式の文字列を作成
-            val newTakenAt = String.format("%02d:%02d", hour, minute)
+            val newTakenAt = String.format(Locale.ROOT, "%02d:%02d", hour, minute)
             repository.updateIntakeTakenAt(medicationId, sequenceNumber, newTakenAt, dateString)
         }
     }
