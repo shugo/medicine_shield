@@ -29,8 +29,12 @@ interface MedicationConfigDao {
     """)
     suspend fun getConfigForMedicationOnDate(medicationId: Long, targetDate: Long): MedicationConfig?
 
-    @Query("SELECT * FROM medication_configs")
-    fun getAllConfigsFlow(): Flow<List<MedicationConfig>>
+    @Query("""
+        SELECT * FROM medication_configs
+        WHERE validFrom <= :targetDate
+        AND validTo > :targetDate
+    """)
+    fun getAllConfigsFlowOnDate(targetDate: String): Flow<List<MedicationConfig>>
 
     @Insert
     suspend fun insert(config: MedicationConfig): Long

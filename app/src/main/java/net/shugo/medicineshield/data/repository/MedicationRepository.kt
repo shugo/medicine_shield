@@ -320,8 +320,8 @@ class MedicationRepository(
      */
     fun getMedications(dateString: String): Flow<List<DailyMedicationItem>> {
         val medications = medicationDao.getAllMedications()
-        val medicationTimes = medicationTimeDao.getAllTimesFlow()
-        val medicationConfigs = medicationConfigDao.getAllConfigsFlow()
+        val medicationTimes = medicationTimeDao.getAllTimesFlowOnDate(dateString)
+        val medicationConfigs = medicationConfigDao.getAllConfigsFlowOnDate(dateString)
         val intakes = medicationIntakeDao.getIntakesByDate(dateString)
 
         return combine(medications, medicationTimes, medicationConfigs, intakes) { medList, allTimes, allConfigs, intakeList ->
@@ -339,12 +339,12 @@ class MedicationRepository(
                 // MedicationWithTimesオブジェクトを構築
                 val medicationWithTimes = MedicationWithTimes(
                     medication = medication,
-                    times = timesByMedicationId[medication.id] ?: emptyList(),
+                    times = timesByMedicationId[medication.id]?.sortedBy { it.time } ?: emptyList(),
                     configs = configsByMedicationId[medication.id] ?: emptyList()
                 )
 
                 // 対象日に有効なConfigを取得
-                val validConfig = medicationWithTimes.getConfigForDate(targetDate)
+                val validConfig = medicationWithTimes.config
 
                 if (validConfig != null && shouldTakeMedication(validConfig, targetDate)) {
                     if (validConfig.isAsNeeded) {
@@ -396,7 +396,7 @@ class MedicationRepository(
                     } else {
                         // 定時薬の処理（既存のロジック）
                         // 対象日に有効な時刻を取得
-                        val validTimes = medicationWithTimes.getTimesForDate(targetDate)
+                        val validTimes = medicationWithTimes.times
 
                         for (medTime in validTimes) {
                             val key = "${medication.id}_${medTime.sequenceNumber}"

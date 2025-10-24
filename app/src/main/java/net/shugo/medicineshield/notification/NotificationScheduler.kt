@@ -11,9 +11,10 @@ import net.shugo.medicineshield.data.model.CycleType
 import net.shugo.medicineshield.data.model.MedicationWithTimes
 import net.shugo.medicineshield.data.preferences.SettingsPreferences
 import net.shugo.medicineshield.data.repository.MedicationRepository
-import net.shugo.medicineshield.utils.DateUtils
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 class NotificationScheduler(
     private val context: Context,
@@ -215,19 +216,17 @@ class NotificationScheduler(
      */
     private suspend fun getMedicationsForTime(time: String, dateTime: Long): List<MedicationWithTimes> {
         val medications = repository.getAllMedicationsWithTimes().first()
-        val normalizedDateTime = DateUtils.normalizeToStartOfDay(dateTime)
 
         return medications.filter { medWithTimes ->
-            // この薬がその時刻を持っているか（その日に有効な時刻）
-            val validTimes = medWithTimes.getTimesForDate(normalizedDateTime)
-            val hasTime = validTimes.any { it.time == time }
+            // この薬がその時刻を持っているか
+            val times = medWithTimes.times
+            val hasTime = times.any { it.time == time }
             if (!hasTime) return@filter false
 
-            // その日に有効なConfigを取得
-            val validConfig = medWithTimes.getConfigForDate(normalizedDateTime)
+            val config = medWithTimes.config
 
             // その日に服用すべきか判定
-            validConfig?.let { shouldTakeMedication(it, dateTime) } ?: false
+            config?.let { shouldTakeMedication(it, dateTime) } ?: false
         }
     }
 
