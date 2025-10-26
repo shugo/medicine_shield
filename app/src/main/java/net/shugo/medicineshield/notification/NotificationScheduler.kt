@@ -31,26 +31,26 @@ class NotificationScheduler(
     }
 
     /**
-     * 時刻から通知IDを生成
-     * 例: "09:00" -> 900, "14:30" -> 1430
+     * Generate notification ID from time
+     * Example: "09:00" -> 900, "14:30" -> 1430
      */
     fun getNotificationIdForTime(time: String): Int {
         return time.replace(":", "").toIntOrNull() ?: 0
     }
 
     /**
-     * すべての通知を再スケジュールする（再起動時・深夜0時）
+     * Reschedule all notifications (on reboot, at midnight)
      */
     suspend fun rescheduleAllNotifications() = withContext(Dispatchers.IO) {
-        // 通知が無効な場合は何もしない
+        // Do nothing if notifications are disabled
         if (!settingsPreferences.isNotificationsEnabled()) {
             return@withContext
         }
 
-        // すべての薬を取得
+        // Get all medications
         val medications = repository.getAllMedicationsWithTimes().first()
 
-        // すべての時刻を収集（現在有効なもののみ）
+        // Collect all times (only currently valid ones)
         val allTimes = mutableSetOf<String>()
         medications.forEach { med ->
             med.times.forEach { time ->
@@ -58,35 +58,35 @@ class NotificationScheduler(
             }
         }
 
-        // 各時刻について次回の通知をスケジュール
+        // Schedule next notification for each time
         allTimes.forEach { time ->
             scheduleNextNotificationForTime(time)
         }
 
-        // 深夜0時の再スケジュールジョブを設定
+        // Set up rescheduling job at midnight
         scheduleDailyRefreshJob()
     }
 
     /**
-     * 特定の時刻の次回通知をスケジュールする
+     * Schedule next notification for specific time
      */
     suspend fun scheduleNextNotificationForTime(time: String) = withContext(Dispatchers.IO) {
         val nextDateTime = calculateNextNotificationDateTime(time)
         if (nextDateTime == null) {
-            // 該当する次回日時がない場合は通知をキャンセル
+            // Cancel notification if no matching next date/time
             cancelNotificationForTime(time)
             return@withContext
         }
 
-        // その時刻に服用すべき薬のリストを取得
+        // Get list of medications that should be taken at that time
         val medications = getMedicationsForTime(time, nextDateTime)
         if (medications.isEmpty()) {
-            // 薬がない場合は通知をキャンセル
+            // Cancel notification if no medications
             cancelNotificationForTime(time)
             return@withContext
         }
 
-        // 服薬予定日を計算（通知がトリガーされる日時から）
+        // Calculate scheduled date (from when notification is triggered)
         val scheduledDate = dateFormatter.format(Date(nextDateTime))
 
         // 通知をスケジュール
@@ -244,21 +244,21 @@ class NotificationScheduler(
         if (targetDateString < config.medicationStartDate) return false
         if (targetDateString > config.medicationEndDate) return false
 
-        // 頓服薬は通知をスケジュールしない
+        // Do not schedule notifications for PRN medications
         if (config.isAsNeeded) return false
 
         return when (config.cycleType) {
             CycleType.DAILY -> true
 
             CycleType.WEEKLY -> {
-                // 曜日チェック (0=日曜, 1=月曜, ..., 6=土曜)
+                // Day of week check (0=Sunday, 1=Monday, ..., 6=Saturday)
                 val dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK) - 1
                 val allowedDays = config.cycleValue?.split(",")?.mapNotNull { it.toIntOrNull() } ?: emptyList()
                 dayOfWeek in allowedDays
             }
 
             CycleType.INTERVAL -> {
-                // N日ごとチェック
+                // Every N days check
                 val intervalDays = config.cycleValue?.toIntOrNull() ?: return false
                 val startDateTimestamp = dateFormatter.parse(config.medicationStartDate)?.time ?: return false
                 val daysSinceStart = ((targetDate - startDateTimestamp) / (1000 * 60 * 60 * 24)).toInt()

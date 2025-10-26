@@ -26,14 +26,14 @@ data class MedicationConfig(
     val id: Long = 0,
     val medicationId: Long,
     val cycleType: CycleType,
-    val cycleValue: String? = null,  // 曜日リスト (e.g., "0,2,4") or 日数 (e.g., "3")
-    val medicationStartDate: String,  // 実際の服用開始日（yyyy-MM-dd形式、INTERVAL計算の基準日）
-    val medicationEndDate: String = DateUtils.MAX_DATE,  // 実際の服用終了日（yyyy-MM-dd形式、デフォルト=最大値）
-    val isAsNeeded: Boolean = false,  // 頓服薬フラグ（true=頓服、false=定時薬）
-    val dose: Double = 1.0,  // 服用量（頓服薬の場合はこの値を使用、定時薬の場合はMedicationTimeのデフォルト値）
-    val doseUnit: String? = null,  // 服用量の単位（例: "錠", "mg", "mL"）
-    val validFrom: String,  // この設定レコードが有効になった日付（yyyy-MM-dd形式、履歴管理用）
-    val validTo: String = DateUtils.MAX_DATE,  // この設定レコードが無効になった日付（yyyy-MM-dd形式、デフォルト=最大値）
+    val cycleValue: String? = null,  // Day of week list (e.g., "0,2,4") or days (e.g., "3")
+    val medicationStartDate: String,  // Actual medication start date (yyyy-MM-dd format, baseline for INTERVAL calculation)
+    val medicationEndDate: String = DateUtils.MAX_DATE,  // Actual medication end date (yyyy-MM-dd format, default=max value)
+    val isAsNeeded: Boolean = false,  // PRN medication flag (true=PRN, false=scheduled)
+    val dose: Double = 1.0,  // Dosage (use this value for PRN, default value for MedicationTime for scheduled)
+    val doseUnit: String? = null,  // Dosage unit (e.g., "tablet", "mg", "mL")
+    val validFrom: String,  // Date when this config record becomes valid (yyyy-MM-dd format, for history management)
+    val validTo: String = DateUtils.MAX_DATE,  // Date when this config record becomes invalid (yyyy-MM-dd format, default=max value)
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
 ) {

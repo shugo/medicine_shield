@@ -3,11 +3,11 @@ package net.shugo.medicineshield.data.model
 data class DailyMedicationItem(
     val medicationId: Long,
     val medicationName: String,
-    val sequenceNumber: Int,  // MedicationTimeのsequenceNumber（頓服の場合は服用回数の連番）
-    val scheduledTime: String,  // 表示用の時刻（HH:mm）（頓服の場合は空文字列）
-    val dose: Double = 1.0,  // 服用量
-    val doseUnit: String? = null,  // 服用量の単位
-    val status: MedicationIntakeStatus,  // 服用状態（未服用・服用済み・キャンセル済み）
-    val takenAt: String? = null,  // 服用時刻 HH:mm format（statusがTAKENの場合のみ有効）
-    val isAsNeeded: Boolean = false  // 頓服薬フラグ
+    val sequenceNumber: Int,  // MedicationTime's sequenceNumber (for PRN, sequential number of intakes)
+    val scheduledTime: String,  // Display time (HH:mm) (empty string for PRN)
+    val dose: Double = 1.0,  // Dosage
+    val doseUnit: String? = null,  // Dosage unit
+    val status: MedicationIntakeStatus,  // Intake status (unchecked, taken, canceled)
+    val takenAt: String? = null,  // Taken time HH:mm format (valid only when status is TAKEN)
+    val isAsNeeded: Boolean = false  // PRN medication flag
 )

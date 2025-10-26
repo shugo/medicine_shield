@@ -21,24 +21,24 @@ data class MedicationWithTimes(
     val configs: List<MedicationConfig> = emptyList()
 ) {
     /**
-     * 現在有効な設定（単一値としてアクセス）
-     * Repositoryが既にフィルタリング済みの場合、configs.firstOrNull()と同等
+     * Currently valid config (access as single value)
+     * Equivalent to configs.firstOrNull() if Repository already filtered
      */
     val config: MedicationConfig?
         get() = configs.firstOrNull()
 
     /**
-     * 現在有効な時刻を取得
-     * @return 現在有効なMedicationTimeのリスト（時刻順にソート済み）
+     * Get currently valid times
+     * @return List of currently valid MedicationTime (sorted by time)
      */
     fun getCurrentTimes(): List<MedicationTime> {
         return times.filter { it.validTo == DateUtils.MAX_DATE }.sortedBy { it.time }
     }
 
     /**
-     * 指定日時に有効な時刻を取得
-     * @param targetDate 対象日時のタイムスタンプ
-     * @return 指定日時に有効なMedicationTimeのリスト（時刻順にソート済み）
+     * Get times valid at specified date/time
+     * @param targetDate timestamp of target date/time
+     * @return List of MedicationTime valid at specified date/time (sorted by time)
      */
     fun getTimesForDate(targetDate: Long): List<MedicationTime> {
         val targetDateString = formatDateString(targetDate)
@@ -48,8 +48,8 @@ data class MedicationWithTimes(
     }
 
     /**
-     * 現在有効な設定を取得
-     * @return 現在有効なMedicationConfig、見つからない場合はnull
+     * Get currently valid config
+     * @return Currently valid MedicationConfig, null if not found
      */
     fun getCurrentConfig(): MedicationConfig? {
         return configs
@@ -58,9 +58,9 @@ data class MedicationWithTimes(
     }
 
     /**
-     * 指定日時に有効な設定を取得
-     * @param targetDate 対象日時のタイムスタンプ
-     * @return 指定日時に有効なMedicationConfig、見つからない場合はnull
+     * Get config valid at specified date/time
+     * @param targetDate timestamp of target date/time
+     * @return MedicationConfig valid at specified date/time, null if not found
      */
     fun getConfigForDate(targetDate: Long): MedicationConfig? {
         val targetDateString = formatDateString(targetDate)
@@ -70,7 +70,7 @@ data class MedicationWithTimes(
     }
 
     /**
-     * Long型のタイムスタンプをyyyy-MM-dd形式の文字列に変換
+     * Convert Long timestamp to yyyy-MM-dd format string
      */
     private fun formatDateString(timestamp: Long): String {
         val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)

@@ -40,7 +40,7 @@ class MedicationListViewModel(
             list.filter { medWithTimes ->
                 // 現在有効なConfigを取得
                 val currentConfig = medWithTimes.getCurrentConfig()
-                // endDateが今日以降なら「服用中」（MAX_DATEの場合も含む）
+                // If endDate is today or later, "Currently taking" (includes MAX_DATE case)
                 currentConfig?.let { config ->
                     config.medicationEndDate >= today
                 } ?: false
@@ -59,7 +59,7 @@ class MedicationListViewModel(
             list.filter { medWithTimes ->
                 // 現在有効なConfigを取得
                 val currentConfig = medWithTimes.getCurrentConfig()
-                // endDateが今日より前なら「過去のお薬」
+                // If endDate is before today, "Past medications"
                 currentConfig?.let { config ->
                     config.medicationEndDate < today
                 } ?: false
@@ -74,13 +74,13 @@ class MedicationListViewModel(
     fun deleteMedication(medicationId: Long) {
         viewModelScope.launch {
             repository.deleteMedicationById(medicationId)
-            // 通知を再スケジュール（削除された薬の時刻に他の薬がある場合は更新）
+            // Reschedule notifications (update if other medications exist at deleted medication's time)
             notificationScheduler.rescheduleAllNotifications()
         }
     }
 
     /**
-     * Long型のタイムスタンプをyyyy-MM-dd形式の文字列に変換
+     * Convert Long timestamp to yyyy-MM-dd format string
      */
     private fun formatDateString(timestamp: Long): String {
         val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)

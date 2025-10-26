@@ -308,16 +308,16 @@ fun MedicationList(
     viewModel: DailyMedicationViewModel,
     scrollToNote: Boolean = false
 ) {
-    // 頓服薬と定時薬を分離
+    // Separate PRN and scheduled medications
     val (asNeededMeds, scheduledMeds) = medications.partition { it.isAsNeeded }
 
-    // 定時薬を時刻でグループ化
+    // Group scheduled medications by time
     val groupedScheduledMeds = scheduledMeds.groupBy { it.scheduledTime }
 
-    // 頓服薬を薬ごとにグループ化
+    // Group PRN medications by drug
     val groupedAsNeededMeds = asNeededMeds.groupBy { it.medicationId }
 
-    // 今日かどうか判定
+    // Determine if today
     val today = Calendar.getInstance()
     val isToday = selectedDate.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
                   selectedDate.get(Calendar.DAY_OF_YEAR) == today.get(Calendar.DAY_OF_YEAR)
@@ -579,11 +579,11 @@ fun ScheduledMedicationItem(
     onUncancelMedication: (Long, Int) -> Unit,
     onUpdateTakenAt: (Long, Int, Int, Int) -> Unit
 ) {
-    // チェックボックスの状態を決定
+    // Determine checkbox state
     val checkboxState = when (medication.status) {
-        MedicationIntakeStatus.UNCHECKED -> ToggleableState.Off        // 未服用
-        MedicationIntakeStatus.TAKEN -> ToggleableState.On             // 服用済み
-        MedicationIntakeStatus.CANCELED -> ToggleableState.Indeterminate  // キャンセル済み
+        MedicationIntakeStatus.UNCHECKED -> ToggleableState.Off        // Not taken
+        MedicationIntakeStatus.TAKEN -> ToggleableState.On             // Taken
+        MedicationIntakeStatus.CANCELED -> ToggleableState.Indeterminate  // Canceled
     }
 
     BaseMedicationCard(
@@ -595,22 +595,22 @@ fun ScheduledMedicationItem(
                 onClick = {
                     when (medication.status) {
                         MedicationIntakeStatus.UNCHECKED -> {
-                            // 未服用 → 服用済み
+                            // Not taken → Taken
                             onToggleTaken(
                                 medication.medicationId,
                                 medication.sequenceNumber,
-                                false  // 現在は未服用
+                                false  // Currently not taken
                             )
                         }
                         MedicationIntakeStatus.TAKEN -> {
-                            // 服用済み → キャンセル済み
+                            // Taken → Canceled
                             onCancelMedication(
                                 medication.medicationId,
                                 medication.sequenceNumber
                             )
                         }
                         MedicationIntakeStatus.CANCELED -> {
-                            // キャンセル済み → 未服用
+                            // Canceled → Not taken
                             onUncancelMedication(
                                 medication.medicationId,
                                 medication.sequenceNumber
@@ -672,7 +672,7 @@ fun TimePickerDialog(
     onConfirm: (hour: Int, minute: Int) -> Unit,
     onDismiss: () -> Unit
 ) {
-    // HH:mm形式の文字列をパース
+    // Parse HH:mm format string
     val timeParts = initialTime.split(":")
     val initialHour = timeParts.getOrNull(0)?.toIntOrNull() ?: 0
     val initialMinute = timeParts.getOrNull(1)?.toIntOrNull() ?: 0
@@ -851,7 +851,7 @@ fun DailyNoteSection(
     var hasPrevious by remember { mutableStateOf(false) }
     var hasNext by remember { mutableStateOf(false) }
 
-    // メモの前後存在チェック（selectedDateも監視）
+    // Check if notes exist before/after (also monitor selectedDate)
     LaunchedEffect(selectedDate) {
         hasPrevious = viewModel.hasPreviousNote()
         hasNext = viewModel.hasNextNote()
@@ -860,7 +860,7 @@ fun DailyNoteSection(
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {
-        // メモの表示または追加ボタン
+        // Display note or add button
         if (note != null) {
             NoteCard(
                 content = note.content,
@@ -882,14 +882,14 @@ fun DailyNoteSection(
             }
         }
 
-        // ナビゲーションボタン（前後のメモがある場合のみ表示）
+        // Navigation buttons (show only if notes exist before/after)
         if (hasPrevious || hasNext) {
             Spacer(modifier = Modifier.height(8.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                // 前のメモへ
+                // Go to previous note
                 if (hasPrevious) {
                     OutlinedButton(
                         onClick = { viewModel.navigateToPreviousNote() },
@@ -909,7 +909,7 @@ fun DailyNoteSection(
 
                 Spacer(modifier = Modifier.width(8.dp))
 
-                // 次のメモへ
+                // Go to next note
                 if (hasNext) {
                     OutlinedButton(
                         onClick = { viewModel.navigateToNextNote() },

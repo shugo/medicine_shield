@@ -5,23 +5,23 @@ import java.util.Calendar
 import java.util.Locale
 
 /**
- * 日付関連のユーティリティ関数
+ * Date-related utility functions
  */
 object DateUtils {
     /**
-     * 日付の最小値（過去すべての日付で有効を表す）
+     * Minimum date (represents valid for all past dates)
      */
     const val MIN_DATE = "0000-01-01"
 
     /**
-     * 日付の最大値（未来永劫有効を表す）
+     * Maximum date (represents valid forever in the future)
      */
     const val MAX_DATE = "9999-12-31"
 
     /**
-     * タイムスタンプを日付の開始時刻(00:00:00.000)に正規化
-     * @param timestamp 対象のタイムスタンプ
-     * @return 日付の開始時刻のタイムスタンプ
+     * Normalize timestamp to start of day (00:00:00.000)
+     * @param timestamp target timestamp
+     * @return timestamp at start of day
      */
     fun normalizeToStartOfDay(timestamp: Long): Long {
         val calendar = Calendar.getInstance()
@@ -34,9 +34,9 @@ object DateUtils {
     }
 
     /**
-     * ISO8601フォーマットの日付文字列をCalendarオブジェクトに変換
-     * @param dateString ISO8601フォーマットの日付文字列
-     * @return Calendarオブジェクト
+     * Convert ISO8601 format date string to Calendar object
+     * @param dateString ISO8601 format date string
+     * @return Calendar object
      */
     fun parseIsoDate(dateString: String): Calendar? {
         val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
@@ -48,9 +48,9 @@ object DateUtils {
     }
 
     /**
-     * CalendarオブジェクトをISO8601フォーマットの日付文字列に変換
-     * @param calendar 変換対象のCalendarオブジェクト
-     * @return ISO8601フォーマットの日付文字列
+     * Convert Calendar object to ISO8601 format date string
+     * @param calendar Calendar object to convert
+     * @return ISO8601 format date string
      */
     fun formatIsoDate(calendar: Calendar): String {
         val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)

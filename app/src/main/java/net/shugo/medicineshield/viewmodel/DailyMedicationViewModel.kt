@@ -62,10 +62,10 @@ class DailyMedicationViewModel(
     }
 
     /**
-     * 通知からの初期日付を設定する
-     * 通知から起動された場合のみ、その日付に移動する
+     * Set initial date from notification
+     * Only move to that date if launched from notification
      *
-     * @param dateString 日付文字列 (yyyy-MM-dd形式)
+     * @param dateString Date string (yyyy-MM-dd format)
      */
     fun setDateFromNotification(dateString: String) {
         val calendar = DateUtils.parseIsoDate(dateString)
@@ -156,7 +156,7 @@ class DailyMedicationViewModel(
 
     fun toggleMedicationTaken(medicationId: Long, sequenceNumber: Int, currentStatus: Boolean) {
         viewModelScope.launch {
-            // 服用済みにマークする場合のみ、通知を消すかチェック
+            // Check if notifications should be dismissed only when marking as taken
             val willBeMarkedAsTaken = !currentStatus
 
             // 該当する薬の情報を取得（通知チェック用）
@@ -175,26 +175,26 @@ class DailyMedicationViewModel(
     }
 
     /**
-     * 指定時刻の全ての薬が服用済みになった場合、通知を消す
+     * Dismiss notification if all medications at specified time are taken
      *
-     * @param time 服用時刻 (HH:mm形式)
-     * @param justToggledMedId 今トグルした薬のID（楽観的更新用）
-     * @param justToggledSeqNum 今トグルした薬のシーケンス番号（楽観的更新用）
+     * @param time Intake time (HH:mm format)
+     * @param justToggledMedId ID of medication just toggled (for optimistic update)
+     * @param justToggledSeqNum Sequence number of medication just toggled (for optimistic update)
      */
     private fun checkAndDismissNotificationIfComplete(
         time: String,
         justToggledMedId: Long,
         justToggledSeqNum: Int
     ) {
-        // その時刻の全ての定時薬を取得（頓服薬は除外）
+        // Get all scheduled medications at that time (excluding PRN)
         val allMedsAtTime = _dailyMedications.value.filter {
             it.scheduledTime == time && !it.isAsNeeded
         }
 
-        // 全ての薬が服用済みかチェック（楽観的更新：今トグルした薬は服用済みと仮定）
+        // Check if all medications are taken (optimistic update: assume just toggled medication is taken)
         val allTaken = allMedsAtTime.all { med ->
             if (med.medicationId == justToggledMedId && med.sequenceNumber == justToggledSeqNum) {
-                true // 今トグルした薬は服用済みと仮定
+                true // Assume just toggled medication is taken
             } else {
                 med.status == MedicationIntakeStatus.TAKEN
             }
@@ -208,7 +208,7 @@ class DailyMedicationViewModel(
     }
 
     /**
-     * 服用をキャンセルする
+     * Cancel medication intake
      */
     fun cancelMedication(medicationId: Long, sequenceNumber: Int) {
         viewModelScope.launch {
@@ -218,7 +218,7 @@ class DailyMedicationViewModel(
     }
 
     /**
-     * 服用のキャンセルを取り消す
+     * Undo cancellation of medication intake
      */
     fun uncancelMedication(medicationId: Long, sequenceNumber: Int) {
         viewModelScope.launch {
@@ -228,7 +228,7 @@ class DailyMedicationViewModel(
     }
 
     /**
-     * 頓服薬を追加服用する
+     * Add additional PRN medication intake
      */
     fun addAsNeededMedication(medicationId: Long) {
         viewModelScope.launch {
@@ -238,7 +238,7 @@ class DailyMedicationViewModel(
     }
 
     /**
-     * 頓服薬の特定の服用記録を削除
+     * Delete specific PRN medication intake record
      */
     fun removeAsNeededMedication(medicationId: Long, sequenceNumber: Int) {
         viewModelScope.launch {
@@ -248,7 +248,7 @@ class DailyMedicationViewModel(
     }
 
     /**
-     * 服用時刻を更新する
+     * Update taken time
      */
     fun updateTakenAt(medicationId: Long, sequenceNumber: Int, hour: Int, minute: Int) {
         viewModelScope.launch {
@@ -267,7 +267,7 @@ class DailyMedicationViewModel(
     }
 
     /**
-     * 時刻でグループ化されたデータを取得
+     * Get data grouped by time
      */
     fun getMedicationsGroupedByTime(): Map<String, List<DailyMedicationItem>> {
         return _dailyMedications.value.groupBy { it.scheduledTime }
@@ -288,7 +288,7 @@ class DailyMedicationViewModel(
     }
 
     /**
-     * すべてのデータソースが読み込まれたかチェックし、ローディング状態を更新
+     * Check if all data sources are loaded and update loading state
      */
     private fun updateLoadingState() {
         if (medicationsLoaded && noteLoaded) {
@@ -297,7 +297,7 @@ class DailyMedicationViewModel(
     }
 
     /**
-     * メモを保存または更新
+     * Save or update note
      */
     fun saveNote(content: String) {
         if (content.isBlank()) return
@@ -309,7 +309,7 @@ class DailyMedicationViewModel(
     }
 
     /**
-     * メモを削除
+     * Delete note
      */
     fun deleteNote() {
         viewModelScope.launch {
@@ -319,7 +319,7 @@ class DailyMedicationViewModel(
     }
 
     /**
-     * 前のメモがある日付に移動
+     * Navigate to previous date with note
      */
     fun navigateToPreviousNote() {
         viewModelScope.launch {
@@ -342,7 +342,7 @@ class DailyMedicationViewModel(
     }
 
     /**
-     * 次のメモがある日付に移動
+     * Navigate to next date with note
      */
     fun navigateToNextNote() {
         viewModelScope.launch {
@@ -372,7 +372,7 @@ class DailyMedicationViewModel(
     }
 
     /**
-     * 前のメモが存在するかチェック
+     * Check if previous note exists
      */
     suspend fun hasPreviousNote(): Boolean {
         val currentDateString = DateUtils.formatIsoDate(_selectedDate.value)
@@ -380,7 +380,7 @@ class DailyMedicationViewModel(
     }
 
     /**
-     * 次のメモが存在するかチェック
+     * Check if next note exists
      */
     suspend fun hasNextNote(): Boolean {
         val currentDateString = DateUtils.formatIsoDate(_selectedDate.value)
