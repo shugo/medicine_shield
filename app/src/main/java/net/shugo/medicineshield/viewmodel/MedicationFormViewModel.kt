@@ -27,13 +27,13 @@ data class MedicationFormState(
     val name: String = "",
     val times: List<TimeWithSequence> = emptyList(),
     val cycleType: CycleType = CycleType.DAILY,
-    val cycleValue: String? = null,  // 曜日リスト or 日数
+    val cycleValue: String? = null,  // Day of week list or days
     val startDate: Long = System.currentTimeMillis(),
     val endDate: Long? = null,
-    val originalStartDate: Long? = null,  // 編集時の元の開始日（変更検出用）
-    val isAsNeeded: Boolean = false,  // 頓服薬フラグ
-    val defaultDoseText: String = formatDoseInput(1.0),  // デフォルト服用量（頓服薬の場合に使用、定時薬の新規時刻追加時のデフォルト値）
-    val doseUnit: String? = null,  // 服用量の単位
+    val originalStartDate: Long? = null,  // Original start date for editing (for change detection)
+    val isAsNeeded: Boolean = false,  // PRN medication flag
+    val defaultDoseText: String = formatDoseInput(1.0),  // Default dosage (used for PRN, default value for adding new time for scheduled)
+    val doseUnit: String? = null,  // Dosage unit
     val nameError: String? = null,
     val timesError: String? = null,
     val cycleError: String? = null,
@@ -100,7 +100,7 @@ class MedicationFormViewModel(
 
     fun addTime(time: String, dose: Double? = null) {
         val currentTimes = _formState.value.times.toMutableList()
-        // doseが指定されていない場合はdefaultDoseTextをパースして使用
+        // If dose not specified, parse and use defaultDoseText
         val actualDose = dose ?: parseDoseInput(_formState.value.defaultDoseText) ?: 1.0
         currentTimes.add(TimeWithSequence(nextSequenceNumber++, time, actualDose))
         currentTimes.sortBy { it.time }
@@ -122,7 +122,7 @@ class MedicationFormViewModel(
     fun updateTime(index: Int, newTime: String, newDose: Double? = null) {
         val currentTimes = _formState.value.times.toMutableList()
         if (index in currentTimes.indices) {
-            // sequenceNumberは保持したまま時刻と服用量を変更
+            // Change time and dosage while keeping sequenceNumber
             currentTimes[index] = currentTimes[index].copy(
                 time = newTime,
                 dose = newDose ?: currentTimes[index].dose
@@ -226,7 +226,7 @@ class MedicationFormViewModel(
             isValid = false
         }
 
-        // 頓服の場合は時刻が不要
+        // Time not required for PRN
         if (!state.isAsNeeded && state.times.isEmpty()) {
             _formState.value = _formState.value.copy(
                 timesError = context.getString(R.string.error_no_times)
@@ -273,13 +273,13 @@ class MedicationFormViewModel(
             isValid = false
         }
 
-        // 編集時：開始日が変更されており、かつ今日より前の日付に設定されている場合はエラー
+        // Edit mode: error if start date is changed and set to a date before today
         if (state.medicationId != null && state.originalStartDate != null) {
             val normalizedStartDate = DateUtils.normalizeToStartOfDay(state.startDate)
             val normalizedOriginalStartDate = DateUtils.normalizeToStartOfDay(state.originalStartDate)
             val normalizedToday = DateUtils.normalizeToStartOfDay(System.currentTimeMillis())
 
-            // 開始日が変更されている場合のみチェック
+            // Check only if start date is changed
             if (normalizedStartDate != normalizedOriginalStartDate && normalizedStartDate < normalizedToday) {
                 _formState.value = _formState.value.copy(
                     dateError = context.getString(R.string.error_invalid_start_date_past)
@@ -296,7 +296,7 @@ class MedicationFormViewModel(
     }
 
     /**
-     * yyyy-MM-dd形式の文字列をLong型のタイムスタンプに変換
+     * Convert yyyy-MM-dd format string to Long timestamp
      */
     private fun parseDateString(dateString: String): Long {
         val calendar = DateUtils.parseIsoDate(dateString)
