@@ -7,8 +7,6 @@ import android.content.Intent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
-import net.shugo.medicineshield.data.model.CycleType
-import net.shugo.medicineshield.data.model.MedicationWithTimes
 import net.shugo.medicineshield.data.preferences.SettingsPreferences
 import net.shugo.medicineshield.data.repository.MedicationRepository
 import java.text.SimpleDateFormat
@@ -64,15 +62,18 @@ class NotificationScheduler(
             return@withContext
         }
 
-        // Get all medications
-        val medications = repository.getAllMedicationsWithTimes().first()
-
-        // Collect all times (only currently valid ones)
+        // Get medications for today and tomorrow (2 days is enough since this runs daily at midnight)
         val allTimes = mutableSetOf<String>()
-        medications.forEach { med ->
-            med.times.forEach { time ->
-                allTimes.add(time.time)
+        val calendar = Calendar.getInstance()
+        calendar.timeInMillis = timeProvider.currentTimeMillis()
+
+        for (i in 0 until 2) {
+            val dateString = dateFormatter.format(Date(calendar.timeInMillis))
+            val medications = repository.getMedications(dateString).first()
+            medications.forEach { med ->
+                allTimes.add(med.scheduledTime)
             }
+            calendar.add(Calendar.DAY_OF_YEAR, 1)
         }
 
         // Schedule next notification for each time
@@ -201,11 +202,30 @@ class NotificationScheduler(
             calendar.add(Calendar.DAY_OF_YEAR, 1)
         }
 
-        // その時刻に服用すべき薬があるか最大7日先までチェック
-        // 毎日深夜0時に再スケジュールされるため、7日で十分
-        for (i in 0 until 7) {
-            // Check if there are any uncompleted medications for this time
-            val hasUncompleted = hasUncompletedMedications(time, calendar.timeInMillis)
+        // Pre-fetch medications for the next few days to avoid repeated queries
+        // Since this reschedules daily at midnight, 3 days should be more than enough
+        val medicationsByDate = mutableMapOf<String, List<net.shugo.medicineshield.data.model.DailyMedicationItem>>()
+        val tempCalendar = Calendar.getInstance().apply { timeInMillis = calendar.timeInMillis }
+
+        for (i in 0 until 3) {
+            val dateString = dateFormatter.format(Date(tempCalendar.timeInMillis))
+            medicationsByDate[dateString] = repository.getMedications(dateString).first()
+            tempCalendar.add(Calendar.DAY_OF_YEAR, 1)
+        }
+
+        // その時刻に服用すべき薬があるか最大3日先までチェック
+        for (i in 0 until 3) {
+            val dateString = dateFormatter.format(Date(calendar.timeInMillis))
+            val dailyMedications = medicationsByDate[dateString] ?: emptyList()
+
+            // Filter medications for the specified time
+            val medicationsAtTime = dailyMedications.filter { it.scheduledTime == time }
+
+            // Check if there are uncompleted medications
+            val hasUncompleted = medicationsAtTime.isNotEmpty() && medicationsAtTime.any { item ->
+                item.status != net.shugo.medicineshield.data.model.MedicationIntakeStatus.TAKEN
+            }
+
             if (hasUncompleted) {
                 return calendar.timeInMillis
             }
@@ -213,30 +233,6 @@ class NotificationScheduler(
         }
 
         return null
-    }
-
-    /**
-     * Check if there are any uncompleted medications for the specified time and date
-     * @param time Time string (HH:mm format)
-     * @param dateTime Target date/time in milliseconds
-     * @return true if there are uncompleted medications, false otherwise
-     */
-    private suspend fun hasUncompletedMedications(time: String, dateTime: Long): Boolean {
-        val dateString = dateFormatter.format(Date(dateTime))
-        val dailyMedications = repository.getMedications(dateString).first()
-
-        // Filter medications for the specified time
-        val medicationsAtTime = dailyMedications.filter { it.scheduledTime == time }
-
-        // If no medications found at this time, no need to schedule notification
-        if (medicationsAtTime.isEmpty()) {
-            return false
-        }
-
-        // Check if any are not taken
-        return medicationsAtTime.any { item ->
-            item.status != net.shugo.medicineshield.data.model.MedicationIntakeStatus.TAKEN
-        }
     }
 
 }
