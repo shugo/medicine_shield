@@ -214,12 +214,40 @@ class NotificationScheduler(
         for (i in 0 until 7) {
             val medications = getMedicationsForTime(time, calendar.timeInMillis)
             if (medications.isNotEmpty()) {
-                return calendar.timeInMillis
+                // Check if there are any uncompleted medications for this time
+                val hasUncompleted = hasUncompletedMedications(time, calendar.timeInMillis)
+                if (hasUncompleted) {
+                    return calendar.timeInMillis
+                }
             }
             calendar.add(Calendar.DAY_OF_YEAR, 1)
         }
 
         return null
+    }
+
+    /**
+     * Check if there are any uncompleted medications for the specified time and date
+     * @param time Time string (HH:mm format)
+     * @param dateTime Target date/time in milliseconds
+     * @return true if there are uncompleted medications, false otherwise
+     */
+    private suspend fun hasUncompletedMedications(time: String, dateTime: Long): Boolean {
+        val dateString = dateFormatter.format(Date(dateTime))
+        val dailyMedications = repository.getMedications(dateString).first()
+
+        // Filter medications for the specified time
+        val medicationsAtTime = dailyMedications.filter { it.scheduledTime == time }
+
+        // If no medications found at this time, assume uncompleted (no intake records yet)
+        if (medicationsAtTime.isEmpty()) {
+            return true
+        }
+
+        // Check if any are not taken
+        return medicationsAtTime.any { item ->
+            item.status != net.shugo.medicineshield.data.model.MedicationIntakeStatus.TAKEN
+        }
     }
 
     /**

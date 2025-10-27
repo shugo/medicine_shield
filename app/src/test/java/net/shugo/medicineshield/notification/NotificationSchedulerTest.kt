@@ -17,8 +17,10 @@ import io.mockk.verify
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import net.shugo.medicineshield.data.model.CycleType
+import net.shugo.medicineshield.data.model.DailyMedicationItem
 import net.shugo.medicineshield.data.model.Medication
 import net.shugo.medicineshield.data.model.MedicationConfig
+import net.shugo.medicineshield.data.model.MedicationIntakeStatus
 import net.shugo.medicineshield.data.model.MedicationTime
 import net.shugo.medicineshield.data.model.MedicationWithTimes
 import net.shugo.medicineshield.data.preferences.SettingsPreferences
@@ -60,6 +62,9 @@ class NotificationSchedulerTest {
 
         // Mock PendingIntent creation
         every { pendingIntentFactory.createBroadcast(any(), any(), any(), any()) } returns mockk(relaxed = true)
+
+        // Mock getMedications to return empty list by default (will be overridden in specific tests)
+        coEvery { repository.getMedications(any()) } returns flowOf(emptyList())
 
         scheduler = NotificationScheduler(
             context,
@@ -388,6 +393,168 @@ class NotificationSchedulerTest {
         scheduler.scheduleNextNotificationForTime("09:00")
 
         // Verify: Should schedule for today at 09:00 (day 0, which is divisible by 2)
+        val expectedTime = Calendar.getInstance().apply {
+            set(2024, 0, 15, 9, 0, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
+
+        val timeSlot = slot<Long>()
+        verify { alarmScheduler.scheduleAlarm(capture(timeSlot), any()) }
+        assertEquals(expectedTime, timeSlot.captured)
+    }
+
+    @Test
+    fun `scheduleNextNotificationForTime should skip to next day when all medications are already taken`() = runTest {
+        // Setup: Current time is 2024-01-15 08:00:00
+        val currentTime = Calendar.getInstance().apply {
+            set(2024, 0, 15, 8, 0, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
+
+        every { timeProvider.currentTimeMillis() } returns currentTime
+
+        // Setup: Medication scheduled for 09:00 daily
+        val medication = Medication(id = 1L, name = "Test Medicine")
+        val config = MedicationConfig(
+            medicationId = 1L,
+            cycleType = CycleType.DAILY,
+            cycleValue = null,
+            medicationStartDate = "2024-01-01",
+            medicationEndDate = "2024-12-31",
+            isAsNeeded = false,
+            validFrom = "2024-01-01",
+            validTo = "9999-12-31"
+        )
+        val time = MedicationTime(
+            medicationId = 1L,
+            sequenceNumber = 1,
+            time = "09:00",
+            validFrom = "2024-01-01",
+            validTo = "9999-12-31"
+        )
+        val medWithTimes = MedicationWithTimes(medication, listOf(time), listOf(config))
+
+        coEvery { repository.getAllMedicationsWithTimes() } returns flowOf(listOf(medWithTimes))
+
+        // Setup: Today's medication is already taken
+        val todayItem = DailyMedicationItem(
+            medicationId = 1L,
+            medicationName = "Test Medicine",
+            scheduledTime = "09:00",
+            sequenceNumber = 1,
+            isAsNeeded = false,
+            dose = 1.0,
+            doseUnit = "tablets",
+            status = MedicationIntakeStatus.TAKEN
+        )
+        coEvery { repository.getMedications("2024-01-15") } returns flowOf(listOf(todayItem))
+
+        // Setup: Tomorrow's medication is not taken yet
+        val tomorrowItem = DailyMedicationItem(
+            medicationId = 1L,
+            medicationName = "Test Medicine",
+            scheduledTime = "09:00",
+            sequenceNumber = 1,
+            isAsNeeded = false,
+            dose = 1.0,
+            doseUnit = "tablets",
+            status = MedicationIntakeStatus.UNCHECKED
+        )
+        coEvery { repository.getMedications("2024-01-16") } returns flowOf(listOf(tomorrowItem))
+
+        // Execute
+        scheduler.scheduleNextNotificationForTime("09:00")
+
+        // Verify: Should schedule for tomorrow at 09:00 (skip today since already taken)
+        val expectedTime = Calendar.getInstance().apply {
+            set(2024, 0, 16, 9, 0, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
+
+        val timeSlot = slot<Long>()
+        verify { alarmScheduler.scheduleAlarm(capture(timeSlot), any()) }
+        assertEquals(expectedTime, timeSlot.captured)
+    }
+
+    @Test
+    fun `scheduleNextNotificationForTime should schedule for today when some medications are not taken`() = runTest {
+        // Setup: Current time is 2024-01-15 08:00:00
+        val currentTime = Calendar.getInstance().apply {
+            set(2024, 0, 15, 8, 0, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
+
+        every { timeProvider.currentTimeMillis() } returns currentTime
+
+        // Setup: Two medications scheduled for 09:00 daily
+        val medication1 = Medication(id = 1L, name = "Medicine A")
+        val medication2 = Medication(id = 2L, name = "Medicine B")
+        val config1 = MedicationConfig(
+            medicationId = 1L,
+            cycleType = CycleType.DAILY,
+            cycleValue = null,
+            medicationStartDate = "2024-01-01",
+            medicationEndDate = "2024-12-31",
+            isAsNeeded = false,
+            validFrom = "2024-01-01",
+            validTo = "9999-12-31"
+        )
+        val config2 = MedicationConfig(
+            medicationId = 2L,
+            cycleType = CycleType.DAILY,
+            cycleValue = null,
+            medicationStartDate = "2024-01-01",
+            medicationEndDate = "2024-12-31",
+            isAsNeeded = false,
+            validFrom = "2024-01-01",
+            validTo = "9999-12-31"
+        )
+        val time1 = MedicationTime(
+            medicationId = 1L,
+            sequenceNumber = 1,
+            time = "09:00",
+            validFrom = "2024-01-01",
+            validTo = "9999-12-31"
+        )
+        val time2 = MedicationTime(
+            medicationId = 2L,
+            sequenceNumber = 1,
+            time = "09:00",
+            validFrom = "2024-01-01",
+            validTo = "9999-12-31"
+        )
+        val medWithTimes1 = MedicationWithTimes(medication1, listOf(time1), listOf(config1))
+        val medWithTimes2 = MedicationWithTimes(medication2, listOf(time2), listOf(config2))
+
+        coEvery { repository.getAllMedicationsWithTimes() } returns flowOf(listOf(medWithTimes1, medWithTimes2))
+
+        // Setup: One medication is taken, one is not
+        val takenItem = DailyMedicationItem(
+            medicationId = 1L,
+            medicationName = "Medicine A",
+            scheduledTime = "09:00",
+            sequenceNumber = 1,
+            isAsNeeded = false,
+            dose = 1.0,
+            doseUnit = "tablets",
+            status = MedicationIntakeStatus.TAKEN
+        )
+        val uncheckedItem = DailyMedicationItem(
+            medicationId = 2L,
+            medicationName = "Medicine B",
+            scheduledTime = "09:00",
+            sequenceNumber = 1,
+            isAsNeeded = false,
+            dose = 1.0,
+            doseUnit = "tablets",
+            status = MedicationIntakeStatus.UNCHECKED
+        )
+        coEvery { repository.getMedications("2024-01-15") } returns flowOf(listOf(takenItem, uncheckedItem))
+
+        // Execute
+        scheduler.scheduleNextNotificationForTime("09:00")
+
+        // Verify: Should schedule for today at 09:00 (one medication is not taken yet)
         val expectedTime = Calendar.getInstance().apply {
             set(2024, 0, 15, 9, 0, 0)
             set(Calendar.MILLISECOND, 0)
