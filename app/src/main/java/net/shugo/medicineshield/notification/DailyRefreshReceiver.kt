@@ -1,6 +1,5 @@
 package net.shugo.medicineshield.notification
 
-import android.app.AlarmManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -8,7 +7,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import net.shugo.medicineshield.data.database.AppDatabase
-import net.shugo.medicineshield.data.preferences.SettingsPreferences
 import net.shugo.medicineshield.data.repository.MedicationRepository
 
 class DailyRefreshReceiver : BroadcastReceiver() {
@@ -33,15 +31,7 @@ class DailyRefreshReceiver : BroadcastReceiver() {
                 notificationHelper.createNotificationChannel()
 
                 // すべての通知を再スケジュール
-                val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-                val alarmScheduler = AlarmSchedulerImpl(alarmManager)
-                val settingsPreferences = SettingsPreferences(context)
-                val scheduler = NotificationScheduler(
-                    context,
-                    repository,
-                    alarmScheduler,
-                    settingsPreferences
-                )
+                val scheduler = NotificationScheduler.create(context, repository)
                 scheduler.rescheduleAllNotifications()
 
             } finally {

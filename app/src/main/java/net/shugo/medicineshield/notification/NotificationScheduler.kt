@@ -30,6 +30,21 @@ class NotificationScheduler(
         const val EXTRA_NOTIFICATION_TIME = "notification_time"
         const val EXTRA_SCHEDULED_DATE = "scheduled_date"
         private const val DAILY_REFRESH_REQUEST_CODE = 999999
+
+        /**
+         * Factory function to create NotificationScheduler with default dependencies
+         */
+        fun create(context: Context, repository: MedicationRepository): NotificationScheduler {
+            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            val alarmScheduler = AlarmSchedulerImpl(alarmManager)
+            val settingsPreferences = SettingsPreferences(context)
+            return NotificationScheduler(
+                context,
+                repository,
+                alarmScheduler,
+                settingsPreferences
+            )
+        }
     }
 
     /**

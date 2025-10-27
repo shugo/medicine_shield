@@ -34,11 +34,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import kotlinx.coroutines.launch
-import android.app.AlarmManager
 import net.shugo.medicineshield.data.database.AppDatabase
 import net.shugo.medicineshield.data.preferences.SettingsPreferences
 import net.shugo.medicineshield.data.repository.MedicationRepository
-import net.shugo.medicineshield.notification.AlarmSchedulerImpl
 import net.shugo.medicineshield.notification.NotificationHelper
 import net.shugo.medicineshield.notification.NotificationScheduler
 import net.shugo.medicineshield.ui.screen.DailyMedicationScreen
@@ -140,15 +138,7 @@ class MainActivity : ComponentActivity() {
 
     private fun setupNotifications() {
         lifecycleScope.launch {
-            val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
-            val alarmScheduler = AlarmSchedulerImpl(alarmManager)
-            val settingsPreferences = SettingsPreferences(applicationContext)
-            val scheduler = NotificationScheduler(
-                applicationContext,
-                repository,
-                alarmScheduler,
-                settingsPreferences
-            )
+            val scheduler = NotificationScheduler.create(applicationContext, repository)
             scheduler.rescheduleAllNotifications()
         }
     }
