@@ -63,6 +63,7 @@ class NotificationScheduler(
         }
 
         // Get medications for today and tomorrow (2 days is enough since this runs daily at midnight)
+        val medicationsByDate = mutableMapOf<String, List<net.shugo.medicineshield.data.model.DailyMedicationItem>>()
         val allTimes = mutableSetOf<String>()
         val calendar = Calendar.getInstance()
         calendar.timeInMillis = timeProvider.currentTimeMillis()
@@ -70,6 +71,7 @@ class NotificationScheduler(
         for (i in 0 until 2) {
             val dateString = dateFormatter.format(Date(calendar.timeInMillis))
             val medications = repository.getMedications(dateString).first()
+            medicationsByDate[dateString] = medications
             medications.forEach { med ->
                 allTimes.add(med.scheduledTime)
             }
@@ -78,7 +80,7 @@ class NotificationScheduler(
 
         // Schedule next notification for each time
         allTimes.forEach { time ->
-            scheduleNextNotificationForTime(time)
+            scheduleNextNotificationForTime(time, medicationsByDate)
         }
 
         // Set up rescheduling job at midnight
@@ -87,9 +89,14 @@ class NotificationScheduler(
 
     /**
      * Schedule next notification for specific time
+     * @param time Time string (HH:mm format)
+     * @param medicationsByDate Pre-fetched medications by date (optional, for performance)
      */
-    suspend fun scheduleNextNotificationForTime(time: String) = withContext(Dispatchers.IO) {
-        val nextDateTime = calculateNextNotificationDateTime(time)
+    suspend fun scheduleNextNotificationForTime(
+        time: String,
+        medicationsByDate: Map<String, List<net.shugo.medicineshield.data.model.DailyMedicationItem>>? = null
+    ) = withContext(Dispatchers.IO) {
+        val nextDateTime = calculateNextNotificationDateTime(time, medicationsByDate)
         if (nextDateTime == null) {
             // Cancel notification if no matching next date/time
             cancelNotificationForTime(time)
@@ -177,9 +184,14 @@ class NotificationScheduler(
 
     /**
      * Calculate next notification date/time for specified time
+     * @param time Time string (HH:mm format)
+     * @param medicationsByDate Pre-fetched medications by date (optional)
      * @return Timestamp of next notification (null if no match)
      */
-    private suspend fun calculateNextNotificationDateTime(time: String): Long? {
+    private suspend fun calculateNextNotificationDateTime(
+        time: String,
+        medicationsByDate: Map<String, List<net.shugo.medicineshield.data.model.DailyMedicationItem>>? = null
+    ): Long? {
         val now = timeProvider.currentTimeMillis()
         val calendar = Calendar.getInstance().apply {
             timeInMillis = now
@@ -202,21 +214,12 @@ class NotificationScheduler(
             calendar.add(Calendar.DAY_OF_YEAR, 1)
         }
 
-        // Pre-fetch medications for the next few days to avoid repeated queries
-        // Since this reschedules daily at midnight, 3 days should be more than enough
-        val medicationsByDate = mutableMapOf<String, List<net.shugo.medicineshield.data.model.DailyMedicationItem>>()
-        val tempCalendar = Calendar.getInstance().apply { timeInMillis = calendar.timeInMillis }
-
-        for (i in 0 until 3) {
-            val dateString = dateFormatter.format(Date(tempCalendar.timeInMillis))
-            medicationsByDate[dateString] = repository.getMedications(dateString).first()
-            tempCalendar.add(Calendar.DAY_OF_YEAR, 1)
-        }
-
-        // その時刻に服用すべき薬があるか最大3日先までチェック
-        for (i in 0 until 3) {
+        // Use provided data or fetch if not available
+        // Check up to 2 days ahead (sufficient since this reschedules daily at midnight)
+        for (i in 0 until 2) {
             val dateString = dateFormatter.format(Date(calendar.timeInMillis))
-            val dailyMedications = medicationsByDate[dateString] ?: emptyList()
+            val dailyMedications = medicationsByDate?.get(dateString)
+                ?: repository.getMedications(dateString).first()
 
             // Filter medications for the specified time
             val medicationsAtTime = dailyMedications.filter { it.scheduledTime == time }
