@@ -7,6 +7,8 @@ import android.content.Intent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
+import net.shugo.medicineshield.data.model.DailyMedicationItem
+import net.shugo.medicineshield.data.model.MedicationIntakeStatus
 import net.shugo.medicineshield.data.preferences.SettingsPreferences
 import net.shugo.medicineshield.data.repository.MedicationRepository
 import java.text.SimpleDateFormat
@@ -63,7 +65,7 @@ class NotificationScheduler(
         }
 
         // Get medications for today and tomorrow (2 days is enough since this runs daily at midnight)
-        val medicationsByDate = mutableMapOf<String, List<net.shugo.medicineshield.data.model.DailyMedicationItem>>()
+        val medicationsByDate = mutableMapOf<String, List<DailyMedicationItem>>()
         val allTimes = mutableSetOf<String>()
         val calendar = Calendar.getInstance()
         calendar.timeInMillis = timeProvider.currentTimeMillis()
@@ -94,7 +96,7 @@ class NotificationScheduler(
      */
     suspend fun scheduleNextNotificationForTime(
         time: String,
-        medicationsByDate: Map<String, List<net.shugo.medicineshield.data.model.DailyMedicationItem>>? = null
+        medicationsByDate: Map<String, List<DailyMedicationItem>>? = null
     ) = withContext(Dispatchers.IO) {
         val nextDateTime = calculateNextNotificationDateTime(time, medicationsByDate)
         if (nextDateTime == null) {
@@ -190,7 +192,7 @@ class NotificationScheduler(
      */
     private suspend fun calculateNextNotificationDateTime(
         time: String,
-        medicationsByDate: Map<String, List<net.shugo.medicineshield.data.model.DailyMedicationItem>>? = null
+        medicationsByDate: Map<String, List<DailyMedicationItem>>? = null
     ): Long? {
         val now = timeProvider.currentTimeMillis()
         val calendar = Calendar.getInstance().apply {
@@ -226,7 +228,7 @@ class NotificationScheduler(
 
             // Check if there are uncompleted medications
             val hasUncompleted = medicationsAtTime.isNotEmpty() && medicationsAtTime.any { item ->
-                item.status != net.shugo.medicineshield.data.model.MedicationIntakeStatus.TAKEN
+                item.status != MedicationIntakeStatus.TAKEN
             }
 
             if (hasUncompleted) {
