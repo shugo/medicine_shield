@@ -1,5 +1,6 @@
 package net.shugo.medicineshield.notification
 
+import android.app.AlarmManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -9,6 +10,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import net.shugo.medicineshield.data.database.AppDatabase
 import net.shugo.medicineshield.data.model.MedicationIntakeStatus
+import net.shugo.medicineshield.data.preferences.SettingsPreferences
 import net.shugo.medicineshield.data.repository.MedicationRepository
 
 class MedicationNotificationReceiver : BroadcastReceiver() {
@@ -37,11 +39,21 @@ class MedicationNotificationReceiver : BroadcastReceiver() {
                     it.scheduledTime == time && it.status != MedicationIntakeStatus.TAKEN
                 }.map { it.medicationName }
 
+                // NotificationScheduler を作成
+                val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+                val alarmScheduler = AlarmSchedulerImpl(alarmManager)
+                val settingsPreferences = SettingsPreferences(context)
+                val scheduler = NotificationScheduler(
+                    context,
+                    repository,
+                    alarmScheduler,
+                    settingsPreferences
+                )
+
                 // 通知を表示
                 if (medications.isNotEmpty()) {
                     val notificationHelper = NotificationHelper(context)
-                    val notificationId = NotificationScheduler(context, repository)
-                        .getNotificationIdForTime(time)
+                    val notificationId = scheduler.getNotificationIdForTime(time)
                     notificationHelper.showMedicationNotification(
                         medications,
                         time,
@@ -51,7 +63,6 @@ class MedicationNotificationReceiver : BroadcastReceiver() {
                 }
 
                 // 次回の通知をスケジュール
-                val scheduler = NotificationScheduler(context, repository)
                 scheduler.scheduleNextNotificationForTime(time)
 
             } finally {

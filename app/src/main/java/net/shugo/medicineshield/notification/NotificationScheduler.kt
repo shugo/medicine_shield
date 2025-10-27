@@ -18,11 +18,13 @@ import java.util.Locale
 
 class NotificationScheduler(
     private val context: Context,
-    private val repository: MedicationRepository
+    private val repository: MedicationRepository,
+    private val alarmScheduler: AlarmScheduler,
+    private val settingsPreferences: SettingsPreferences,
+    private val timeProvider: TimeProvider = SystemTimeProvider(),
+    private val dateFormatter: SimpleDateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT),
+    private val pendingIntentFactory: PendingIntentFactory = PendingIntentFactoryImpl()
 ) {
-    private val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-    private val settingsPreferences = SettingsPreferences(context)
-    private val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
 
     companion object {
         const val EXTRA_NOTIFICATION_TIME = "notification_time"
@@ -89,49 +91,45 @@ class NotificationScheduler(
         // Calculate scheduled date (from when notification is triggered)
         val scheduledDate = dateFormatter.format(Date(nextDateTime))
 
-        // 通知をスケジュール
+        // Schedule notification
         val notificationId = getNotificationIdForTime(time)
         val intent = Intent(context, MedicationNotificationReceiver::class.java).apply {
             putExtra(EXTRA_NOTIFICATION_TIME, time)
             putExtra(EXTRA_SCHEDULED_DATE, scheduledDate)
         }
 
-        val pendingIntent = PendingIntent.getBroadcast(
+        val pendingIntent = pendingIntentFactory.createBroadcast(
             context,
             notificationId,
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        // AlarmManagerで通知を設定（正確な時刻ではないが、薬の通知には十分）
-        alarmManager.setAndAllowWhileIdle(
-            AlarmManager.RTC_WAKEUP,
-            nextDateTime,
-            pendingIntent
-        )
+        // Schedule notification using AlarmScheduler
+        alarmScheduler.scheduleAlarm(nextDateTime, pendingIntent)
     }
 
     /**
-     * 特定時刻の通知をキャンセルする
+     * Cancel notification for a specific time
      */
     fun cancelNotificationForTime(time: String) {
         val notificationId = getNotificationIdForTime(time)
         val intent = Intent(context, MedicationNotificationReceiver::class.java)
-        val pendingIntent = PendingIntent.getBroadcast(
+        val pendingIntent = pendingIntentFactory.createBroadcast(
             context,
             notificationId,
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
-        alarmManager.cancel(pendingIntent)
+        alarmScheduler.cancelAlarm(pendingIntent)
     }
 
     /**
-     * 毎日深夜0時の再スケジュールジョブを設定
+     * Schedule daily refresh job at midnight
      */
     fun scheduleDailyRefreshJob() {
         val calendar = Calendar.getInstance().apply {
-            // 現在時刻が00:00:00.000より後であれば翌日に設定
+            // Set to next midnight if current time is past 00:00:00.000
             if (get(Calendar.HOUR_OF_DAY) > 0 ||
                 get(Calendar.MINUTE) > 0 ||
                 get(Calendar.SECOND) > 0 ||
@@ -145,41 +143,39 @@ class NotificationScheduler(
         }
 
         val intent = Intent(context, DailyRefreshReceiver::class.java)
-        val pendingIntent = PendingIntent.getBroadcast(
+        val pendingIntent = pendingIntentFactory.createBroadcast(
             context,
             DAILY_REFRESH_REQUEST_CODE,
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        alarmManager.setAndAllowWhileIdle(
-            AlarmManager.RTC_WAKEUP,
-            calendar.timeInMillis,
-            pendingIntent
-        )
+        alarmScheduler.scheduleAlarm(calendar.timeInMillis, pendingIntent)
     }
 
     /**
-     * 深夜0時の再スケジュールジョブをキャンセル
+     * Cancel daily refresh job at midnight
      */
     fun cancelDailyRefreshJob() {
         val intent = Intent(context, DailyRefreshReceiver::class.java)
-        val pendingIntent = PendingIntent.getBroadcast(
+        val pendingIntent = pendingIntentFactory.createBroadcast(
             context,
             DAILY_REFRESH_REQUEST_CODE,
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
-        alarmManager.cancel(pendingIntent)
+        alarmScheduler.cancelAlarm(pendingIntent)
     }
 
     /**
-     * 指定時刻の次回通知日時を計算する
-     * @return 次回通知日時のタイムスタンプ（該当なしの場合null）
+     * Calculate next notification date/time for specified time
+     * @return Timestamp of next notification (null if no match)
      */
     private suspend fun calculateNextNotificationDateTime(time: String): Long? {
-        val now = System.currentTimeMillis()
-        val calendar = Calendar.getInstance()
+        val now = timeProvider.currentTimeMillis()
+        val calendar = Calendar.getInstance().apply {
+            timeInMillis = now
+        }
 
         // 今日の指定時刻
         val timeParts = time.split(":")

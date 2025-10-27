@@ -1,12 +1,15 @@
 package net.shugo.medicineshield.viewmodel
 
+import android.app.AlarmManager
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import net.shugo.medicineshield.R
 import net.shugo.medicineshield.data.model.CycleType
 import net.shugo.medicineshield.data.model.MedicationConfig
+import net.shugo.medicineshield.data.preferences.SettingsPreferences
 import net.shugo.medicineshield.data.repository.MedicationRepository
+import net.shugo.medicineshield.notification.AlarmSchedulerImpl
 import net.shugo.medicineshield.notification.NotificationScheduler
 import net.shugo.medicineshield.utils.DateUtils
 import net.shugo.medicineshield.utils.formatDoseInput
@@ -53,7 +56,10 @@ class MedicationFormViewModel(
     private var nextSequenceNumber = 1  // 新規追加時のsequenceNumber
 
     private val notificationScheduler by lazy {
-        NotificationScheduler(context, repository)
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val alarmScheduler = AlarmSchedulerImpl(alarmManager)
+        val settingsPreferences = SettingsPreferences(context)
+        NotificationScheduler(context, repository, alarmScheduler, settingsPreferences)
     }
 
     fun loadMedication(medicationId: Long) {

@@ -1,5 +1,6 @@
 package net.shugo.medicineshield.viewmodel
 
+import android.app.AlarmManager
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
@@ -11,6 +12,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import net.shugo.medicineshield.data.preferences.SettingsPreferences
 import net.shugo.medicineshield.data.repository.MedicationRepository
+import net.shugo.medicineshield.notification.AlarmSchedulerImpl
 import net.shugo.medicineshield.notification.NotificationScheduler
 
 class SettingsViewModel(
@@ -19,7 +21,11 @@ class SettingsViewModel(
 ) : ViewModel() {
 
     private val settingsPreferences = SettingsPreferences(context)
-    private val notificationScheduler = NotificationScheduler(context, repository)
+    private val notificationScheduler by lazy {
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val alarmScheduler = AlarmSchedulerImpl(alarmManager)
+        NotificationScheduler(context, repository, alarmScheduler, settingsPreferences)
+    }
 
     private val _notificationsEnabled = MutableStateFlow(settingsPreferences.isNotificationsEnabled())
     val notificationsEnabled: StateFlow<Boolean> = _notificationsEnabled.asStateFlow()

@@ -1,10 +1,13 @@
 package net.shugo.medicineshield.viewmodel
 
+import android.app.AlarmManager
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import net.shugo.medicineshield.data.model.MedicationWithTimes
+import net.shugo.medicineshield.data.preferences.SettingsPreferences
 import net.shugo.medicineshield.data.repository.MedicationRepository
+import net.shugo.medicineshield.notification.AlarmSchedulerImpl
 import net.shugo.medicineshield.notification.NotificationScheduler
 import net.shugo.medicineshield.utils.DateUtils
 import kotlinx.coroutines.flow.SharingStarted
@@ -22,7 +25,10 @@ class MedicationListViewModel(
 ) : ViewModel() {
 
     private val notificationScheduler by lazy {
-        NotificationScheduler(context, repository)
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val alarmScheduler = AlarmSchedulerImpl(alarmManager)
+        val settingsPreferences = SettingsPreferences(context)
+        NotificationScheduler(context, repository, alarmScheduler, settingsPreferences)
     }
 
     val medications: StateFlow<List<MedicationWithTimes>> = repository

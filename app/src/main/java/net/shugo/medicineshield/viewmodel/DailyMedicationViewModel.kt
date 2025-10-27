@@ -1,6 +1,8 @@
 package net.shugo.medicineshield.viewmodel
 
+import android.app.AlarmManager
 import android.app.Application
+import android.content.Context
 import android.text.format.DateFormat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -13,7 +15,9 @@ import net.shugo.medicineshield.R
 import net.shugo.medicineshield.data.model.DailyMedicationItem
 import net.shugo.medicineshield.data.model.DailyNote
 import net.shugo.medicineshield.data.model.MedicationIntakeStatus
+import net.shugo.medicineshield.data.preferences.SettingsPreferences
 import net.shugo.medicineshield.data.repository.MedicationRepository
+import net.shugo.medicineshield.notification.AlarmSchedulerImpl
 import net.shugo.medicineshield.notification.NotificationHelper
 import net.shugo.medicineshield.notification.NotificationScheduler
 import net.shugo.medicineshield.utils.DateUtils
@@ -52,7 +56,12 @@ class DailyMedicationViewModel(
 
     // 通知管理用
     private val notificationHelper = NotificationHelper(application.applicationContext)
-    private val notificationScheduler = NotificationScheduler(application.applicationContext, repository)
+    private val notificationScheduler by lazy {
+        val alarmManager = application.applicationContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val alarmScheduler = AlarmSchedulerImpl(alarmManager)
+        val settingsPreferences = SettingsPreferences(application.applicationContext)
+        NotificationScheduler(application.applicationContext, repository, alarmScheduler, settingsPreferences)
+    }
 
     init {
         _isLoading.value = true
