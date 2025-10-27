@@ -95,14 +95,6 @@ class NotificationScheduler(
             return@withContext
         }
 
-        // Get list of medications that should be taken at that time
-        val medications = getMedicationsForTime(time, nextDateTime)
-        if (medications.isEmpty()) {
-            // Cancel notification if no medications
-            cancelNotificationForTime(time)
-            return@withContext
-        }
-
         // Calculate scheduled date (from when notification is triggered)
         val scheduledDate = dateFormatter.format(Date(nextDateTime))
 
@@ -212,13 +204,10 @@ class NotificationScheduler(
         // その時刻に服用すべき薬があるか最大7日先までチェック
         // 毎日深夜0時に再スケジュールされるため、7日で十分
         for (i in 0 until 7) {
-            val medications = getMedicationsForTime(time, calendar.timeInMillis)
-            if (medications.isNotEmpty()) {
-                // Check if there are any uncompleted medications for this time
-                val hasUncompleted = hasUncompletedMedications(time, calendar.timeInMillis)
-                if (hasUncompleted) {
-                    return calendar.timeInMillis
-                }
+            // Check if there are any uncompleted medications for this time
+            val hasUncompleted = hasUncompletedMedications(time, calendar.timeInMillis)
+            if (hasUncompleted) {
+                return calendar.timeInMillis
             }
             calendar.add(Calendar.DAY_OF_YEAR, 1)
         }
@@ -239,9 +228,9 @@ class NotificationScheduler(
         // Filter medications for the specified time
         val medicationsAtTime = dailyMedications.filter { it.scheduledTime == time }
 
-        // If no medications found at this time, assume uncompleted (no intake records yet)
+        // If no medications found at this time, no need to schedule notification
         if (medicationsAtTime.isEmpty()) {
-            return true
+            return false
         }
 
         // Check if any are not taken
@@ -250,59 +239,4 @@ class NotificationScheduler(
         }
     }
 
-    /**
-     * 指定時刻・指定日に服用すべき薬のリストを取得
-     */
-    private suspend fun getMedicationsForTime(time: String, dateTime: Long): List<MedicationWithTimes> {
-        val medications = repository.getAllMedicationsWithTimes().first()
-
-        return medications.filter { medWithTimes ->
-            // この薬がその時刻を持っているか
-            val times = medWithTimes.times
-            val hasTime = times.any { it.time == time }
-            if (!hasTime) return@filter false
-
-            val config = medWithTimes.config
-
-            // その日に服用すべきか判定
-            config?.let { shouldTakeMedication(it, dateTime) } ?: false
-        }
-    }
-
-    /**
-     * 指定日にその薬を服用すべきかどうか判定（Configベース）
-     */
-    private fun shouldTakeMedication(config: net.shugo.medicineshield.data.model.MedicationConfig, targetDate: Long): Boolean {
-        val calendar = Calendar.getInstance()
-        calendar.timeInMillis = targetDate
-
-        // targetDateをyyyy-MM-dd形式の文字列に変換
-        val targetDateString = dateFormatter.format(Date(targetDate))
-
-        // 期間チェック（String型での比較、yyyy-MM-ddは辞書順で比較可能）
-        if (targetDateString < config.medicationStartDate) return false
-        if (targetDateString > config.medicationEndDate) return false
-
-        // Do not schedule notifications for PRN medications
-        if (config.isAsNeeded) return false
-
-        return when (config.cycleType) {
-            CycleType.DAILY -> true
-
-            CycleType.WEEKLY -> {
-                // Day of week check (0=Sunday, 1=Monday, ..., 6=Saturday)
-                val dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK) - 1
-                val allowedDays = config.cycleValue?.split(",")?.mapNotNull { it.toIntOrNull() } ?: emptyList()
-                dayOfWeek in allowedDays
-            }
-
-            CycleType.INTERVAL -> {
-                // Every N days check
-                val intervalDays = config.cycleValue?.toIntOrNull() ?: return false
-                val startDateTimestamp = dateFormatter.parse(config.medicationStartDate)?.time ?: return false
-                val daysSinceStart = ((targetDate - startDateTimestamp) / (1000 * 60 * 60 * 24)).toInt()
-                daysSinceStart % intervalDays == 0
-            }
-        }
-    }
 }

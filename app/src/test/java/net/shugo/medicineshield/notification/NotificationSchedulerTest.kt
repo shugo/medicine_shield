@@ -108,27 +108,17 @@ class NotificationSchedulerTest {
         every { timeProvider.currentTimeMillis() } returns currentTime
 
         // Setup: Medication with 09:00 time slot
-        val medication = Medication(id = 1L, name = "Test Medicine")
-        val config = MedicationConfig(
+        val dailyItem = DailyMedicationItem(
             medicationId = 1L,
-            cycleType = CycleType.DAILY,
-            cycleValue = null,
-            medicationStartDate = "2024-01-01",
-            medicationEndDate = "2024-12-31",
-            isAsNeeded = false,
-            validFrom = "2024-01-01",
-            validTo = "9999-12-31"
-        )
-        val time = MedicationTime(
-            medicationId = 1L,
+            medicationName = "Test Medicine",
+            scheduledTime = "09:00",
             sequenceNumber = 1,
-            time = "09:00",
-            validFrom = "2024-01-01",
-            validTo = "9999-12-31"
+            isAsNeeded = false,
+            dose = 1.0,
+            doseUnit = "tablets",
+            status = MedicationIntakeStatus.UNCHECKED
         )
-        val medWithTimes = MedicationWithTimes(medication, listOf(time), listOf(config))
-
-        coEvery { repository.getAllMedicationsWithTimes() } returns flowOf(listOf(medWithTimes))
+        coEvery { repository.getMedications("2024-01-15") } returns flowOf(listOf(dailyItem))
 
         // Execute
         scheduler.scheduleNextNotificationForTime("09:00")
@@ -302,6 +292,29 @@ class NotificationSchedulerTest {
 
         coEvery { repository.getAllMedicationsWithTimes() } returns flowOf(listOf(medWithTimes1, medWithTimes2))
 
+        // Setup: Daily medications for both times
+        val dailyItem1 = DailyMedicationItem(
+            medicationId = 1L,
+            medicationName = "Medicine 1",
+            scheduledTime = "09:00",
+            sequenceNumber = 1,
+            isAsNeeded = false,
+            dose = 1.0,
+            doseUnit = "tablets",
+            status = MedicationIntakeStatus.UNCHECKED
+        )
+        val dailyItem2 = DailyMedicationItem(
+            medicationId = 2L,
+            medicationName = "Medicine 2",
+            scheduledTime = "14:00",
+            sequenceNumber = 1,
+            isAsNeeded = false,
+            dose = 1.0,
+            doseUnit = "tablets",
+            status = MedicationIntakeStatus.UNCHECKED
+        )
+        coEvery { repository.getMedications("2024-01-15") } returns flowOf(listOf(dailyItem1, dailyItem2))
+
         // Execute
         scheduler.rescheduleAllNotifications()
 
@@ -320,27 +333,17 @@ class NotificationSchedulerTest {
         every { timeProvider.currentTimeMillis() } returns currentTime
 
         // Setup: Medication scheduled for Monday and Wednesday (1,3)
-        val medication = Medication(id = 1L, name = "Test Medicine")
-        val config = MedicationConfig(
+        val dailyItem = DailyMedicationItem(
             medicationId = 1L,
-            cycleType = CycleType.WEEKLY,
-            cycleValue = "1,3",  // Monday=1, Wednesday=3
-            medicationStartDate = "2024-01-01",
-            medicationEndDate = "2024-12-31",
-            isAsNeeded = false,
-            validFrom = "2024-01-01",
-            validTo = "9999-12-31"
-        )
-        val time = MedicationTime(
-            medicationId = 1L,
+            medicationName = "Test Medicine",
+            scheduledTime = "09:00",
             sequenceNumber = 1,
-            time = "09:00",
-            validFrom = "2024-01-01",
-            validTo = "9999-12-31"
+            isAsNeeded = false,
+            dose = 1.0,
+            doseUnit = "tablets",
+            status = MedicationIntakeStatus.UNCHECKED
         )
-        val medWithTimes = MedicationWithTimes(medication, listOf(time), listOf(config))
-
-        coEvery { repository.getAllMedicationsWithTimes() } returns flowOf(listOf(medWithTimes))
+        coEvery { repository.getMedications("2024-01-15") } returns flowOf(listOf(dailyItem))
 
         // Execute
         scheduler.scheduleNextNotificationForTime("09:00")
@@ -367,27 +370,17 @@ class NotificationSchedulerTest {
         every { timeProvider.currentTimeMillis() } returns currentTime
 
         // Setup: Medication with 2-day interval starting from 2024-01-15
-        val medication = Medication(id = 1L, name = "Test Medicine")
-        val config = MedicationConfig(
+        val dailyItem = DailyMedicationItem(
             medicationId = 1L,
-            cycleType = CycleType.INTERVAL,
-            cycleValue = "2",  // Every 2 days
-            medicationStartDate = "2024-01-15",
-            medicationEndDate = "2024-12-31",
-            isAsNeeded = false,
-            validFrom = "2024-01-01",
-            validTo = "9999-12-31"
-        )
-        val time = MedicationTime(
-            medicationId = 1L,
+            medicationName = "Test Medicine",
+            scheduledTime = "09:00",
             sequenceNumber = 1,
-            time = "09:00",
-            validFrom = "2024-01-01",
-            validTo = "9999-12-31"
+            isAsNeeded = false,
+            dose = 1.0,
+            doseUnit = "tablets",
+            status = MedicationIntakeStatus.UNCHECKED
         )
-        val medWithTimes = MedicationWithTimes(medication, listOf(time), listOf(config))
-
-        coEvery { repository.getAllMedicationsWithTimes() } returns flowOf(listOf(medWithTimes))
+        coEvery { repository.getMedications("2024-01-15") } returns flowOf(listOf(dailyItem))
 
         // Execute
         scheduler.scheduleNextNotificationForTime("09:00")
