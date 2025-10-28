@@ -89,7 +89,7 @@ fun DailyMedicationScreen(
     val dailyNote by viewModel.dailyNote.collectAsState()
     val scrollToNote by viewModel.scrollToNote.collectAsState()
 
-    // Configuration変更（言語変更など）を検出して表示を更新
+    // Detect Configuration changes (language change, etc.) and update display
     val configuration = LocalConfiguration.current
     LaunchedEffect(configuration.locales) {
         viewModel.refreshData()
@@ -136,7 +136,7 @@ fun DailyMedicationScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // 日付ナビゲーションバー
+            // Date navigation bar
             DateNavigationBar(
                 displayDateText = displayDateText,
                 onPreviousDay = { viewModel.onPreviousDay() },
@@ -190,7 +190,7 @@ fun DailyMedicationScreen(
             }
         }
 
-        // DatePickerダイアログ
+        // DatePicker dialog
         if (showDatePicker) {
             DailyMedicationDatePickerDialog(
                 selectedDate = selectedDate,
@@ -222,7 +222,7 @@ fun DateNavigationBar(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // 前日ボタン
+            // Previous day button
             IconButton(onClick = onPreviousDay) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
@@ -231,7 +231,7 @@ fun DateNavigationBar(
                 )
             }
 
-            // 日付表示（タップ可能）
+            // Date display (tappable)
             Text(
                 text = displayDateText,
                 fontSize = 18.sp,
@@ -241,7 +241,7 @@ fun DateNavigationBar(
                     .padding(horizontal = 16.dp, vertical = 8.dp)
             )
 
-            // 翌日ボタン
+            // Next day button
             IconButton(onClick = onNextDay) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
@@ -323,7 +323,7 @@ fun MedicationList(
                   selectedDate.get(Calendar.DAY_OF_YEAR) == today.get(Calendar.DAY_OF_YEAR)
     val isFuture = selectedDate.timeInMillis > today.timeInMillis
 
-    // LazyListStateを作成
+    // Create LazyListState
     val listState = rememberLazyListState()
 
     val timeParser = SimpleDateFormat("HH:mm", Locale.ROOT)
@@ -338,7 +338,7 @@ fun MedicationList(
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
         state = listState
     ) {
-        // 定時薬のセクション
+        // Scheduled medication section
         groupedScheduledMeds.forEach { (time, items) ->
             val date = timeParser.parse(time)
             val timeText = date?.let { timeFormatter.format(it) } ?: "??:??"
@@ -362,7 +362,7 @@ fun MedicationList(
             }
         }
 
-        // 頓服薬のセクション
+        // PRN medication section
         if (groupedAsNeededMeds.isNotEmpty()) {
             item {
                 TimeHeader(stringResource(R.string.as_needed_medication))
@@ -384,14 +384,14 @@ fun MedicationList(
             }
         }
 
-        // 服薬予定がない場合のメッセージ
+        // Message when no medication is scheduled
         if (medications.isEmpty()) {
             item {
                 NoMedicationMessage(isToday = isToday, isFuture = isFuture)
             }
         }
 
-        // メモセクション
+        // Note section
         item {
             TimeHeader(stringResource(R.string.note_section_title))
         }
@@ -409,7 +409,7 @@ fun MedicationList(
 
     val listEndIndex = listState.layoutInfo.totalItemsCount - 1
 
-    // スクロールトリガー
+    // Scroll trigger
     LaunchedEffect(scrollToNote, listEndIndex) {
         if (scrollToNote) {
             listState.animateScrollToItem(listState.layoutInfo.totalItemsCount - 1)
@@ -635,7 +635,7 @@ fun AsNeededMedicationItem(
         onUpdateTakenAt = onUpdateTakenAt,
         actionButton = {
             if (medication.status == MedicationIntakeStatus.TAKEN) {
-                // 服用済みの場合は削除ボタン
+                // Delete button if taken
                 IconButton(
                     onClick = {
                         onRemoveIntake(medication.medicationId, medication.sequenceNumber)
@@ -648,7 +648,7 @@ fun AsNeededMedicationItem(
                     )
                 }
             } else {
-                // 未服用の場合はチェックボックス
+                // Checkbox if not taken
                 IconButton(
                     onClick = {
                         onAddIntake(medication.medicationId)

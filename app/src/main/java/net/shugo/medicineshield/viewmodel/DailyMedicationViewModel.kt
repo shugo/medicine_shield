@@ -46,11 +46,11 @@ class DailyMedicationViewModel(
     private var loadJob: Job? = null
     private var noteLoadJob: Job? = null
 
-    // 各データソースの読み込み完了フラグ
+    // Data source loading completion flags
     private var medicationsLoaded = false
     private var noteLoaded = false
 
-    // 通知管理用
+    // For notification management
     private val notificationHelper = NotificationHelper(application.applicationContext)
     private val notificationScheduler by lazy {
         NotificationScheduler.create(application.applicationContext, repository)
@@ -81,7 +81,7 @@ class DailyMedicationViewModel(
     }
 
     private fun loadMedicationsForSelectedDate() {
-        // 前回のloadJobをキャンセル
+        // Cancel previous loadJob
         loadJob?.cancel()
 
         loadJob = viewModelScope.launch {
@@ -97,13 +97,13 @@ class DailyMedicationViewModel(
     private fun updateDisplayDate() {
         val calendar = _selectedDate.value
 
-        // Applicationの現在のConfigurationから最新のロケールを取得
+        // Get latest locale from current Configuration of Application
         val appContext = getApplication<Application>()
         val currentLocale = appContext.resources.configuration.locales[0]
         val pattern = DateFormat.getBestDateTimePattern(currentLocale, "yMdE")
         val dateFormat = SimpleDateFormat(pattern, currentLocale)
 
-        // 今日かどうかチェック
+        // Check if today
         val today = Calendar.getInstance()
         val isToday = calendar.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
                       calendar.get(Calendar.DAY_OF_YEAR) == today.get(Calendar.DAY_OF_YEAR)
@@ -147,13 +147,13 @@ class DailyMedicationViewModel(
     }
 
     /**
-     * 日付変更時にローディングフラグをリセット
+     * Reset loading flags when date changes
      */
     private fun resetLoadingFlags() {
         _isLoading.value = true
         medicationsLoaded = false
         noteLoaded = false
-        // countLoadedはリセットしない（薬の件数は日付に依存しないため）
+        // Do not reset countLoaded (medication count does not depend on date)
     }
 
     fun toggleMedicationTaken(medicationId: Long, sequenceNumber: Int, currentStatus: Boolean) {
@@ -161,7 +161,7 @@ class DailyMedicationViewModel(
             // Check if notifications should be dismissed only when marking as taken
             val willBeMarkedAsTaken = !currentStatus
 
-            // 該当する薬の情報を取得（通知チェック用）
+            // Get information of corresponding medication (for notification check)
             val medication = _dailyMedications.value.find {
                 it.medicationId == medicationId && it.sequenceNumber == sequenceNumber
             }
@@ -169,7 +169,7 @@ class DailyMedicationViewModel(
             val dateString = DateUtils.formatIsoDate(_selectedDate.value)
             repository.updateIntakeStatus(medicationId, sequenceNumber, !currentStatus, dateString)
 
-            // 服用済みにマークした場合、その時刻の通知をチェック
+            // If marked as taken, check notification for that time
             if (willBeMarkedAsTaken && medication != null && !medication.isAsNeeded) {
                 checkAndDismissNotificationIfComplete(medication.scheduledTime, medicationId, sequenceNumber)
             }
@@ -203,7 +203,7 @@ class DailyMedicationViewModel(
         }
 
         if (allMedsAtTime.isNotEmpty() && allTaken) {
-            // 通知IDを計算して通知を消す
+            // Calculate notification ID and dismiss notification
             val notificationId = notificationScheduler.getNotificationIdForTime(time)
             notificationHelper.cancelNotification(notificationId)
         }
@@ -255,7 +255,7 @@ class DailyMedicationViewModel(
     fun updateTakenAt(medicationId: Long, sequenceNumber: Int, hour: Int, minute: Int) {
         viewModelScope.launch {
             val dateString = DateUtils.formatIsoDate(_selectedDate.value)
-            // HH:mm形式の文字列を作成
+            // Create HH:mm format string
             val newTakenAt = String.format(Locale.ROOT, "%02d:%02d", hour, minute)
             repository.updateIntakeTakenAt(medicationId, sequenceNumber, newTakenAt, dateString)
         }
@@ -276,7 +276,7 @@ class DailyMedicationViewModel(
     }
 
     private fun loadNoteForSelectedDate() {
-        // 前回のnoteLoadJobをキャンセル
+        // Cancel previous noteLoadJob
         noteLoadJob?.cancel()
 
         noteLoadJob = viewModelScope.launch {
@@ -329,7 +329,7 @@ class DailyMedicationViewModel(
             val previousNote = repository.getPreviousNote(currentDateString)
 
             if (previousNote != null) {
-                // 日付文字列をCalendarに変換
+                // Convert date string to Calendar
                 val newCalendar = DateUtils.parseIsoDate(previousNote.noteDate)
                 if (newCalendar != null) {
                     _selectedDate.value = newCalendar
@@ -352,7 +352,7 @@ class DailyMedicationViewModel(
             val nextNote = repository.getNextNote(currentDateString)
 
             if (nextNote != null) {
-                // 日付文字列をCalendarに変換
+                // Convert date string to Calendar
                 val newCalendar = DateUtils.parseIsoDate(nextNote.noteDate)
                 if (newCalendar != null) {
                     _selectedDate.value = newCalendar
@@ -367,7 +367,7 @@ class DailyMedicationViewModel(
     }
 
     /**
-     * スクロールフラグをリセット
+     * Reset scroll flag
      */
     fun resetScrollToNote() {
         _scrollToNote.value = false

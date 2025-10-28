@@ -117,7 +117,7 @@ fun MedicationFormScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // 薬の名前
+            // Medication name
             item {
                 OutlinedTextField(
                     value = formState.name,
@@ -129,7 +129,7 @@ fun MedicationFormScreen(
                 )
             }
 
-            // 頓服チェックボックス
+            // PRN medication checkbox
             item {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -157,7 +157,7 @@ fun MedicationFormScreen(
                 }
             }
 
-            // デフォルト服用量
+            // Default dosage
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -213,7 +213,7 @@ fun MedicationFormScreen(
                 }
             }
 
-            // 服用時間（頓服の場合は非表示）
+            // Medication times (hidden for PRN)
             if (!formState.isAsNeeded) {
                 item {
                     Text(stringResource(R.string.medication_times), style = MaterialTheme.typography.titleMedium)
@@ -268,7 +268,7 @@ fun MedicationFormScreen(
                 }
             }
 
-            // 服用サイクル（頓服の場合は非表示）
+            // Medication cycle (hidden for PRN)
             if (!formState.isAsNeeded) {
                 item {
                 Text(stringResource(R.string.cycle_type), style = MaterialTheme.typography.titleMedium)
@@ -305,7 +305,7 @@ fun MedicationFormScreen(
                 }
             }
 
-                // サイクル詳細設定
+                // Cycle detail settings
                 item {
                     when (formState.cycleType) {
                         CycleType.WEEKLY -> {
@@ -332,7 +332,7 @@ fun MedicationFormScreen(
                 }
             }
 
-            // 開始日
+            // Start date
             item {
                 OutlinedButton(
                     onClick = { showStartDatePicker = true },
@@ -342,7 +342,7 @@ fun MedicationFormScreen(
                 }
             }
 
-            // 終了日
+            // End date
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -374,7 +374,7 @@ fun MedicationFormScreen(
                 }
             }
 
-            // バリデーションエラーメッセージ
+            // Validation error messages
             item {
                 val hasErrors = formState.nameError != null ||
                         formState.timesError != null ||
@@ -399,7 +399,7 @@ fun MedicationFormScreen(
                 }
             }
 
-            // 保存ボタン
+            // Save button
             item {
                 Button(
                     onClick = {
@@ -417,7 +417,7 @@ fun MedicationFormScreen(
     // Time and Dose Picker Dialog
     if (showTimePicker) {
         val currentEditingTimeWithSeq = editingTimeIndex?.let { formState.times.getOrNull(it) }
-        // 新規追加時のデフォルト値：formState.defaultDoseText、編集時は現在のdose
+        // Default value for new addition: formState.defaultDoseText, for editing: current dose
         val defaultDose = currentEditingTimeWithSeq?.dose ?: parseDoseInput(formState.defaultDoseText) ?: 1.0
         TimeAndDosePickerDialog(
             initialTime = currentEditingTimeWithSeq?.time,
@@ -632,7 +632,7 @@ fun MedicationFormDatePickerDialog(
         confirmButton = {
             TextButton(onClick = {
                 datePickerState.selectedDateMillis?.let { millis ->
-                    // 選択された日付を00:00:00に正規化
+                    // Normalize selected date to 00:00:00
                     val selectedCalendar = Calendar.getInstance().apply {
                         timeInMillis = millis
                         set(Calendar.HOUR_OF_DAY, 0)
@@ -671,7 +671,7 @@ fun DoseUnitSelector(
     onUnitSelected: (String?) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // 一般的な単位の選択肢
+    // Common dosage unit options
     val unitOptions = listOf(
         stringResource(R.string.dose_unit_tab),
         stringResource(R.string.dose_unit_cap),
@@ -689,7 +689,7 @@ fun DoseUnitSelector(
     var expanded by remember { mutableStateOf(false) }
     var showCustomDialog by remember { mutableStateOf(false) }
 
-    // 現在の選択値を判定（事前定義されたオプションかカスタムか）
+    // Determine current selection (predefined option or custom)
     val isCustomUnit = selectedUnit != null && selectedUnit !in unitOptions
     val displayValue = when {
         selectedUnit == null -> ""
@@ -719,7 +719,7 @@ fun DoseUnitSelector(
             expanded = expanded,
             onDismissRequest = { expanded = false }
         ) {
-            // 空欄オプション
+            // Empty option
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.dose_unit_none)) },
                 onClick = {
@@ -728,7 +728,7 @@ fun DoseUnitSelector(
                 }
             )
 
-            // 事前定義された単位
+            // Predefined units
             unitOptions.forEach { unit ->
                 DropdownMenuItem(
                     text = { Text(unit) },
@@ -739,7 +739,7 @@ fun DoseUnitSelector(
                 )
             }
 
-            // カスタムオプション
+            // Custom option
             DropdownMenuItem(
                 text = { Text(customLabel) },
                 onClick = {
@@ -750,7 +750,7 @@ fun DoseUnitSelector(
         }
     }
 
-    // カスタム単位入力ダイアログ
+    // Custom unit input dialog
     if (showCustomDialog) {
         var customUnitText by remember { mutableStateOf(if (isCustomUnit) selectedUnit else "") }
 
