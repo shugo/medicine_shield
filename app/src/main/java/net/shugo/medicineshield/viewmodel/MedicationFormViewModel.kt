@@ -50,7 +50,7 @@ class MedicationFormViewModel(
     private val _formState = MutableStateFlow(MedicationFormState())
     val formState: StateFlow<MedicationFormState> = _formState.asStateFlow()
 
-    private var nextSequenceNumber = 1  // 新規追加時のsequenceNumber
+    private var nextSequenceNumber = 1  // sequenceNumber for new addition
 
     private val notificationScheduler by lazy {
         NotificationScheduler.create(context, repository)
@@ -60,14 +60,14 @@ class MedicationFormViewModel(
         viewModelScope.launch {
             val medicationWithTimes = repository.getMedicationWithTimesById(medicationId)
             medicationWithTimes?.let { mwt ->
-                // 現在有効なConfigを取得
+                // Get currently valid Config
                 val currentConfig = mwt.config
 
-                // String型の日付をLong型に変換
+                // Convert String date to Long type
                 val originalStartDate = currentConfig?.medicationStartDate?.let {
                     parseDateString(it)
                 } ?: System.currentTimeMillis()
-                // medicationEndDateがMAX_DATEの場合はnullに変換（終了日なし）
+                // Convert to null if medicationEndDate is MAX_DATE (no end date)
                 val endDate = currentConfig?.medicationEndDate?.let {
                     if (it == DateUtils.MAX_DATE) null else parseDateString(it)
                 }
@@ -203,7 +203,7 @@ class MedicationFormViewModel(
                     )
                 }
 
-                // 通知をスケジュール
+                // Schedule notifications
                 state.times.forEach { timeWithSeq ->
                     notificationScheduler.scheduleNextNotificationForTime(timeWithSeq.time)
                 }
@@ -257,7 +257,7 @@ class MedicationFormViewModel(
             }
         }
 
-        // 服用量のバリデーション
+        // Validate dosage
         val dose = parseDoseInput(state.defaultDoseText)
         if (dose == null || dose < MedicationConfig.MIN_DOSE || dose > MedicationConfig.MAX_DOSE) {
             _formState.value = _formState.value.copy(

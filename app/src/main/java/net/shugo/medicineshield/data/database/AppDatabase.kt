@@ -58,7 +58,7 @@ abstract class AppDatabase : RoomDatabase() {
 
         private val MIGRATION_2_3 = object : Migration(2, 3) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                // 1. 新しいテーブルを作成
+                // 1. Create a new table
                 db.execSQL(
                     """
                     CREATE TABLE medication_times_new (
@@ -74,7 +74,7 @@ abstract class AppDatabase : RoomDatabase() {
                     """.trimIndent()
                 )
 
-                // 2. 既存データを移行（既存の時刻はすべて過去から有効とする）
+                // 2. Migrate existing data (all existing times are valid from the past)
                 db.execSQL(
                     """
                     INSERT INTO medication_times_new (id, medicationId, time, startDate, endDate, createdAt, updatedAt)
@@ -85,13 +85,13 @@ abstract class AppDatabase : RoomDatabase() {
                     """.trimIndent()
                 )
 
-                // 3. 古いテーブルを削除
+                // 3. Delete the old table
                 db.execSQL("DROP TABLE medication_times")
 
-                // 4. 新しいテーブルをリネーム
+                // 4. Rename the new table
                 db.execSQL("ALTER TABLE medication_times_new RENAME TO medication_times")
 
-                // 5. インデックスを作成
+                // 5. Create indexes
                 db.execSQL("CREATE INDEX index_medication_times_medicationId ON medication_times(medicationId)")
                 db.execSQL("CREATE INDEX index_medication_times_medicationId_date ON medication_times(medicationId, startDate, endDate)")
             }
@@ -101,7 +101,7 @@ abstract class AppDatabase : RoomDatabase() {
             override fun migrate(db: SupportSQLiteDatabase) {
                 val currentTime = System.currentTimeMillis()
 
-                // 1. medication_timesテーブルのカラムをリネーム（startDate→validFrom, endDate→validTo）
+                // 1. Rename columns in medication_times table (startDate→validFrom, endDate→validTo)
                 db.execSQL(
                     """
                     CREATE TABLE medication_times_new (
@@ -130,7 +130,7 @@ abstract class AppDatabase : RoomDatabase() {
                 db.execSQL("CREATE INDEX index_medication_times_medicationId ON medication_times(medicationId)")
                 db.execSQL("CREATE INDEX index_medication_times_medicationId_date ON medication_times(medicationId, validFrom, validTo)")
 
-                // 2. medication_configsテーブルを作成
+                // 2. Create medication_configs table
                 db.execSQL(
                     """
                     CREATE TABLE medication_configs (
@@ -152,7 +152,7 @@ abstract class AppDatabase : RoomDatabase() {
                 db.execSQL("CREATE INDEX index_medication_configs_medicationId ON medication_configs(medicationId)")
                 db.execSQL("CREATE INDEX index_medication_configs_medicationId_date ON medication_configs(medicationId, validFrom, validTo)")
 
-                // 3. 既存のmedications.cycleType/cycleValue/startDate/endDateをmedication_configsに移行
+                // 3. Migrate existing medications.cycleType/cycleValue/startDate/endDate to medication_configs
                 db.execSQL(
                     """
                     INSERT INTO medication_configs (medicationId, cycleType, cycleValue, medicationStartDate, medicationEndDate, validFrom, validTo, createdAt, updatedAt)
@@ -161,7 +161,7 @@ abstract class AppDatabase : RoomDatabase() {
                     """.trimIndent()
                 )
 
-                // 4. medicationsテーブルからcycleType/cycleValue/startDate/endDateを削除
+                // 4. Delete cycleType/cycleValue/startDate/endDate from medications table
                 db.execSQL(
                     """
                     CREATE TABLE medications_new (
@@ -188,10 +188,10 @@ abstract class AppDatabase : RoomDatabase() {
 
         private val MIGRATION_4_5 = object : Migration(4, 5) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                // 1. MedicationIntakeを全削除（履歴の移行は複雑すぎるため）
+                // 1. Delete all MedicationIntake (migration of history is too complex)
                 db.execSQL("DELETE FROM medication_intakes")
 
-                // 2. MedicationTimeに一時テーブルを作成
+                // 2. Create a temporary table for MedicationTime
                 db.execSQL(
                     """
                     CREATE TABLE medication_times_new (
@@ -208,8 +208,8 @@ abstract class AppDatabase : RoomDatabase() {
                     """.trimIndent()
                 )
 
-                // 3. 既存データを移行（sequenceNumberを割り当て）
-                // valid_to IS NULLのレコードのみ移行し、medicationId毎にtime順で連番を割り当て
+                // 3. Migrate existing data (assign sequenceNumber)
+                // Migrate only records where valid_to IS NULL, and assign sequential numbers per medicationId in time order
                 db.execSQL(
                     """
                     INSERT INTO medication_times_new (id, medicationId, sequenceNumber, time, validFrom, validTo, createdAt, updatedAt)
@@ -227,17 +227,17 @@ abstract class AppDatabase : RoomDatabase() {
                     """.trimIndent()
                 )
 
-                // 4. 古いテーブルを削除
+                // 4. Delete the old table
                 db.execSQL("DROP TABLE medication_times")
 
-                // 5. 新しいテーブルをリネーム
+                // 5. Rename the new table
                 db.execSQL("ALTER TABLE medication_times_new RENAME TO medication_times")
 
-                // 6. インデックスを作成
+                // 6. Create indexes
                 db.execSQL("CREATE INDEX index_medication_times_medicationId ON medication_times(medicationId)")
                 db.execSQL("CREATE INDEX index_medication_times_medicationId_validFrom_validTo ON medication_times(medicationId, validFrom, validTo)")
 
-                // 7. MedicationIntakeテーブルを再作成
+                // 7. Recreate MedicationIntake table
                 db.execSQL("DROP TABLE medication_intakes")
                 db.execSQL(
                     """
@@ -254,7 +254,7 @@ abstract class AppDatabase : RoomDatabase() {
                     """.trimIndent()
                 )
 
-                // 8. インデックスを作成
+                // 8. Create indexes
                 db.execSQL("CREATE INDEX index_medication_intakes_medicationId ON medication_intakes(medicationId)")
                 db.execSQL("CREATE INDEX index_medication_intakes_scheduledDate ON medication_intakes(scheduledDate)")
                 db.execSQL("CREATE UNIQUE INDEX index_medication_intakes_medicationId_scheduledDate_sequenceNumber ON medication_intakes(medicationId, scheduledDate, sequenceNumber)")
@@ -263,35 +263,35 @@ abstract class AppDatabase : RoomDatabase() {
 
         private val MIGRATION_5_6 = object : Migration(5, 6) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                // medication_timesテーブルにdoseカラムを追加（デフォルト値: 1.0）
+                // Add dose column to medication_times table (default value: 1.0)
                 db.execSQL("ALTER TABLE medication_times ADD COLUMN dose REAL NOT NULL DEFAULT 1.0")
             }
         }
 
         private val MIGRATION_6_7 = object : Migration(6, 7) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                // medication_configsテーブルにisAsNeededカラムを追加（デフォルト値: 0=false）
+                // Add isAsNeeded column to medication_configs table (default value: 0=false)
                 db.execSQL("ALTER TABLE medication_configs ADD COLUMN isAsNeeded INTEGER NOT NULL DEFAULT 0")
             }
         }
 
         private val MIGRATION_7_8 = object : Migration(7, 8) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                // medication_configsテーブルにdoseカラムを追加（デフォルト値: 1.0）
+                // Add dose column to medication_configs table (default value: 1.0)
                 db.execSQL("ALTER TABLE medication_configs ADD COLUMN dose REAL NOT NULL DEFAULT 1.0")
             }
         }
 
         private val MIGRATION_8_9 = object : Migration(8, 9) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                // medication_configsテーブルにdoseUnitカラムを追加（nullable）
+                // Add doseUnit column to medication_configs table (nullable)
                 db.execSQL("ALTER TABLE medication_configs ADD COLUMN doseUnit TEXT")
             }
         }
 
         private val MIGRATION_9_10 = object : Migration(9, 10) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                // daily_notesテーブルを作成
+                // Create daily_notes table
                 db.execSQL(
                     """
                     CREATE TABLE daily_notes (
@@ -307,16 +307,16 @@ abstract class AppDatabase : RoomDatabase() {
 
         private val MIGRATION_10_11 = object : Migration(10, 11) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                // medication_intakesテーブルにisCanceledカラムを追加（デフォルト値: 0=false）
+                // Add isCanceled column to medication_intakes table (default value: 0=false)
                 db.execSQL("ALTER TABLE medication_intakes ADD COLUMN isCanceled INTEGER NOT NULL DEFAULT 0")
             }
         }
 
         private val MIGRATION_11_12 = object : Migration(11, 12) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                // ========== medication_configs テーブルの変換 (Long → String, NOT NULL制約追加) ==========
+                // ========== Converting medication_configs table (Long → String, adding NOT NULL constraints) ==========
 
-                // 1. 新しいテーブルを作成（medicationEndDate, validToもNOT NULLに）
+                // 1. Create a new table (medicationEndDate and validTo also become NOT NULL)
                 db.execSQL(
                     """
                     CREATE TABLE medication_configs_new (
@@ -338,7 +338,7 @@ abstract class AppDatabase : RoomDatabase() {
                     """.trimIndent()
                 )
 
-                // 2. 既存データを変換してコピー（タイムスタンプ → yyyy-MM-dd、NULL → 最大値）
+                // 2. Convert and copy existing data (timestamp → yyyy-MM-dd, NULL → max value)
                 db.execSQL(
                     """
                     INSERT INTO medication_configs_new
@@ -364,19 +364,19 @@ abstract class AppDatabase : RoomDatabase() {
                     """.trimIndent()
                 )
 
-                // 3. 古いテーブルを削除
+                // 3. Delete the old table
                 db.execSQL("DROP TABLE medication_configs")
 
-                // 4. 新しいテーブルをリネーム
+                // 4. Rename the new table
                 db.execSQL("ALTER TABLE medication_configs_new RENAME TO medication_configs")
 
-                // 5. インデックスを再作成
+                // 5. Recreate indexes
                 db.execSQL("CREATE INDEX index_medication_configs_medicationId ON medication_configs(medicationId)")
                 db.execSQL("CREATE INDEX index_medication_configs_medicationId_validFrom_validTo ON medication_configs(medicationId, validFrom, validTo)")
 
-                // ========== medication_times テーブルの変換 (Long → String, NOT NULL制約追加) ==========
+                // ========== Converting medication_times table (Long → String, adding NOT NULL constraints) ==========
 
-                // 1. 新しいテーブルを作成（validToもNOT NULLに）
+                // 1. Create a new table (validTo also becomes NOT NULL)
                 db.execSQL(
                     """
                     CREATE TABLE medication_times_new (
@@ -394,7 +394,7 @@ abstract class AppDatabase : RoomDatabase() {
                     """.trimIndent()
                 )
 
-                // 2. 既存データを変換してコピー（タイムスタンプ → yyyy-MM-dd、NULL → 最大値）
+                // 2. Convert and copy existing data (timestamp → yyyy-MM-dd, NULL → max value)
                 db.execSQL(
                     """
                     INSERT INTO medication_times_new
@@ -414,13 +414,13 @@ abstract class AppDatabase : RoomDatabase() {
                     """.trimIndent()
                 )
 
-                // 3. 古いテーブルを削除
+                // 3. Delete the old table
                 db.execSQL("DROP TABLE medication_times")
 
-                // 4. 新しいテーブルをリネーム
+                // 4. Rename the new table
                 db.execSQL("ALTER TABLE medication_times_new RENAME TO medication_times")
 
-                // 5. インデックスを再作成
+                // 5. Recreate indexes
                 db.execSQL("CREATE INDEX index_medication_times_medicationId ON medication_times(medicationId)")
                 db.execSQL("CREATE INDEX index_medication_times_medicationId_validFrom_validTo ON medication_times(medicationId, validFrom, validTo)")
             }
@@ -428,9 +428,9 @@ abstract class AppDatabase : RoomDatabase() {
 
         private val MIGRATION_12_13 = object : Migration(12, 13) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                // ========== medication_intakes テーブルの変換 (takenAt: Long → String HH:mm) ==========
+                // ========== Converting medication_intakes table (takenAt: Long → String HH:mm) ==========
 
-                // 1. 新しいテーブルを作成（takenAtをTEXTに）
+                // 1. Create a new table (convert takenAt to TEXT)
                 db.execSQL(
                     """
                     CREATE TABLE medication_intakes_new (
@@ -447,7 +447,7 @@ abstract class AppDatabase : RoomDatabase() {
                     """.trimIndent()
                 )
 
-                // 2. 既存データを変換してコピー（タイムスタンプ → HH:mm）
+                // 2. Convert and copy existing data (timestamp → HH:mm)
                 db.execSQL(
                     """
                     INSERT INTO medication_intakes_new
@@ -466,13 +466,13 @@ abstract class AppDatabase : RoomDatabase() {
                     """.trimIndent()
                 )
 
-                // 3. 古いテーブルを削除
+                // 3. Delete the old table
                 db.execSQL("DROP TABLE medication_intakes")
 
-                // 4. 新しいテーブルをリネーム
+                // 4. Rename the new table
                 db.execSQL("ALTER TABLE medication_intakes_new RENAME TO medication_intakes")
 
-                // 5. インデックスを再作成
+                // 5. Recreate indexes
                 db.execSQL("CREATE INDEX index_medication_intakes_medicationId ON medication_intakes(medicationId)")
                 db.execSQL("CREATE INDEX index_medication_intakes_scheduledDate ON medication_intakes(scheduledDate)")
                 db.execSQL("CREATE UNIQUE INDEX index_medication_intakes_medicationId_scheduledDate_sequenceNumber ON medication_intakes(medicationId, scheduledDate, sequenceNumber)")

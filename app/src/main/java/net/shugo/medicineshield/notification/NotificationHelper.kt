@@ -21,7 +21,7 @@ class NotificationHelper(private val context: Context) {
     private val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
     /**
-     * 通知チャネルを作成する（Android 8.0以降）
+     * Create notification channel (Android 8.0 and above)
      */
     fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -41,12 +41,12 @@ class NotificationHelper(private val context: Context) {
     }
 
     /**
-     * 服薬通知を表示する
+     * Show medication notification
      *
-     * @param medications 通知する薬のリスト
-     * @param time 服用時刻 (HH:mm形式)
-     * @param notificationId 通知ID
-     * @param scheduledDate 服薬予定日 (yyyy-MM-dd形式)
+     * @param medications List of medications to notify
+     * @param time Intake time (HH:mm format)
+     * @param notificationId Notification ID
+     * @param scheduledDate Scheduled intake date (yyyy-MM-dd format)
      */
     fun showMedicationNotification(
         medications: List<String>,
@@ -56,7 +56,7 @@ class NotificationHelper(private val context: Context) {
     ) {
         if (medications.isEmpty()) return
 
-        // 通知本文を作成
+        // Create notification message
         val message = if (medications.size == 1) {
             context.getString(R.string.notification_message_single, medications[0])
         } else {
@@ -64,7 +64,7 @@ class NotificationHelper(private val context: Context) {
             context.getString(R.string.notification_message_multiple, medications.joinToString(separator))
         }
 
-        // 通知をタップした時のIntent
+        // Intent when notification is tapped
         val intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
             putExtra(EXTRA_SCHEDULED_DATE, scheduledDate)
@@ -77,7 +77,7 @@ class NotificationHelper(private val context: Context) {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        // 通知を作成
+        // Create notification
         val soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_stat_name)
@@ -95,9 +95,9 @@ class NotificationHelper(private val context: Context) {
     }
 
     /**
-     * 通知をキャンセルする
+     * Cancel notification
      *
-     * @param notificationId 通知ID
+     * @param notificationId Notification ID
      */
     fun cancelNotification(notificationId: Int) {
         notificationManager.cancel(notificationId)

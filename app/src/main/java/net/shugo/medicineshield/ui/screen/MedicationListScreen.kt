@@ -213,11 +213,11 @@ fun MedicationCard(
 
             Spacer(Modifier.height(8.dp))
 
-            // 現在有効なConfigを取得
+            // Get currently valid Config
             val currentConfig = medicationWithTimes.config
 
             currentConfig?.let { config ->
-                // 服用時間（頓服の場合は "As Needed x dose"、定時の場合は時刻リスト）
+                // Intake time (for PRN: "As Needed x dose", for scheduled: time list)
                 val timesText = if (config.isAsNeeded) {
                     "${stringResource(R.string.as_needed_medication)} ${formatDose(doseFormat, config.dose, config.doseUnit)}"
                 } else {
@@ -236,7 +236,7 @@ fun MedicationCard(
 
                 Spacer(Modifier.height(4.dp))
 
-                // サイクル（頓服の場合は非表示）
+                // Cycle (hidden for PRN)
                 if (!config.isAsNeeded) {
                     val cycleText = when (config.cycleType) {
                         CycleType.DAILY -> stringResource(R.string.cycle_daily_full)
@@ -256,7 +256,7 @@ fun MedicationCard(
                     Spacer(Modifier.height(4.dp))
                 }
 
-                // 期間
+                // Period
                 val locale = Locale.getDefault()
                 val pattern = DateFormat.getBestDateTimePattern(locale, "yMd")
                 val dateFormat = SimpleDateFormat(pattern, locale)

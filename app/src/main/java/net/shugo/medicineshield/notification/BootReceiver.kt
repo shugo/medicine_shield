@@ -18,7 +18,7 @@ class BootReceiver : BroadcastReceiver() {
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                // Repositoryを初期化
+                // Initialize repository
                 val database = AppDatabase.getDatabase(context)
                 val repository = MedicationRepository(
                     database.medicationDao(),
@@ -28,11 +28,11 @@ class BootReceiver : BroadcastReceiver() {
                     database.dailyNoteDao()
                 )
 
-                // 通知チャネルを作成
+                // Create notification channel
                 val notificationHelper = NotificationHelper(context)
                 notificationHelper.createNotificationChannel()
 
-                // すべての通知を再スケジュール
+                // Reschedule all notifications
                 val scheduler = NotificationScheduler.create(context, repository)
                 scheduler.rescheduleAllNotifications()
 

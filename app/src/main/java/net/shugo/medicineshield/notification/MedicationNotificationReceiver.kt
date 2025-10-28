@@ -21,7 +21,7 @@ class MedicationNotificationReceiver : BroadcastReceiver() {
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                // Repositoryを初期化
+                // Initialize repository
                 val database = AppDatabase.getDatabase(context)
                 val repository = MedicationRepository(
                     database.medicationDao(),
@@ -31,16 +31,16 @@ class MedicationNotificationReceiver : BroadcastReceiver() {
                     database.dailyNoteDao()
                 )
 
-                // 服薬予定日の薬リストを取得
+                // Get medications for the scheduled date
                 val items = repository.getMedications(scheduledDate).first()
                 val medications = items.filter {
                     it.scheduledTime == time && it.status != MedicationIntakeStatus.TAKEN
                 }.map { it.medicationName }
 
-                // NotificationScheduler を作成
+                // Create NotificationScheduler
                 val scheduler = NotificationScheduler.create(context, repository)
 
-                // 通知を表示
+                // Show notification
                 if (medications.isNotEmpty()) {
                     val notificationHelper = NotificationHelper(context)
                     val notificationId = scheduler.getNotificationIdForTime(time)
@@ -52,7 +52,7 @@ class MedicationNotificationReceiver : BroadcastReceiver() {
                     )
                 }
 
-                // 次回の通知をスケジュール
+                // Schedule next notification
                 scheduler.scheduleNextNotificationForTime(time)
 
             } finally {

@@ -15,7 +15,7 @@ interface MedicationTimeDao {
     suspend fun getTimesForMedication(medicationId: Long): List<MedicationTime>
 
     /**
-     * 全ての時刻を監視（Flowで変更を検知）
+     * Monitor all times (detect changes via Flow)
      */
     @Query("""
         SELECT * FROM medication_times
@@ -25,7 +25,7 @@ interface MedicationTimeDao {
     fun getAllTimesFlowOnDate(targetDate: String): Flow<List<MedicationTime>>
 
     /**
-     * 現在有効な時刻を取得（validTo > today）
+     * Get currently valid times (validTo > today)
      */
     @Query("""
         SELECT * FROM medication_times
@@ -36,7 +36,7 @@ interface MedicationTimeDao {
     suspend fun getCurrentTimesForMedication(medicationId: Long): List<MedicationTime>
 
     /**
-     * 指定されたmedicationの最大sequenceNumberを取得
+     * Get the maximum sequenceNumber for the specified medication
      */
     @Query("SELECT MAX(sequenceNumber) FROM medication_times WHERE medicationId = :medicationId")
     suspend fun getMaxSequenceNumber(medicationId: Long): Int?

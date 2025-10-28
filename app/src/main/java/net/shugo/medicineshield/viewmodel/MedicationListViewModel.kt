@@ -38,7 +38,7 @@ class MedicationListViewModel(
         .map { list ->
             val today = formatDateString(System.currentTimeMillis())
             list.filter { medWithTimes ->
-                // 現在有効なConfigを取得
+                // Get current valid Config
                 val currentConfig = medWithTimes.getCurrentConfig()
                 // If endDate is today or later, "Currently taking" (includes MAX_DATE case)
                 currentConfig?.let { config ->
@@ -57,7 +57,7 @@ class MedicationListViewModel(
         .map { list ->
             val today = formatDateString(System.currentTimeMillis())
             list.filter { medWithTimes ->
-                // 現在有効なConfigを取得
+                // Get current valid Config
                 val currentConfig = medWithTimes.getCurrentConfig()
                 // If endDate is before today, "Past medications"
                 currentConfig?.let { config ->

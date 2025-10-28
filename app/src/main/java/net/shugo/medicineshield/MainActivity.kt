@@ -56,10 +56,10 @@ class MainActivity : ComponentActivity() {
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
         if (isGranted) {
-            // 権限が許可された場合、通知をスケジュール
+            // If permission is granted, schedule notifications
             setupNotifications()
         } else {
-            // 権限が拒否された場合、設定で通知をオフにする
+            // If permission is denied, turn off notifications in settings
             val settingsPreferences = SettingsPreferences(this)
             settingsPreferences.setNotificationsEnabled(false)
         }
@@ -80,14 +80,14 @@ class MainActivity : ComponentActivity() {
             database.dailyNoteDao()
         )
 
-        // 通知チャネルを作成
+        // Create notification channel
         val notificationHelper = NotificationHelper(this)
         notificationHelper.createNotificationChannel()
 
-        // 通知権限をリクエスト
+        // Request notification permission
         requestNotificationPermission()
 
-        // 通知からの起動時に渡される日付を取得
+        // Get the date passed when launching from notification
         scheduledDateState.value = intent?.getStringExtra(NotificationHelper.EXTRA_SCHEDULED_DATE)
 
         setContent {
@@ -104,15 +104,15 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        // 新しい通知から起動された場合、日付を更新
+        // If launched from a new notification, update the date
         scheduledDateState.value = intent.getStringExtra(NotificationHelper.EXTRA_SCHEDULED_DATE)
     }
 
     private fun requestNotificationPermission() {
-        // 通知設定を確認
+        // Check notification settings
         val settingsPreferences = SettingsPreferences(this)
         if (!settingsPreferences.isNotificationsEnabled()) {
-            // 通知がオフの場合は権限をリクエストしない
+            // If notifications are off, don't request permission
             return
         }
 
@@ -122,16 +122,16 @@ class MainActivity : ComponentActivity() {
                     this,
                     Manifest.permission.POST_NOTIFICATIONS
                 ) == PackageManager.PERMISSION_GRANTED -> {
-                    // 権限が既に許可されている場合
+                    // If permission is already granted
                     setupNotifications()
                 }
                 else -> {
-                    // 権限をリクエスト
+                    // Request permission
                     requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                 }
             }
         } else {
-            // Android 13未満では権限不要
+            // Permission not required for Android 13 and below
             setupNotifications()
         }
     }
@@ -149,7 +149,7 @@ fun MedicineShieldTheme(content: @Composable () -> Unit) {
     val context = LocalContext.current
     val isDarkTheme = isSystemInDarkTheme()
 
-    // Android 12以降でダイナミックカラーを使用
+    // Use dynamic color for Android 12 and later
     val colorScheme = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         if (isDarkTheme) {
             dynamicDarkColorScheme(context)
@@ -157,7 +157,7 @@ fun MedicineShieldTheme(content: @Composable () -> Unit) {
             dynamicLightColorScheme(context)
         }
     } else {
-        // Android 12未満ではデフォルトのMaterial 3カラースキームを使用
+        // For Android 12 and below, use default Material 3 color scheme
         if (isDarkTheme) {
             androidx.compose.material3.darkColorScheme()
         } else {
@@ -197,12 +197,12 @@ fun MedicineShieldApp(
                 factory = DailyMedicationViewModelFactory(context.applicationContext as Application, repository)
             )
 
-            // 通知から起動された場合、その日付に移動
-            val scheduledDate = scheduledDateState.value  // Composable内でStateを読み取る
+            // If launched from notification, navigate to that date
+            val scheduledDate = scheduledDateState.value  // Read State within Composable
             if (scheduledDate != null) {
                 LaunchedEffect(scheduledDate) {
                     viewModel.setDateFromNotification(scheduledDate)
-                    // 処理完了後にクリアして、次の通知で再実行できるようにする
+                    // Clear after processing so it can be re-executed on the next notification
                     scheduledDateState.value = null
                 }
             }
