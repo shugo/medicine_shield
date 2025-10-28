@@ -240,7 +240,9 @@ fun DateNavigationBar(
 
             // Date display (tappable)
             Row(
-                modifier = Modifier.clickable(onClick = onDateClick)
+                modifier = Modifier.clickable(
+                    onClickLabel = stringResource(R.string.select_date),
+                    onClick = onDateClick)
                     .semantics { role = Role.Button }
                     .padding(horizontal = 16.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
