@@ -203,7 +203,7 @@ class MedicationFormViewModel(
                     )
                 }
 
-                // 通知をスケジュール
+                // Schedule notifications
                 state.times.forEach { timeWithSeq ->
                     notificationScheduler.scheduleNextNotificationForTime(timeWithSeq.time)
                 }
@@ -257,7 +257,7 @@ class MedicationFormViewModel(
             }
         }
 
-        // 服用量のバリデーション
+        // Validate dosage
         val dose = parseDoseInput(state.defaultDoseText)
         if (dose == null || dose < MedicationConfig.MIN_DOSE || dose > MedicationConfig.MAX_DOSE) {
             _formState.value = _formState.value.copy(

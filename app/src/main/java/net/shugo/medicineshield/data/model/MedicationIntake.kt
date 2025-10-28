@@ -25,7 +25,7 @@ data class MedicationIntake(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     val medicationId: Long,
-    val sequenceNumber: Int,  // MedicationTimeのsequenceNumberと紐付け
+    val sequenceNumber: Int,  // Links to MedicationTime's sequenceNumber
     val scheduledDate: String,  // YYYY-MM-DD format (e.g., "2025-10-09")
     val takenAt: String? = null,  // HH:mm format (e.g., "09:30"), null = not taken yet
     val isCanceled: Boolean = false,  // true = user intentionally canceled this intake

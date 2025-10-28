@@ -75,11 +75,11 @@ class MedicationRepository(
         defaultDose: Double = 1.0,  // Default dose (saved in MedicationConfig, also used as default value for MedicationTime)
         doseUnit: String? = null  // Dosage unit
     ): Long {
-        // 1. Medicationを作成
+        // 1. Create Medication
         val medication = Medication(name = name)
         val medicationId = medicationDao.insert(medication)
 
-        // 2. Long型の日付をString型（yyyy-MM-dd）に変換
+        // 2. Convert Long type date to String type (yyyy-MM-dd)
         val startDateString = formatDateString(startDate)
         val endDateString = endDate?.let { formatDateString(it) } ?: DateUtils.MAX_DATE
 
@@ -132,17 +132,17 @@ class MedicationRepository(
         doseUnit: String? = null  // Dosage unit
     ) {
         val now = System.currentTimeMillis()
-        val today = formatDateString(now)  // yyyy-MM-dd形式の今日の日付
+        val today = formatDateString(now)  // Today's date in yyyy-MM-dd format
 
-        // Long型の日付をString型に変換
+        // Convert Long type date to String type
         val startDateString = formatDateString(startDate)
         val endDateString = endDate?.let { formatDateString(it) } ?: DateUtils.MAX_DATE
 
-        // 1. Medicationの名前を更新
+        // 1. Update Medication name
         val medication = medicationDao.getMedicationById(medicationId) ?: return
         medicationDao.update(medication.copy(name = name, updatedAt = System.currentTimeMillis()))
 
-        // 2. MedicationConfigの変更をチェック
+        // 2. Check for MedicationConfig changes
         val currentConfig = medicationConfigDao.getCurrentConfigForMedication(medicationId)
         if (currentConfig != null) {
             val configChanged = currentConfig.cycleType != cycleType ||
@@ -176,7 +176,7 @@ class MedicationRepository(
                     // If validFrom is today, delete the old Config as it's not used
                     medicationConfigDao.delete(currentConfig)
                 } else {
-                    // validFromが今日より前の場合、既存のConfigを無効化
+                    // If validFrom is before today, invalidate existing Config
                     medicationConfigDao.update(
                         currentConfig.copy(
                             validTo = today,
@@ -185,7 +185,7 @@ class MedicationRepository(
                     )
                 }
 
-                // 新しいConfigを作成
+                // Create new Config
                 val newConfig = MedicationConfig(
                     medicationId = medicationId,
                     cycleType = cycleType,
@@ -223,7 +223,7 @@ class MedicationRepository(
             return
         }
 
-        // 3. MedicationTimeの変更をチェック
+        // 3. Check for MedicationTime changes
         val currentTimes = medicationTimeDao.getCurrentTimesForMedication(medicationId)
         val currentMap = currentTimes.associateBy { it.sequenceNumber }
         val newMap = timesWithSequenceAndDose.associate { (seq, time, dose) -> seq to Pair(time, dose) }
@@ -231,7 +231,7 @@ class MedicationRepository(
         // Times to delete (sequenceNumber not in new list)
         val timesToEnd = currentTimes.filter { it.sequenceNumber !in newMap }
         timesToEnd.forEach { oldTime ->
-            // 今日のMedicationIntakeが存在するかチェック
+            // Check if today's MedicationIntake exists
             val todayIntake = medicationIntakeDao.getIntakeByMedicationAndDateTime(
                 medicationId, today, oldTime.sequenceNumber
             )
@@ -258,29 +258,29 @@ class MedicationRepository(
             )
         }
 
-        // 追加または更新する時刻
+        // Times to add or update
         timesWithSequenceAndDose.forEach { (sequenceNumber, newTime, newDose) ->
             val currentTime = currentMap[sequenceNumber]
 
             if (currentTime == null) {
-                // 新規追加
+                // New addition
                 medicationTimeDao.insert(
                     MedicationTime(
                         medicationId = medicationId,
                         sequenceNumber = sequenceNumber,
                         time = newTime,
                         dose = newDose,
-                        validFrom = today,  // 今日から有効
+                        validFrom = today,  // Valid from today
                         validTo = DateUtils.MAX_DATE
                     )
                 )
             } else if (currentTime.time != newTime || currentTime.dose != newDose) {
-                // 時刻または服用量が変更された場合
+                // If time or dose has changed
                 if (currentTime.validFrom == today) {
-                    // validFromが今日の場合、古いレコードは使用されないので削除
+                    // If validFrom is today, delete old record as it's not used
                     medicationTimeDao.delete(currentTime)
                 } else {
-                    // validFromが今日より前の場合、古いレコードを無効化
+                    // If validFrom is before today, invalidate old record
                     medicationTimeDao.update(
                         currentTime.copy(
                             validTo = today,
@@ -289,19 +289,19 @@ class MedicationRepository(
                     )
                 }
 
-                // 新しいレコードを作成（同じsequenceNumber）
+                // Create new record (same sequenceNumber)
                 medicationTimeDao.insert(
                     MedicationTime(
                         medicationId = medicationId,
                         sequenceNumber = sequenceNumber,
                         time = newTime,
                         dose = newDose,
-                        validFrom = today,  // 今日から有効
+                        validFrom = today,  // Valid from today
                         validTo = DateUtils.MAX_DATE
                     )
                 )
             }
-            // else: 変更なし
+            // else: No changes
         }
     }
 
@@ -336,7 +336,7 @@ class MedicationRepository(
             val configsByMedicationId = allConfigs.groupBy { it.medicationId }
 
             for (medication in medList) {
-                // MedicationWithTimesオブジェクトを構築
+                // Build MedicationWithTimes object
                 val medicationWithTimes = MedicationWithTimes(
                     medication = medication,
                     times = timesByMedicationId[medication.id]?.sortedBy { it.time } ?: emptyList(),
@@ -369,7 +369,7 @@ class MedicationRepository(
                                     medicationName = medication.name,
                                     sequenceNumber = intake.sequenceNumber,
                                     scheduledTime = "",  // PRN has no time
-                                    dose = validConfig.dose,  // MedicationConfig.doseを使用
+                                    dose = validConfig.dose,  // Use MedicationConfig.dose
                                     doseUnit = validConfig.doseUnit,
                                     status = status,
                                     takenAt = intake.takenAt,
@@ -386,7 +386,7 @@ class MedicationRepository(
                                 medicationName = medication.name,
                                 sequenceNumber = nextSequenceNumber,
                                 scheduledTime = "",  // PRN has no time
-                                dose = validConfig.dose,  // MedicationConfig.doseを使用
+                                dose = validConfig.dose,  // Use MedicationConfig.dose
                                 doseUnit = validConfig.doseUnit,
                                 status = MedicationIntakeStatus.UNCHECKED,
                                 takenAt = null,
@@ -402,7 +402,7 @@ class MedicationRepository(
                             val key = "${medication.id}_${medTime.sequenceNumber}"
                             val intake = intakeMap[key]
 
-                            // 服用状態を判定
+                            // Determine intake status
                             val status = when {
                                 intake?.isCanceled == true -> MedicationIntakeStatus.CANCELED
                                 intake?.takenAt != null -> MedicationIntakeStatus.TAKEN
@@ -432,7 +432,7 @@ class MedicationRepository(
     }
 
     /**
-     * 服用記録を更新する（チェック/チェック解除）
+     * Update intake record (check/uncheck)
      */
     suspend fun updateIntakeStatus(
         medicationId: Long,
@@ -446,7 +446,7 @@ class MedicationRepository(
 
         if (isTaken) {
             if (existingIntake == null) {
-                // 新規作成
+                // Create new
                 medicationIntakeDao.insert(
                     MedicationIntake(
                         medicationId = medicationId,
@@ -456,7 +456,7 @@ class MedicationRepository(
                     )
                 )
             } else {
-                // 更新
+                // Update
                 medicationIntakeDao.update(
                     existingIntake.copy(
                         takenAt = getCurrentTimeString(),
@@ -465,7 +465,7 @@ class MedicationRepository(
                 )
             }
         } else {
-            // チェック解除
+            // Uncheck
             if (existingIntake != null) {
                 medicationIntakeDao.update(
                     existingIntake.copy(
@@ -484,14 +484,14 @@ class MedicationRepository(
         val calendar = Calendar.getInstance()
         calendar.timeInMillis = targetDate
 
-        // targetDateをyyyy-MM-dd形式の文字列に変換
+        // Convert targetDate to yyyy-MM-dd format string
         val targetDateString = formatDateString(targetDate)
 
-        // 期間チェック（String型での比較、yyyy-MM-ddは辞書順で比較可能）
+        // Period check (String type comparison, yyyy-MM-dd is comparable in lexicographical order)
         if (targetDateString < config.medicationStartDate) return false
         if (targetDateString > config.medicationEndDate) return false
 
-        // 頓服薬チェック
+        // PRN medication check
         if (config.isAsNeeded) return true
 
         return when (config.cycleType) {
@@ -521,14 +521,14 @@ class MedicationRepository(
     }
 
     /**
-     * 現在の日付を YYYY-MM-DD 形式で取得
+     * Get current date in YYYY-MM-DD format
      */
     private fun getCurrentDateString(): String {
         return formatDateString(System.currentTimeMillis())
     }
 
     /**
-     * Long型のタイムスタンプをyyyy-MM-dd形式の文字列に変換
+     * Convert Long type timestamp to yyyy-MM-dd format string
      */
     private fun formatDateString(timestamp: Long): String {
         val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
@@ -536,7 +536,7 @@ class MedicationRepository(
     }
 
     /**
-     * YYYY-MM-DD 形式の文字列をタイムスタンプに変換
+     * Convert YYYY-MM-DD format string to timestamp
      */
     private fun parseDateString(dateString: String): Long? {
         val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
@@ -548,7 +548,7 @@ class MedicationRepository(
     }
 
     /**
-     * 現在の時刻を HH:mm 形式で取得
+     * Get current time in HH:mm format
      */
     private fun getCurrentTimeString(): String {
         val timeFormatter = SimpleDateFormat("HH:mm", Locale.ROOT)
@@ -562,11 +562,11 @@ class MedicationRepository(
         medicationId: Long,
         scheduledDate: String = getCurrentDateString()
     ) {
-        // その日の最大sequenceNumberを取得
+        // Get the maximum sequenceNumber for that day
         val existingIntakes = medicationIntakeDao.getIntakesByMedicationAndDate(medicationId, scheduledDate)
         val nextSequenceNumber = (existingIntakes.maxOfOrNull { it.sequenceNumber } ?: 0) + 1
 
-        // 新しい服用記録を作成
+        // Create new intake record
         medicationIntakeDao.insert(
             MedicationIntake(
                 medicationId = medicationId,
@@ -635,14 +635,14 @@ class MedicationRepository(
         val existingNote = dailyNoteDao.getNoteByDateSync(date)
 
         if (existingNote != null) {
-            // 既存のメモを更新（createdAtは保持）
+            // Update existing note (keep createdAt)
             val updatedNote = existingNote.copy(
                 content = content,
                 updatedAt = System.currentTimeMillis()
             )
             dailyNoteDao.update(updatedNote)
         } else {
-            // 新規作成
+            // Create new
             val newNote = DailyNote(
                 noteDate = date,
                 content = content,
@@ -696,7 +696,7 @@ class MedicationRepository(
         )
 
         if (existingIntake == null) {
-            // 新規作成（キャンセル状態）
+            // Create new (canceled state)
             medicationIntakeDao.insert(
                 MedicationIntake(
                     medicationId = medicationId,
@@ -707,7 +707,7 @@ class MedicationRepository(
                 )
             )
         } else {
-            // 更新（キャンセル状態、服用記録はクリア）
+            // Update (canceled state, intake record is cleared)
             medicationIntakeDao.update(
                 existingIntake.copy(
                     takenAt = null,
@@ -731,7 +731,7 @@ class MedicationRepository(
         )
 
         if (existingIntake != null) {
-            // キャンセルを取り消す際は、レコード自体を削除して未服用状態に戻す
+            // When canceling the cancellation, delete the record itself to return to unchecked state
             medicationIntakeDao.delete(existingIntake)
         }
     }

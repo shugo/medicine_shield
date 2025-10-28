@@ -199,7 +199,7 @@ class NotificationScheduler(
             timeInMillis = now
         }
 
-        // 今日の指定時刻
+        // Today's specified time
         val timeParts = time.split(":")
         if (timeParts.size != 2) return null
 
@@ -211,7 +211,7 @@ class NotificationScheduler(
         calendar.set(Calendar.SECOND, 0)
         calendar.set(Calendar.MILLISECOND, 0)
 
-        // 今日の指定時刻が既に過ぎている場合は明日から
+        // If today's specified time has already passed, start from tomorrow
         if (calendar.timeInMillis <= now) {
             calendar.add(Calendar.DAY_OF_YEAR, 1)
         }
