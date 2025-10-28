@@ -143,8 +143,8 @@ class MedicationRepositoryTest {
 
     @Test
     fun `updateMedicationWithTimes should update existing config not create duplicate when DAO returns valid config`() = runTest {
-        // Given - このテストは、DAOが正しく現在有効なconfigを取得できた場合の動作を確認する
-        // バグがあると、getCurrentConfigForMedicationがnullを返し、validFrom=MIN_DATEの新規configが作成されてしまう
+        // Given - This test verifies behavior when DAO correctly retrieves the currently valid config
+        // If there's a bug, getCurrentConfigForMedication would return null, creating a new config with validFrom=MIN_DATE
         val medicationId = 1L
         val startDate = parseDate("2025-10-01")
 
@@ -162,20 +162,20 @@ class MedicationRepositoryTest {
         coEvery { medicationConfigDao.insert(any()) } returns 2L
         coEvery { medicationConfigDao.update(any()) } just Runs
 
-        // When - cycleTypeを変更（DAILY -> WEEKLY）
+        // When - Change cycleType (DAILY -> WEEKLY)
         repository.updateMedicationWithTimes(
             medicationId, "Med Updated", CycleType.WEEKLY, "1,2,3", startDate, null, emptyList()
         )
 
-        // Then - 既存のconfigを無効化し、新しいconfigを作成する（今日からvalidFrom）
+        // Then - Invalidate existing config and create new one (validFrom from today)
         coVerify(exactly = 1) { medicationConfigDao.update(match { it.validTo != DateUtils.MAX_DATE }) }
         coVerify(exactly = 1) { medicationConfigDao.insert(match { it.validFrom != DateUtils.MIN_DATE }) }
     }
 
     @Test
     fun `updateMedicationWithTimes should create config with MIN_DATE validFrom when DAO returns null config`() = runTest {
-        // Given - このテストは、getCurrentConfigForMedicationがnullを返した場合の動作を確認する
-        // これは正常なケース（初回の設定時）だが、バグがあるとDAOが不正にnullを返してしまう
+        // Given - This test verifies behavior when getCurrentConfigForMedication returns null
+        // This is a normal case (initial setup), but a bug could cause DAO to incorrectly return null
         val medicationId = 1L
         val cycleType = CycleType.DAILY
         val startDate = parseDate("2025-10-01")
@@ -193,15 +193,15 @@ class MedicationRepositoryTest {
             medicationId, "Med", cycleType, null, startDate, null, emptyList()
         )
 
-        // Then - 新規作成（validFrom = MIN_DATE）
+        // Then - Create new (validFrom = MIN_DATE)
         coVerify(exactly = 0) { medicationConfigDao.update(any()) }
         coVerify(exactly = 1) { medicationConfigDao.insert(match { it.validFrom == DateUtils.MIN_DATE }) }
     }
 
     @Test
     fun `updateMedicationWithTimes should update existing times not create duplicates when DAO returns valid times`() = runTest {
-        // Given - このテストは、DAOが正しく現在有効なtimesを取得できた場合の動作を確認する
-        // バグがあると、getCurrentTimesForMedicationが空リストを返し、timeが追加され続ける
+        // Given - This test verifies behavior when DAO correctly retrieves currently valid times
+        // If there's a bug, getCurrentTimesForMedication would return empty list and times would keep getting added
         val medicationId = 1L
         val cycleType = CycleType.DAILY
         val startDate = parseDate("2025-10-01")
@@ -226,21 +226,21 @@ class MedicationRepositoryTest {
         coEvery { medicationTimeDao.insert(any()) } returns 2L
         coEvery { medicationIntakeDao.getIntakeByMedicationAndDateTime(any(), any(), any()) } returns null
 
-        // When - 時刻を変更（08:00 -> 09:00）
+        // When - Change time (08:00 -> 09:00)
         repository.updateMedicationWithTimes(
             medicationId, "Med", cycleType, null, startDate, null,
             listOf(Triple(1, "09:00", 1.0))
         )
 
-        // Then - 古いtimeが無効化され、新しいtimeが作成される（今日からvalidFrom）
+        // Then - Old time is invalidated and new time is created (validFrom from today)
         coVerify(exactly = 1) { medicationTimeDao.update(match { it.id == 1L && it.validTo != DateUtils.MAX_DATE }) }
         coVerify(exactly = 1) { medicationTimeDao.insert(match { it.validFrom != DateUtils.MIN_DATE }) }
     }
 
     @Test
     fun `updateMedicationWithTimes should create new times with today validFrom when DAO returns empty times`() = runTest {
-        // Given - このテストは、getCurrentTimesForMedicationが空リストを返した場合の動作を確認する
-        // バグがあるとDAOが不正に空リストを返してしまい、既存のtimeが無効化されない
+        // Given - This test verifies behavior when getCurrentTimesForMedication returns empty list
+        // If there's a bug, DAO could incorrectly return empty list and existing times wouldn't be invalidated
         val medicationId = 1L
         val cycleType = CycleType.DAILY
         val startDate = parseDate("2025-10-01")
@@ -258,13 +258,13 @@ class MedicationRepositoryTest {
         coEvery { medicationTimeDao.getCurrentTimesForMedication(medicationId) } returns emptyList()
         coEvery { medicationTimeDao.insert(any()) } returns 1L
 
-        // When - 新しい時刻を追加
+        // When - Add new time
         repository.updateMedicationWithTimes(
             medicationId, "Med", cycleType, null, startDate, null,
             listOf(Triple(1, "08:00", 1.0))
         )
 
-        // Then - 新規作成（validFrom = 今日）
+        // Then - Create new (validFrom = today)
         coVerify(exactly = 0) { medicationTimeDao.update(any()) }
         coVerify(exactly = 1) { medicationTimeDao.insert(match { it.validFrom != DateUtils.MIN_DATE }) }
     }

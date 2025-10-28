@@ -17,18 +17,18 @@ interface MedicationDao {
     fun getAllMedications(): Flow<List<Medication>>
 
     /**
-     * すべてのMedicationとそのリレーションを取得（履歴含む）
-     * 注意: @Relationは全データを取得するため、現在有効なデータのみが必要な場合は
-     * Repositoryでフィルタリングするか、個別のDAOメソッドを使用してください
+     * Get all Medications and their relationships (including history)
+     * Note: @Relation retrieves all data, so if you only need currently valid data,
+     * filter in the Repository or use individual DAO methods
      */
     @Transaction
     @Query("SELECT * FROM medications ORDER BY createdAt DESC")
     fun getAllMedicationsWithTimes(): Flow<List<MedicationWithTimes>>
 
     /**
-     * 指定IDのMedicationとそのリレーションを取得（履歴含む）
-     * 注意: @Relationは全データを取得するため、現在有効なデータのみが必要な場合は
-     * Repositoryでフィルタリングするか、個別のDAOメソッドを使用してください
+     * Get Medication and its relationships for specified ID (including history)
+     * Note: @Relation retrieves all data, so if you only need currently valid data,
+     * filter in the Repository or use individual DAO methods
      */
     @Transaction
     @Query("SELECT * FROM medications WHERE id = :medicationId")
