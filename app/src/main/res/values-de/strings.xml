@@ -16,6 +16,7 @@
     <string name="taken_at">Eingenommen um %s</string>
     <string name="edit_taken_time">Einnahmezeit bearbeiten</string>
     <string name="today">Heute</string>
+    <string name="select_date">Datum auswählen</string>
 
     <!-- Medication List Screen -->
     <string name="medication_list_title">Medikamente</string>
