@@ -16,7 +16,6 @@
     <string name="taken_at">已服用 %s</string>
     <string name="edit_taken_time">編輯服用時間</string>
     <string name="today">今天</string>
-    <string name="today_with_date">今天 %s</string>
 
     <!-- Medication List Screen -->
     <string name="medication_list_title">藥品列表</string>

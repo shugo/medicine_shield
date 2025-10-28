@@ -16,7 +16,6 @@
     <string name="taken_at">Pris à %s</string>
     <string name="edit_taken_time">Modifier l\'heure de prise</string>
     <string name="today">Aujourd\'hui</string>
-    <string name="today_with_date">Aujourd\'hui %s</string>
 
     <!-- Medication List Screen -->
     <string name="medication_list_title">Médicaments</string>

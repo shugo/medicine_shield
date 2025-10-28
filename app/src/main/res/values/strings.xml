@@ -16,7 +16,7 @@
     <string name="taken_at">Taken at %s</string>
     <string name="edit_taken_time">Edit taken time</string>
     <string name="today">Today</string>
-    <string name="today_with_date">Today %s</string>
+    <string name="select_date">Select date</string>
 
     <!-- Medication List Screen -->
     <string name="medication_list_title">Medications</string>

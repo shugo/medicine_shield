@@ -16,7 +16,6 @@
     <string name="taken_at">복용 완료 %s</string>
     <string name="edit_taken_time">복용 시각 수정</string>
     <string name="today">오늘</string>
-    <string name="today_with_date">오늘 %s</string>
 
     <!-- Medication List Screen -->
     <string name="medication_list_title">약품 목록</string>

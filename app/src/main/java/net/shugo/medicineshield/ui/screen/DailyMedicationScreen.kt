@@ -85,6 +85,7 @@ fun DailyMedicationScreen(
 ) {
     val dailyMedications by viewModel.dailyMedications.collectAsState()
     val displayDateText by viewModel.displayDateText.collectAsState()
+    val isToday by viewModel.isToday.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val selectedDate by viewModel.selectedDate.collectAsState()
     val dailyNote by viewModel.dailyNote.collectAsState()
@@ -140,6 +141,7 @@ fun DailyMedicationScreen(
             // Date navigation bar
             DateNavigationBar(
                 displayDateText = displayDateText,
+                isToday = isToday,
                 onPreviousDay = { viewModel.onPreviousDay() },
                 onNextDay = { viewModel.onNextDay() },
                 onDateClick = { showDatePicker = true }
@@ -208,6 +210,7 @@ fun DailyMedicationScreen(
 @Composable
 fun DateNavigationBar(
     displayDateText: String,
+    isToday: Boolean,
     onPreviousDay: () -> Unit,
     onNextDay: () -> Unit,
     onDateClick: () -> Unit
@@ -245,8 +248,12 @@ fun DateNavigationBar(
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Icon(
-                    imageVector = Icons.Filled.CalendarMonth,
-                    contentDescription = null,
+                    imageVector = if (isToday) Icons.Filled.Today else Icons.Filled.CalendarMonth,
+                    contentDescription = if (isToday) {
+                        stringResource(R.string.today)
+                    } else {
+                        stringResource(R.string.select_date)
+                    },
                     modifier = Modifier.size(24.dp)
                 )
             }
