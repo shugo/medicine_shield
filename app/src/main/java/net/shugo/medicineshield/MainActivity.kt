@@ -138,7 +138,7 @@ class MainActivity : ComponentActivity() {
 
     private fun setupNotifications() {
         lifecycleScope.launch {
-            val scheduler = NotificationScheduler(applicationContext, repository)
+            val scheduler = NotificationScheduler.create(applicationContext, repository)
             scheduler.rescheduleAllNotifications()
         }
     }

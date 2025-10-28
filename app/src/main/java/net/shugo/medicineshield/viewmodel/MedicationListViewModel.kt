@@ -22,7 +22,7 @@ class MedicationListViewModel(
 ) : ViewModel() {
 
     private val notificationScheduler by lazy {
-        NotificationScheduler(context, repository)
+        NotificationScheduler.create(context, repository)
     }
 
     val medications: StateFlow<List<MedicationWithTimes>> = repository

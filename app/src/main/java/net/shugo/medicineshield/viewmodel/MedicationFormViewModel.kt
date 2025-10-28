@@ -53,7 +53,7 @@ class MedicationFormViewModel(
     private var nextSequenceNumber = 1  // 新規追加時のsequenceNumber
 
     private val notificationScheduler by lazy {
-        NotificationScheduler(context, repository)
+        NotificationScheduler.create(context, repository)
     }
 
     fun loadMedication(medicationId: Long) {

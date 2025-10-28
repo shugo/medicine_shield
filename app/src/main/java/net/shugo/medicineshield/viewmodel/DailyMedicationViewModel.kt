@@ -52,7 +52,9 @@ class DailyMedicationViewModel(
 
     // 通知管理用
     private val notificationHelper = NotificationHelper(application.applicationContext)
-    private val notificationScheduler = NotificationScheduler(application.applicationContext, repository)
+    private val notificationScheduler by lazy {
+        NotificationScheduler.create(application.applicationContext, repository)
+    }
 
     init {
         _isLoading.value = true

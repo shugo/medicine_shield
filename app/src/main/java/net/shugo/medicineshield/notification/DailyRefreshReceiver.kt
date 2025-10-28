@@ -31,7 +31,7 @@ class DailyRefreshReceiver : BroadcastReceiver() {
                 notificationHelper.createNotificationChannel()
 
                 // すべての通知を再スケジュール
-                val scheduler = NotificationScheduler(context, repository)
+                val scheduler = NotificationScheduler.create(context, repository)
                 scheduler.rescheduleAllNotifications()
 
             } finally {

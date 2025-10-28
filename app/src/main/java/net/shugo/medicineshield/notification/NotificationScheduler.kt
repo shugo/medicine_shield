@@ -7,8 +7,8 @@ import android.content.Intent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
-import net.shugo.medicineshield.data.model.CycleType
-import net.shugo.medicineshield.data.model.MedicationWithTimes
+import net.shugo.medicineshield.data.model.DailyMedicationItem
+import net.shugo.medicineshield.data.model.MedicationIntakeStatus
 import net.shugo.medicineshield.data.preferences.SettingsPreferences
 import net.shugo.medicineshield.data.repository.MedicationRepository
 import java.text.SimpleDateFormat
@@ -18,16 +18,33 @@ import java.util.Locale
 
 class NotificationScheduler(
     private val context: Context,
-    private val repository: MedicationRepository
+    private val repository: MedicationRepository,
+    private val alarmScheduler: AlarmScheduler,
+    private val settingsPreferences: SettingsPreferences,
+    private val timeProvider: TimeProvider = SystemTimeProvider(),
+    private val dateFormatter: SimpleDateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT),
+    private val pendingIntentFactory: PendingIntentFactory = PendingIntentFactoryImpl()
 ) {
-    private val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-    private val settingsPreferences = SettingsPreferences(context)
-    private val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
 
     companion object {
         const val EXTRA_NOTIFICATION_TIME = "notification_time"
         const val EXTRA_SCHEDULED_DATE = "scheduled_date"
         private const val DAILY_REFRESH_REQUEST_CODE = 999999
+
+        /**
+         * Factory function to create NotificationScheduler with default dependencies
+         */
+        fun create(context: Context, repository: MedicationRepository): NotificationScheduler {
+            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            val alarmScheduler = AlarmSchedulerImpl(alarmManager)
+            val settingsPreferences = SettingsPreferences(context)
+            return NotificationScheduler(
+                context,
+                repository,
+                alarmScheduler,
+                settingsPreferences
+            )
+        }
     }
 
     /**
@@ -47,20 +64,25 @@ class NotificationScheduler(
             return@withContext
         }
 
-        // Get all medications
-        val medications = repository.getAllMedicationsWithTimes().first()
-
-        // Collect all times (only currently valid ones)
+        // Get medications for today and tomorrow (2 days is enough since this runs daily at midnight)
+        val medicationsByDate = mutableMapOf<String, List<DailyMedicationItem>>()
         val allTimes = mutableSetOf<String>()
-        medications.forEach { med ->
-            med.times.forEach { time ->
-                allTimes.add(time.time)
+        val calendar = Calendar.getInstance()
+        calendar.timeInMillis = timeProvider.currentTimeMillis()
+
+        for (i in 0 until 2) {
+            val dateString = dateFormatter.format(Date(calendar.timeInMillis))
+            val medications = repository.getMedications(dateString).first()
+            medicationsByDate[dateString] = medications
+            medications.forEach { med ->
+                allTimes.add(med.scheduledTime)
             }
+            calendar.add(Calendar.DAY_OF_YEAR, 1)
         }
 
         // Schedule next notification for each time
         allTimes.forEach { time ->
-            scheduleNextNotificationForTime(time)
+            scheduleNextNotificationForTime(time, medicationsByDate)
         }
 
         // Set up rescheduling job at midnight
@@ -69,19 +91,16 @@ class NotificationScheduler(
 
     /**
      * Schedule next notification for specific time
+     * @param time Time string (HH:mm format)
+     * @param medicationsByDate Pre-fetched medications by date (optional, for performance)
      */
-    suspend fun scheduleNextNotificationForTime(time: String) = withContext(Dispatchers.IO) {
-        val nextDateTime = calculateNextNotificationDateTime(time)
+    suspend fun scheduleNextNotificationForTime(
+        time: String,
+        medicationsByDate: Map<String, List<DailyMedicationItem>>? = null
+    ) = withContext(Dispatchers.IO) {
+        val nextDateTime = calculateNextNotificationDateTime(time, medicationsByDate)
         if (nextDateTime == null) {
             // Cancel notification if no matching next date/time
-            cancelNotificationForTime(time)
-            return@withContext
-        }
-
-        // Get list of medications that should be taken at that time
-        val medications = getMedicationsForTime(time, nextDateTime)
-        if (medications.isEmpty()) {
-            // Cancel notification if no medications
             cancelNotificationForTime(time)
             return@withContext
         }
@@ -89,49 +108,45 @@ class NotificationScheduler(
         // Calculate scheduled date (from when notification is triggered)
         val scheduledDate = dateFormatter.format(Date(nextDateTime))
 
-        // 通知をスケジュール
+        // Schedule notification
         val notificationId = getNotificationIdForTime(time)
         val intent = Intent(context, MedicationNotificationReceiver::class.java).apply {
             putExtra(EXTRA_NOTIFICATION_TIME, time)
             putExtra(EXTRA_SCHEDULED_DATE, scheduledDate)
         }
 
-        val pendingIntent = PendingIntent.getBroadcast(
+        val pendingIntent = pendingIntentFactory.createBroadcast(
             context,
             notificationId,
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        // AlarmManagerで通知を設定（正確な時刻ではないが、薬の通知には十分）
-        alarmManager.setAndAllowWhileIdle(
-            AlarmManager.RTC_WAKEUP,
-            nextDateTime,
-            pendingIntent
-        )
+        // Schedule notification using AlarmScheduler
+        alarmScheduler.scheduleAlarm(nextDateTime, pendingIntent)
     }
 
     /**
-     * 特定時刻の通知をキャンセルする
+     * Cancel notification for a specific time
      */
     fun cancelNotificationForTime(time: String) {
         val notificationId = getNotificationIdForTime(time)
         val intent = Intent(context, MedicationNotificationReceiver::class.java)
-        val pendingIntent = PendingIntent.getBroadcast(
+        val pendingIntent = pendingIntentFactory.createBroadcast(
             context,
             notificationId,
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
-        alarmManager.cancel(pendingIntent)
+        alarmScheduler.cancelAlarm(pendingIntent)
     }
 
     /**
-     * 毎日深夜0時の再スケジュールジョブを設定
+     * Schedule daily refresh job at midnight
      */
     fun scheduleDailyRefreshJob() {
         val calendar = Calendar.getInstance().apply {
-            // 現在時刻が00:00:00.000より後であれば翌日に設定
+            // Set to next midnight if current time is past 00:00:00.000
             if (get(Calendar.HOUR_OF_DAY) > 0 ||
                 get(Calendar.MINUTE) > 0 ||
                 get(Calendar.SECOND) > 0 ||
@@ -145,41 +160,44 @@ class NotificationScheduler(
         }
 
         val intent = Intent(context, DailyRefreshReceiver::class.java)
-        val pendingIntent = PendingIntent.getBroadcast(
+        val pendingIntent = pendingIntentFactory.createBroadcast(
             context,
             DAILY_REFRESH_REQUEST_CODE,
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        alarmManager.setAndAllowWhileIdle(
-            AlarmManager.RTC_WAKEUP,
-            calendar.timeInMillis,
-            pendingIntent
-        )
+        alarmScheduler.scheduleAlarm(calendar.timeInMillis, pendingIntent)
     }
 
     /**
-     * 深夜0時の再スケジュールジョブをキャンセル
+     * Cancel daily refresh job at midnight
      */
     fun cancelDailyRefreshJob() {
         val intent = Intent(context, DailyRefreshReceiver::class.java)
-        val pendingIntent = PendingIntent.getBroadcast(
+        val pendingIntent = pendingIntentFactory.createBroadcast(
             context,
             DAILY_REFRESH_REQUEST_CODE,
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
-        alarmManager.cancel(pendingIntent)
+        alarmScheduler.cancelAlarm(pendingIntent)
     }
 
     /**
-     * 指定時刻の次回通知日時を計算する
-     * @return 次回通知日時のタイムスタンプ（該当なしの場合null）
+     * Calculate next notification date/time for specified time
+     * @param time Time string (HH:mm format)
+     * @param medicationsByDate Pre-fetched medications by date (optional)
+     * @return Timestamp of next notification (null if no match)
      */
-    private suspend fun calculateNextNotificationDateTime(time: String): Long? {
-        val now = System.currentTimeMillis()
-        val calendar = Calendar.getInstance()
+    private suspend fun calculateNextNotificationDateTime(
+        time: String,
+        medicationsByDate: Map<String, List<DailyMedicationItem>>? = null
+    ): Long? {
+        val now = timeProvider.currentTimeMillis()
+        val calendar = Calendar.getInstance().apply {
+            timeInMillis = now
+        }
 
         // 今日の指定時刻
         val timeParts = time.split(":")
@@ -198,11 +216,22 @@ class NotificationScheduler(
             calendar.add(Calendar.DAY_OF_YEAR, 1)
         }
 
-        // その時刻に服用すべき薬があるか最大7日先までチェック
-        // 毎日深夜0時に再スケジュールされるため、7日で十分
-        for (i in 0 until 7) {
-            val medications = getMedicationsForTime(time, calendar.timeInMillis)
-            if (medications.isNotEmpty()) {
+        // Use provided data or fetch if not available
+        // Check up to 2 days ahead (sufficient since this reschedules daily at midnight)
+        for (i in 0 until 2) {
+            val dateString = dateFormatter.format(Date(calendar.timeInMillis))
+            val dailyMedications = medicationsByDate?.get(dateString)
+                ?: repository.getMedications(dateString).first()
+
+            // Filter medications for the specified time
+            val medicationsAtTime = dailyMedications.filter { it.scheduledTime == time }
+
+            // Check if there are uncompleted medications
+            val hasUncompleted = medicationsAtTime.isNotEmpty() && medicationsAtTime.any { item ->
+                item.status != MedicationIntakeStatus.TAKEN
+            }
+
+            if (hasUncompleted) {
                 return calendar.timeInMillis
             }
             calendar.add(Calendar.DAY_OF_YEAR, 1)
@@ -211,59 +240,4 @@ class NotificationScheduler(
         return null
     }
 
-    /**
-     * 指定時刻・指定日に服用すべき薬のリストを取得
-     */
-    private suspend fun getMedicationsForTime(time: String, dateTime: Long): List<MedicationWithTimes> {
-        val medications = repository.getAllMedicationsWithTimes().first()
-
-        return medications.filter { medWithTimes ->
-            // この薬がその時刻を持っているか
-            val times = medWithTimes.times
-            val hasTime = times.any { it.time == time }
-            if (!hasTime) return@filter false
-
-            val config = medWithTimes.config
-
-            // その日に服用すべきか判定
-            config?.let { shouldTakeMedication(it, dateTime) } ?: false
-        }
-    }
-
-    /**
-     * 指定日にその薬を服用すべきかどうか判定（Configベース）
-     */
-    private fun shouldTakeMedication(config: net.shugo.medicineshield.data.model.MedicationConfig, targetDate: Long): Boolean {
-        val calendar = Calendar.getInstance()
-        calendar.timeInMillis = targetDate
-
-        // targetDateをyyyy-MM-dd形式の文字列に変換
-        val targetDateString = dateFormatter.format(Date(targetDate))
-
-        // 期間チェック（String型での比較、yyyy-MM-ddは辞書順で比較可能）
-        if (targetDateString < config.medicationStartDate) return false
-        if (targetDateString > config.medicationEndDate) return false
-
-        // Do not schedule notifications for PRN medications
-        if (config.isAsNeeded) return false
-
-        return when (config.cycleType) {
-            CycleType.DAILY -> true
-
-            CycleType.WEEKLY -> {
-                // Day of week check (0=Sunday, 1=Monday, ..., 6=Saturday)
-                val dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK) - 1
-                val allowedDays = config.cycleValue?.split(",")?.mapNotNull { it.toIntOrNull() } ?: emptyList()
-                dayOfWeek in allowedDays
-            }
-
-            CycleType.INTERVAL -> {
-                // Every N days check
-                val intervalDays = config.cycleValue?.toIntOrNull() ?: return false
-                val startDateTimestamp = dateFormatter.parse(config.medicationStartDate)?.time ?: return false
-                val daysSinceStart = ((targetDate - startDateTimestamp) / (1000 * 60 * 60 * 24)).toInt()
-                daysSinceStart % intervalDays == 0
-            }
-        }
-    }
 }

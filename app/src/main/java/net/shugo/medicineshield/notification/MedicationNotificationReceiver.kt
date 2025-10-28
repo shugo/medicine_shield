@@ -37,11 +37,13 @@ class MedicationNotificationReceiver : BroadcastReceiver() {
                     it.scheduledTime == time && it.status != MedicationIntakeStatus.TAKEN
                 }.map { it.medicationName }
 
+                // NotificationScheduler を作成
+                val scheduler = NotificationScheduler.create(context, repository)
+
                 // 通知を表示
                 if (medications.isNotEmpty()) {
                     val notificationHelper = NotificationHelper(context)
-                    val notificationId = NotificationScheduler(context, repository)
-                        .getNotificationIdForTime(time)
+                    val notificationId = scheduler.getNotificationIdForTime(time)
                     notificationHelper.showMedicationNotification(
                         medications,
                         time,
@@ -51,7 +53,6 @@ class MedicationNotificationReceiver : BroadcastReceiver() {
                 }
 
                 // 次回の通知をスケジュール
-                val scheduler = NotificationScheduler(context, repository)
                 scheduler.scheduleNextNotificationForTime(time)
 
             } finally {

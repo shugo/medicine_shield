@@ -19,7 +19,9 @@ class SettingsViewModel(
 ) : ViewModel() {
 
     private val settingsPreferences = SettingsPreferences(context)
-    private val notificationScheduler = NotificationScheduler(context, repository)
+    private val notificationScheduler by lazy {
+        NotificationScheduler.create(context, repository)
+    }
 
     private val _notificationsEnabled = MutableStateFlow(settingsPreferences.isNotificationsEnabled())
     val notificationsEnabled: StateFlow<Boolean> = _notificationsEnabled.asStateFlow()
