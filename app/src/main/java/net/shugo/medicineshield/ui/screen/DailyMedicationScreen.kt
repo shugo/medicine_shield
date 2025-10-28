@@ -22,6 +22,7 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Settings
@@ -59,6 +60,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -84,6 +88,7 @@ fun DailyMedicationScreen(
 ) {
     val dailyMedications by viewModel.dailyMedications.collectAsState()
     val displayDateText by viewModel.displayDateText.collectAsState()
+    val isToday by viewModel.isToday.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val selectedDate by viewModel.selectedDate.collectAsState()
     val dailyNote by viewModel.dailyNote.collectAsState()
@@ -139,6 +144,7 @@ fun DailyMedicationScreen(
             // Date navigation bar
             DateNavigationBar(
                 displayDateText = displayDateText,
+                isToday = isToday,
                 onPreviousDay = { viewModel.onPreviousDay() },
                 onNextDay = { viewModel.onNextDay() },
                 onDateClick = { showDatePicker = true }
@@ -207,6 +213,7 @@ fun DailyMedicationScreen(
 @Composable
 fun DateNavigationBar(
     displayDateText: String,
+    isToday: Boolean,
     onPreviousDay: () -> Unit,
     onNextDay: () -> Unit,
     onDateClick: () -> Unit
@@ -232,14 +239,30 @@ fun DateNavigationBar(
             }
 
             // Date display (tappable)
-            Text(
-                text = displayDateText,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier
-                    .clickable(onClick = onDateClick)
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-            )
+            Row(
+                modifier = Modifier.clickable(
+                    onClickLabel = stringResource(R.string.select_date),
+                    onClick = onDateClick)
+                    .semantics { role = Role.Button }
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = displayDateText,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Icon(
+                    imageVector = if (isToday) Icons.Filled.Today else Icons.Filled.CalendarMonth,
+                    contentDescription = if (isToday) {
+                        stringResource(R.string.today)
+                    } else {
+                        stringResource(R.string.select_date)
+                    },
+                    modifier = Modifier.size(24.dp)
+                )
+            }
 
             // Next day button
             IconButton(onClick = onNextDay) {

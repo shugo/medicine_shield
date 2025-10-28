@@ -9,7 +9,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import net.shugo.medicineshield.R
 import net.shugo.medicineshield.data.model.DailyMedicationItem
 import net.shugo.medicineshield.data.model.DailyNote
 import net.shugo.medicineshield.data.model.MedicationIntakeStatus
@@ -36,6 +35,9 @@ class DailyMedicationViewModel(
 
     private val _displayDateText = MutableStateFlow("")
     val displayDateText: StateFlow<String> = _displayDateText.asStateFlow()
+
+    private val _isToday = MutableStateFlow(false)
+    val isToday: StateFlow<Boolean> = _isToday.asStateFlow()
 
     private val _dailyNote = MutableStateFlow<DailyNote?>(null)
     val dailyNote: StateFlow<DailyNote?> = _dailyNote.asStateFlow()
@@ -100,20 +102,15 @@ class DailyMedicationViewModel(
         // Get latest locale from current Configuration of Application
         val appContext = getApplication<Application>()
         val currentLocale = appContext.resources.configuration.locales[0]
-        val pattern = DateFormat.getBestDateTimePattern(currentLocale, "yMdE")
+        val pattern = DateFormat.getBestDateTimePattern(currentLocale, "MMMdEEE")
         val dateFormat = SimpleDateFormat(pattern, currentLocale)
 
         // Check if today
         val today = Calendar.getInstance()
-        val isToday = calendar.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
-                      calendar.get(Calendar.DAY_OF_YEAR) == today.get(Calendar.DAY_OF_YEAR)
+        _isToday.value = calendar.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
+                calendar.get(Calendar.DAY_OF_YEAR) == today.get(Calendar.DAY_OF_YEAR)
 
-        val dateText = dateFormat.format(calendar.time)
-        _displayDateText.value = if (isToday) {
-            appContext.getString(R.string.today_with_date, dateText)
-        } else {
-            dateText
-        }
+        _displayDateText.value = dateFormat.format(calendar.time)
     }
 
     fun onPreviousDay() {
