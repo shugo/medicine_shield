@@ -35,8 +35,8 @@ class ReminderNotificationReceiver : BroadcastReceiver() {
                 // Show reminder notification if there are any unchecked medications
                 if (medications.isNotEmpty()) {
                     val notificationHelper = NotificationHelper(context)
-                    val scheduler = NotificationScheduler.create(context, repository)
-                    val notificationId = scheduler.getNotificationIdForTime(time)
+                    val reminderScheduler = ReminderNotificationScheduler.create(context, repository)
+                    val notificationId = reminderScheduler.getNotificationIdForTime(time)
 
                     // Show reminder notification with all unchecked medications
                     notificationHelper.showReminderNotification(

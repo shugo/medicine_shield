@@ -41,7 +41,7 @@ class ReminderNotificationScheduler(
      * Uses offset to avoid conflicts with main notifications
      * Example: "09:00" -> 100900, "14:30" -> 101430
      */
-    private fun getNotificationIdForTime(time: String): Int {
+    fun getNotificationIdForTime(time: String): Int {
         val baseId = time.replace(":", "").toIntOrNull() ?: 0
         return REMINDER_NOTIFICATION_ID_OFFSET + baseId
     }
