@@ -207,10 +207,14 @@ class DailyMedicationViewModel(
         }
 
         if (allComplete) {
-            // Dismiss notification and cancel reminder for this time
+            // Dismiss main notification
             val notificationId = notificationScheduler.getNotificationIdForTime(time)
             notificationHelper.cancelNotification(notificationId)
+
+            // Cancel reminder notification (both scheduled alarm and displayed notification)
             reminderScheduler.cancelReminderNotification(time)
+            val reminderNotificationId = reminderScheduler.getNotificationIdForTime(time)
+            notificationHelper.cancelNotification(reminderNotificationId)
         }
     }
 
