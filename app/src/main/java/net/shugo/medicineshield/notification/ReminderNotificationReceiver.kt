@@ -16,10 +16,6 @@ class ReminderNotificationReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val time = intent.getStringExtra(ReminderNotificationScheduler.EXTRA_NOTIFICATION_TIME) ?: return
         val scheduledDate = intent.getStringExtra(ReminderNotificationScheduler.EXTRA_SCHEDULED_DATE) ?: return
-        val medicationId = intent.getLongExtra(ReminderNotificationScheduler.EXTRA_MEDICATION_ID, -1L)
-        val sequenceNumber = intent.getIntExtra(ReminderNotificationScheduler.EXTRA_SEQUENCE_NUMBER, -1)
-
-        if (medicationId == -1L || sequenceNumber == -1) return
 
         val pendingResult = goAsync()
 
@@ -38,22 +34,20 @@ class ReminderNotificationReceiver : BroadcastReceiver() {
                 // Get medications for the scheduled date
                 val items = repository.getMedications(scheduledDate).first()
 
-                // Find the specific medication
-                val medication = items.find {
-                    it.medicationId == medicationId &&
-                    it.sequenceNumber == sequenceNumber &&
-                    it.scheduledTime == time
-                }
+                // Get all UNCHECKED medications at the specified time
+                val medications = items.filter {
+                    it.scheduledTime == time && it.status == MedicationIntakeStatus.UNCHECKED
+                }.map { it.medicationName }
 
-                // Only show reminder if medication is still UNCHECKED
-                if (medication != null && medication.status == MedicationIntakeStatus.UNCHECKED) {
+                // Show reminder notification if there are any unchecked medications
+                if (medications.isNotEmpty()) {
                     val notificationHelper = NotificationHelper(context)
                     val scheduler = NotificationScheduler.create(context, repository)
                     val notificationId = scheduler.getNotificationIdForTime(time)
 
-                    // Show reminder notification
+                    // Show reminder notification with all unchecked medications
                     notificationHelper.showReminderNotification(
-                        medication.medicationName,
+                        medications,
                         time,
                         notificationId,
                         scheduledDate

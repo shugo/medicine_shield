@@ -113,17 +113,19 @@ class NotificationHelper(private val context: Context) {
     /**
      * Show reminder notification
      *
-     * @param medicationName Name of medication to remind
+     * @param medications List of medication names to remind
      * @param time Original scheduled time (HH:mm format)
      * @param notificationId Notification ID
      * @param scheduledDate Scheduled intake date (yyyy-MM-dd format)
      */
     fun showReminderNotification(
-        medicationName: String,
+        medications: List<String>,
         time: String,
         notificationId: Int,
         scheduledDate: String
     ) {
+        if (medications.isEmpty()) return
+
         // Intent when notification is tapped
         val intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
@@ -138,7 +140,12 @@ class NotificationHelper(private val context: Context) {
         )
 
         // Create notification message
-        val message = context.getString(R.string.reminder_notification_message, medicationName)
+        val message = if (medications.size == 1) {
+            context.getString(R.string.reminder_notification_message, medications[0])
+        } else {
+            val separator = context.getString(R.string.medication_list_separator)
+            context.getString(R.string.reminder_notification_message_multiple, medications.joinToString(separator))
+        }
 
         // Create notification
         val soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
