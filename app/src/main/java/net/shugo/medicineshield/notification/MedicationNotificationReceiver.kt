@@ -51,18 +51,9 @@ class MedicationNotificationReceiver : BroadcastReceiver() {
                         scheduledDate
                     )
 
-                    // Schedule reminder notifications for each unchecked medication
+                    // Schedule reminder notification for this time (once per time)
                     val reminderScheduler = ReminderNotificationScheduler.create(context, repository)
-                    items.filter {
-                        it.scheduledTime == time && it.status == MedicationIntakeStatus.UNCHECKED
-                    }.forEach { item ->
-                        reminderScheduler.scheduleReminderNotification(
-                            item.medicationId,
-                            item.sequenceNumber,
-                            scheduledDate,
-                            time
-                        )
-                    }
+                    reminderScheduler.scheduleReminderNotification(time, scheduledDate)
                 }
 
                 // Schedule next notification

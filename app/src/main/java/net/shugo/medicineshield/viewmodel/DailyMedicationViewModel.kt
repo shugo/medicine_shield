@@ -173,10 +173,9 @@ class DailyMedicationViewModel(
             // If marked as taken, check notification for that time
             if (willBeMarkedAsTaken && medication != null && !medication.isAsNeeded) {
                 checkAndDismissNotificationIfComplete(medication.scheduledTime, medicationId, sequenceNumber)
+                // Also check if reminder should be canceled
+                checkAndCancelReminderIfComplete(medication.scheduledTime, medicationId, sequenceNumber)
             }
-
-            // Cancel reminder notification when status changes (either taken or unchecked)
-            reminderScheduler.cancelReminderNotification(medicationId, sequenceNumber)
         }
     }
 
@@ -214,15 +213,55 @@ class DailyMedicationViewModel(
     }
 
     /**
+     * Cancel reminder notification if all medications at specified time are taken or canceled
+     *
+     * @param time Intake time (HH:mm format)
+     * @param justChangedMedId ID of medication just changed (for optimistic update)
+     * @param justChangedSeqNum Sequence number of medication just changed (for optimistic update)
+     */
+    private fun checkAndCancelReminderIfComplete(
+        time: String,
+        justChangedMedId: Long,
+        justChangedSeqNum: Int
+    ) {
+        // Get all scheduled medications at that time (excluding PRN)
+        val allMedsAtTime = _dailyMedications.value.filter {
+            it.scheduledTime == time && !it.isAsNeeded
+        }
+
+        // Check if all medications are taken or canceled
+        val allComplete = allMedsAtTime.all { med ->
+            if (med.medicationId == justChangedMedId && med.sequenceNumber == justChangedSeqNum) {
+                true // Assume just changed medication is taken or canceled
+            } else {
+                med.status == MedicationIntakeStatus.TAKEN ||
+                med.status == MedicationIntakeStatus.CANCELED
+            }
+        }
+
+        if (allMedsAtTime.isNotEmpty() && allComplete) {
+            // Cancel reminder notification for this time
+            reminderScheduler.cancelReminderNotification(time)
+        }
+    }
+
+    /**
      * Cancel medication intake
      */
     fun cancelMedication(medicationId: Long, sequenceNumber: Int) {
         viewModelScope.launch {
+            // Get information of corresponding medication
+            val medication = _dailyMedications.value.find {
+                it.medicationId == medicationId && it.sequenceNumber == sequenceNumber
+            }
+
             val dateString = DateUtils.formatIsoDate(_selectedDate.value)
             repository.cancelIntake(medicationId, sequenceNumber, dateString)
 
-            // Cancel reminder notification when medication is canceled
-            reminderScheduler.cancelReminderNotification(medicationId, sequenceNumber)
+            // Check if reminder should be canceled when medication is canceled
+            if (medication != null && !medication.isAsNeeded) {
+                checkAndCancelReminderIfComplete(medication.scheduledTime, medicationId, sequenceNumber)
+            }
         }
     }
 

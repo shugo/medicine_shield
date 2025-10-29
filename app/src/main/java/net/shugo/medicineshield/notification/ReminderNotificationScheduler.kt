@@ -18,9 +18,7 @@ class ReminderNotificationScheduler(
     companion object {
         const val EXTRA_NOTIFICATION_TIME = "notification_time"
         const val EXTRA_SCHEDULED_DATE = "scheduled_date"
-        const val EXTRA_MEDICATION_ID = "medication_id"
-        const val EXTRA_SEQUENCE_NUMBER = "sequence_number"
-        private const val REMINDER_REQUEST_CODE_BASE = 100000
+        private const val REMINDER_NOTIFICATION_ID_OFFSET = 100000
 
         /**
          * Factory function to create ReminderNotificationScheduler with default dependencies
@@ -39,21 +37,21 @@ class ReminderNotificationScheduler(
     }
 
     /**
-     * Generate reminder notification ID
-     * Uses a different range from main notifications to avoid conflicts
+     * Generate reminder notification ID from time
+     * Uses offset to avoid conflicts with main notifications
+     * Example: "09:00" -> 100900, "14:30" -> 101430
      */
-    private fun getReminderNotificationId(medicationId: Long, sequenceNumber: Int): Int {
-        return REMINDER_REQUEST_CODE_BASE + (medicationId.toInt() * 1000) + sequenceNumber
+    private fun getNotificationIdForTime(time: String): Int {
+        val baseId = time.replace(":", "").toIntOrNull() ?: 0
+        return REMINDER_NOTIFICATION_ID_OFFSET + baseId
     }
 
     /**
-     * Schedule reminder notification for a specific medication intake
+     * Schedule reminder notification for a specific time
      */
     suspend fun scheduleReminderNotification(
-        medicationId: Long,
-        sequenceNumber: Int,
-        scheduledDate: String,
-        scheduledTime: String
+        time: String,
+        scheduledDate: String
     ) = withContext(Dispatchers.IO) {
         // Check if reminders are enabled
         if (!settingsPreferences.isNotificationsEnabled() || !settingsPreferences.isReminderEnabled()) {
@@ -65,12 +63,10 @@ class ReminderNotificationScheduler(
         val triggerTime = System.currentTimeMillis() + (delayMinutes * 60 * 1000)
 
         // Create intent for reminder notification
-        val notificationId = getReminderNotificationId(medicationId, sequenceNumber)
+        val notificationId = getNotificationIdForTime(time)
         val intent = Intent(context, ReminderNotificationReceiver::class.java).apply {
-            putExtra(EXTRA_NOTIFICATION_TIME, scheduledTime)
+            putExtra(EXTRA_NOTIFICATION_TIME, time)
             putExtra(EXTRA_SCHEDULED_DATE, scheduledDate)
-            putExtra(EXTRA_MEDICATION_ID, medicationId)
-            putExtra(EXTRA_SEQUENCE_NUMBER, sequenceNumber)
         }
 
         val pendingIntent = pendingIntentFactory.createBroadcast(
@@ -85,10 +81,10 @@ class ReminderNotificationScheduler(
     }
 
     /**
-     * Cancel reminder notification for a specific medication intake
+     * Cancel reminder notification for a specific time
      */
-    fun cancelReminderNotification(medicationId: Long, sequenceNumber: Int) {
-        val notificationId = getReminderNotificationId(medicationId, sequenceNumber)
+    fun cancelReminderNotification(time: String) {
+        val notificationId = getNotificationIdForTime(time)
         val intent = Intent(context, ReminderNotificationReceiver::class.java)
         val pendingIntent = pendingIntentFactory.createBroadcast(
             context,
