@@ -102,6 +102,10 @@
     <string name="notification_settings">Paramètres de notification</string>
     <string name="enable_notifications">Activer les notifications</string>
     <string name="notification_description">Recevoir des rappels quand il est temps de prendre un médicament</string>
+    <string name="enable_reminder">Activer les notifications de rappel</string>
+    <string name="reminder_description">Envoyer un rappel si le médicament n\'est pas pris</string>
+    <string name="reminder_delay">Délai de rappel (minutes)</string>
+    <string name="reminder_delay_description">Temps d\'attente avant d\'envoyer le rappel</string>
     <string name="app_info">Informations sur l\'application</string>
     <string name="version">Version</string>
     <string name="license_info">Informations de licence</string>
@@ -117,6 +121,10 @@
     <string name="notification_message_single">Veuillez prendre %s</string>
     <string name="notification_message_multiple">Veuillez prendre %s</string>
     <string name="medication_list_separator">,&#160;</string>
+    <string name="reminder_channel_name">Notifications de rappel de médicament</string>
+    <string name="reminder_channel_description">Vous rappelle si le médicament n\'est pas pris</string>
+    <string name="reminder_notification_title">Rappel de médicament (%s)</string>
+    <string name="reminder_notification_message">Vous n\'avez pas encore pris %s</string>
 
     <!-- As-Needed Medication -->
     <string name="as_needed_medication">Si nécessaire</string>

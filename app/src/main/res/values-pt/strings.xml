@@ -102,6 +102,10 @@
     <string name="notification_settings">Definições de notificações</string>
     <string name="enable_notifications">Ativar notificações</string>
     <string name="notification_description">Receba lembretes quando for hora de tomar medicamentos</string>
+    <string name="enable_reminder">Ativar notificações de lembrete</string>
+    <string name="reminder_description">Enviar lembrete se o medicamento não for tomado</string>
+    <string name="reminder_delay">Atraso do lembrete (minutos)</string>
+    <string name="reminder_delay_description">Tempo de espera antes de enviar o lembrete</string>
     <string name="app_info">Informações da aplicação</string>
     <string name="version">Versão</string>
     <string name="license_info">Informações de licença</string>
@@ -117,6 +121,10 @@
     <string name="notification_message_single">Por favor tome %s</string>
     <string name="notification_message_multiple">Por favor tome %s</string>
     <string name="medication_list_separator">,&#160;</string>
+    <string name="reminder_channel_name">Notificações de lembrete de medicamento</string>
+    <string name="reminder_channel_description">Lembra-o se o medicamento não for tomado</string>
+    <string name="reminder_notification_title">Lembrete de medicamento (%s)</string>
+    <string name="reminder_notification_message">Ainda não tomou %s</string>
 
     <!-- As-Needed Medication -->
     <string name="as_needed_medication">Se necessário</string>

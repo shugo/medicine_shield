@@ -102,6 +102,10 @@
     <string name="notification_settings">알림 설정</string>
     <string name="enable_notifications">알림 사용</string>
     <string name="notification_description">복약 시각에 리마인더 받기</string>
+    <string name="enable_reminder">재알림 활성화</string>
+    <string name="reminder_description">복용하지 않은 경우 재알림 전송</string>
+    <string name="reminder_delay">재알림 대기 시간(분)</string>
+    <string name="reminder_delay_description">재알림을 보내기 전 대기 시간</string>
     <string name="app_info">앱 정보</string>
     <string name="version">버전</string>
     <string name="license_info">라이선스 정보</string>
@@ -117,6 +121,10 @@
     <string name="notification_message_single">%s 를 복용하세요</string>
     <string name="notification_message_multiple">%s 를 복용하세요</string>
     <string name="medication_list_separator">、</string>
+    <string name="reminder_channel_name">복약 재알림</string>
+    <string name="reminder_channel_description">복용하지 않은 경우 재알림을 보냅니다</string>
+    <string name="reminder_notification_title">복용 리마인더 (%s)</string>
+    <string name="reminder_notification_message">아직 %s 를 복용하지 않았습니다</string>
 
     <!-- As-Needed Medication -->
     <string name="as_needed_medication">임시 복용</string>
