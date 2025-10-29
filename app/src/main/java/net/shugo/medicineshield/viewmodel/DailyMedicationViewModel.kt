@@ -207,7 +207,8 @@ class DailyMedicationViewModel(
         }
 
         if (allComplete) {
-            // Dismiss main notification
+            // Cancel main notification (both scheduled alarm and displayed notification)
+            notificationScheduler.cancelNotificationForTime(time)
             val notificationId = notificationScheduler.getNotificationIdForTime(time)
             notificationHelper.cancelNotification(notificationId)
 
