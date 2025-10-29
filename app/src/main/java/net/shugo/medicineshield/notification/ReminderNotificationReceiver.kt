@@ -9,11 +9,11 @@ import kotlinx.coroutines.launch
 import net.shugo.medicineshield.data.database.AppDatabase
 import net.shugo.medicineshield.data.repository.MedicationRepository
 
-class MedicationNotificationReceiver : BroadcastReceiver() {
+class ReminderNotificationReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
-        val time = intent.getStringExtra(NotificationScheduler.EXTRA_NOTIFICATION_TIME) ?: return
-        val scheduledDate = intent.getStringExtra(NotificationScheduler.EXTRA_SCHEDULED_DATE) ?: return
+        val time = intent.getStringExtra(ReminderNotificationScheduler.EXTRA_NOTIFICATION_TIME) ?: return
+        val scheduledDate = intent.getStringExtra(ReminderNotificationScheduler.EXTRA_SCHEDULED_DATE) ?: return
 
         val pendingResult = goAsync()
 
@@ -32,27 +32,20 @@ class MedicationNotificationReceiver : BroadcastReceiver() {
                 // Get unchecked medications at the specified time
                 val medications = repository.getUncheckedMedicationNamesAtTime(scheduledDate, time)
 
-                // Create NotificationScheduler
-                val scheduler = NotificationScheduler.create(context, repository)
-
-                // Show notification
+                // Show reminder notification if there are any unchecked medications
                 if (medications.isNotEmpty()) {
                     val notificationHelper = NotificationHelper(context)
-                    val notificationId = scheduler.getNotificationIdForTime(time)
-                    notificationHelper.showMedicationNotification(
+                    val reminderScheduler = ReminderNotificationScheduler.create(context, repository)
+                    val notificationId = reminderScheduler.getNotificationIdForTime(time)
+
+                    // Show reminder notification with all unchecked medications
+                    notificationHelper.showReminderNotification(
                         medications,
                         time,
                         notificationId,
                         scheduledDate
                     )
-
-                    // Schedule reminder notification for this time (once per time)
-                    val reminderScheduler = ReminderNotificationScheduler.create(context, repository)
-                    reminderScheduler.scheduleReminderNotification(time, scheduledDate)
                 }
-
-                // Schedule next notification
-                scheduler.scheduleNextNotificationForTime(time)
 
             } finally {
                 pendingResult.finish()

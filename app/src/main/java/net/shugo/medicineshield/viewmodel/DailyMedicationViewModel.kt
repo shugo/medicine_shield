@@ -15,6 +15,7 @@ import net.shugo.medicineshield.data.model.MedicationIntakeStatus
 import net.shugo.medicineshield.data.repository.MedicationRepository
 import net.shugo.medicineshield.notification.NotificationHelper
 import net.shugo.medicineshield.notification.NotificationScheduler
+import net.shugo.medicineshield.notification.ReminderNotificationScheduler
 import net.shugo.medicineshield.utils.DateUtils
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -56,6 +57,9 @@ class DailyMedicationViewModel(
     private val notificationHelper = NotificationHelper(application.applicationContext)
     private val notificationScheduler by lazy {
         NotificationScheduler.create(application.applicationContext, repository)
+    }
+    private val reminderScheduler by lazy {
+        ReminderNotificationScheduler.create(application.applicationContext, repository)
     }
 
     init {
@@ -166,7 +170,7 @@ class DailyMedicationViewModel(
             val dateString = DateUtils.formatIsoDate(_selectedDate.value)
             repository.updateIntakeStatus(medicationId, sequenceNumber, !currentStatus, dateString)
 
-            // If marked as taken, check notification for that time
+            // If marked as taken, check notification and reminder for that time
             if (willBeMarkedAsTaken && medication != null && !medication.isAsNeeded) {
                 checkAndDismissNotificationIfComplete(medication.scheduledTime, medicationId, sequenceNumber)
             }
@@ -174,35 +178,44 @@ class DailyMedicationViewModel(
     }
 
     /**
-     * Dismiss notification if all medications at specified time are taken
+     * Dismiss notification and cancel reminder if all medications at specified time are complete
      *
      * @param time Intake time (HH:mm format)
-     * @param justToggledMedId ID of medication just toggled (for optimistic update)
-     * @param justToggledSeqNum Sequence number of medication just toggled (for optimistic update)
+     * @param justChangedMedId ID of medication just changed (for optimistic update)
+     * @param justChangedSeqNum Sequence number of medication just changed (for optimistic update)
      */
     private fun checkAndDismissNotificationIfComplete(
         time: String,
-        justToggledMedId: Long,
-        justToggledSeqNum: Int
+        justChangedMedId: Long,
+        justChangedSeqNum: Int
     ) {
         // Get all scheduled medications at that time (excluding PRN)
         val allMedsAtTime = _dailyMedications.value.filter {
             it.scheduledTime == time && !it.isAsNeeded
         }
 
-        // Check if all medications are taken (optimistic update: assume just toggled medication is taken)
-        val allTaken = allMedsAtTime.all { med ->
-            if (med.medicationId == justToggledMedId && med.sequenceNumber == justToggledSeqNum) {
-                true // Assume just toggled medication is taken
+        if (allMedsAtTime.isEmpty()) return
+
+        // Check if all medications are taken or canceled
+        val allComplete = allMedsAtTime.all { med ->
+            if (med.medicationId == justChangedMedId && med.sequenceNumber == justChangedSeqNum) {
+                true // Assume just changed medication is taken or canceled
             } else {
-                med.status == MedicationIntakeStatus.TAKEN
+                med.status == MedicationIntakeStatus.TAKEN ||
+                med.status == MedicationIntakeStatus.CANCELED
             }
         }
 
-        if (allMedsAtTime.isNotEmpty() && allTaken) {
-            // Calculate notification ID and dismiss notification
+        if (allComplete) {
+            // Cancel main notification (both scheduled alarm and displayed notification)
+            notificationScheduler.cancelNotificationForTime(time)
             val notificationId = notificationScheduler.getNotificationIdForTime(time)
             notificationHelper.cancelNotification(notificationId)
+
+            // Cancel reminder notification (both scheduled alarm and displayed notification)
+            reminderScheduler.cancelReminderNotification(time)
+            val reminderNotificationId = reminderScheduler.getNotificationIdForTime(time)
+            notificationHelper.cancelNotification(reminderNotificationId)
         }
     }
 
@@ -211,8 +224,18 @@ class DailyMedicationViewModel(
      */
     fun cancelMedication(medicationId: Long, sequenceNumber: Int) {
         viewModelScope.launch {
+            // Get information of corresponding medication
+            val medication = _dailyMedications.value.find {
+                it.medicationId == medicationId && it.sequenceNumber == sequenceNumber
+            }
+
             val dateString = DateUtils.formatIsoDate(_selectedDate.value)
             repository.cancelIntake(medicationId, sequenceNumber, dateString)
+
+            // Check if notification and reminder should be canceled when medication is canceled
+            if (medication != null && !medication.isAsNeeded) {
+                checkAndDismissNotificationIfComplete(medication.scheduledTime, medicationId, sequenceNumber)
+            }
         }
     }
 

@@ -102,6 +102,10 @@
     <string name="notification_settings">Notification Settings</string>
     <string name="enable_notifications">Enable Notifications</string>
     <string name="notification_description">Receive reminders when it\'s time to take medication</string>
+    <string name="enable_reminder">Enable Reminder Notifications</string>
+    <string name="reminder_description">Send reminder if medication is not taken</string>
+    <string name="reminder_delay">Reminder Delay (minutes)</string>
+    <string name="reminder_delay_description">Time to wait before sending reminder</string>
     <string name="app_info">App Information</string>
     <string name="version">Version</string>
     <string name="license_info">License Information</string>
@@ -117,6 +121,10 @@
     <string name="notification_message_single">Please take %s</string>
     <string name="notification_message_multiple">Please take %s</string>
     <string name="medication_list_separator">,&#160;</string>
+    <string name="reminder_channel_name">Medication Reminder Notifications</string>
+    <string name="reminder_channel_description">Reminds you if medication is not taken</string>
+    <string name="reminder_notification_title">Medication Reminder (%s)</string>
+    <string name="reminder_notification_message">You haven\'t taken %s yet</string>
 
     <!-- As-Needed Medication -->
     <string name="as_needed_medication">As Needed</string>

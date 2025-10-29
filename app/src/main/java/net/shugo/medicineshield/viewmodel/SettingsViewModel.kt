@@ -12,6 +12,7 @@ import kotlinx.coroutines.launch
 import net.shugo.medicineshield.data.preferences.SettingsPreferences
 import net.shugo.medicineshield.data.repository.MedicationRepository
 import net.shugo.medicineshield.notification.NotificationScheduler
+import net.shugo.medicineshield.notification.ReminderNotificationScheduler
 
 class SettingsViewModel(
     private val context: Context,
@@ -22,9 +23,18 @@ class SettingsViewModel(
     private val notificationScheduler by lazy {
         NotificationScheduler.create(context, repository)
     }
+    private val reminderScheduler by lazy {
+        ReminderNotificationScheduler.create(context, repository)
+    }
 
     private val _notificationsEnabled = MutableStateFlow(settingsPreferences.isNotificationsEnabled())
     val notificationsEnabled: StateFlow<Boolean> = _notificationsEnabled.asStateFlow()
+
+    private val _reminderEnabled = MutableStateFlow(settingsPreferences.isReminderEnabled())
+    val reminderEnabled: StateFlow<Boolean> = _reminderEnabled.asStateFlow()
+
+    private val _reminderDelayMinutes = MutableStateFlow(settingsPreferences.getReminderDelayMinutes())
+    val reminderDelayMinutes: StateFlow<Int> = _reminderDelayMinutes.asStateFlow()
 
     val appVersion: String by lazy {
         try {
@@ -63,6 +73,26 @@ class SettingsViewModel(
     }
 
     /**
+     * Toggle reminder notification enabled/disabled
+     */
+    fun setReminderEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsPreferences.setReminderEnabled(enabled)
+            _reminderEnabled.value = enabled
+        }
+    }
+
+    /**
+     * Set reminder delay in minutes
+     */
+    fun setReminderDelayMinutes(minutes: Int) {
+        viewModelScope.launch {
+            settingsPreferences.setReminderDelayMinutes(minutes)
+            _reminderDelayMinutes.value = minutes
+        }
+    }
+
+    /**
      * Cancel all scheduled notifications
      */
     private suspend fun cancelAllNotifications() {
@@ -78,6 +108,7 @@ class SettingsViewModel(
 
             allTimes.forEach { time ->
                 notificationScheduler.cancelNotificationForTime(time)
+                reminderScheduler.cancelReminderNotification(time)
             }
         }
 

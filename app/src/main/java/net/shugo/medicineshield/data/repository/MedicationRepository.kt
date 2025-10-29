@@ -2,6 +2,7 @@ package net.shugo.medicineshield.data.repository
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import net.shugo.medicineshield.data.dao.DailyNoteDao
 import net.shugo.medicineshield.data.dao.MedicationConfigDao
@@ -318,9 +319,13 @@ class MedicationRepository(
     /**
      * Retrieve the list of medications for the specified date
      */
-    fun getMedications(dateString: String): Flow<List<DailyMedicationItem>> {
+    fun getMedications(dateString: String, time: String? = null): Flow<List<DailyMedicationItem>> {
         val medications = medicationDao.getAllMedications()
-        val medicationTimes = medicationTimeDao.getAllTimesFlowOnDate(dateString)
+        val medicationTimes = if (time != null) {
+            medicationTimeDao.getAllTimesFlowAtDateTime(dateString, time)
+        } else {
+            medicationTimeDao.getAllTimesFlowOnDate(dateString)
+        }
         val medicationConfigs = medicationConfigDao.getAllConfigsFlowOnDate(dateString)
         val intakes = medicationIntakeDao.getIntakesByDate(dateString)
 
@@ -347,8 +352,8 @@ class MedicationRepository(
                 val validConfig = medicationWithTimes.config
 
                 if (validConfig != null && shouldTakeMedication(validConfig, targetDate)) {
-                    if (validConfig.isAsNeeded) {
-                        // PRN medication processing
+                    if (validConfig.isAsNeeded && time == null) {
+                        // PRN medication processing (only when time is not specified)
                         // Retrieve all taken records for that day
                         val takenIntakes = intakeList.filter {
                             it.medicationId == medication.id && it.takenAt != null
@@ -734,5 +739,24 @@ class MedicationRepository(
             // When canceling the cancellation, delete the record itself to return to unchecked state
             medicationIntakeDao.delete(existingIntake)
         }
+    }
+
+    /**
+     * Get list of unchecked medication names at specified time
+     * Used for notification and reminder display
+     *
+     * @param scheduledDate Date string (yyyy-MM-dd format)
+     * @param time Time string (HH:mm format)
+     * @return List of medication names that are UNCHECKED at the specified time (PRN medications excluded)
+     */
+    suspend fun getUncheckedMedicationNamesAtTime(
+        scheduledDate: String,
+        time: String
+    ): List<String> {
+        // getMedications with time parameter already excludes PRN medications
+        val items = getMedications(scheduledDate, time).first()
+        return items.filter {
+            it.status == MedicationIntakeStatus.UNCHECKED
+        }.map { it.medicationName }
     }
 }

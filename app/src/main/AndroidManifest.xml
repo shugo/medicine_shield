@@ -27,6 +27,10 @@
             android:exported="false" />
 
         <receiver
+            android:name=".notification.ReminderNotificationReceiver"
+            android:exported="false" />
+
+        <receiver
             android:name=".notification.DailyRefreshReceiver"
             android:exported="false" />
 
