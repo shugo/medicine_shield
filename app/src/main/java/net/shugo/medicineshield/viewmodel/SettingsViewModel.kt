@@ -12,6 +12,7 @@ import kotlinx.coroutines.launch
 import net.shugo.medicineshield.data.preferences.SettingsPreferences
 import net.shugo.medicineshield.data.repository.MedicationRepository
 import net.shugo.medicineshield.notification.NotificationScheduler
+import net.shugo.medicineshield.notification.ReminderNotificationScheduler
 
 class SettingsViewModel(
     private val context: Context,
@@ -21,6 +22,9 @@ class SettingsViewModel(
     private val settingsPreferences = SettingsPreferences(context)
     private val notificationScheduler by lazy {
         NotificationScheduler.create(context, repository)
+    }
+    private val reminderScheduler by lazy {
+        ReminderNotificationScheduler.create(context, repository)
     }
 
     private val _notificationsEnabled = MutableStateFlow(settingsPreferences.isNotificationsEnabled())
@@ -104,6 +108,7 @@ class SettingsViewModel(
 
             allTimes.forEach { time ->
                 notificationScheduler.cancelNotificationForTime(time)
+                reminderScheduler.cancelReminderNotification(time)
             }
         }
 
