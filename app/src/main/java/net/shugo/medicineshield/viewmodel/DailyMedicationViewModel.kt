@@ -196,21 +196,6 @@ class DailyMedicationViewModel(
 
         if (allMedsAtTime.isEmpty()) return
 
-        // Check if all medications are taken (optimistic update: assume just changed medication is taken)
-        val allTaken = allMedsAtTime.all { med ->
-            if (med.medicationId == justChangedMedId && med.sequenceNumber == justChangedSeqNum) {
-                true // Assume just changed medication is taken
-            } else {
-                med.status == MedicationIntakeStatus.TAKEN
-            }
-        }
-
-        if (allTaken) {
-            // Calculate notification ID and dismiss notification
-            val notificationId = notificationScheduler.getNotificationIdForTime(time)
-            notificationHelper.cancelNotification(notificationId)
-        }
-
         // Check if all medications are taken or canceled
         val allComplete = allMedsAtTime.all { med ->
             if (med.medicationId == justChangedMedId && med.sequenceNumber == justChangedSeqNum) {
@@ -222,7 +207,9 @@ class DailyMedicationViewModel(
         }
 
         if (allComplete) {
-            // Cancel reminder notification for this time
+            // Dismiss notification and cancel reminder for this time
+            val notificationId = notificationScheduler.getNotificationIdForTime(time)
+            notificationHelper.cancelNotification(notificationId)
             reminderScheduler.cancelReminderNotification(time)
         }
     }
