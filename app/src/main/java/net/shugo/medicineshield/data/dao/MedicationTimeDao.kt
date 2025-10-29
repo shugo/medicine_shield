@@ -25,6 +25,17 @@ interface MedicationTimeDao {
     fun getAllTimesFlowOnDate(targetDate: String): Flow<List<MedicationTime>>
 
     /**
+     * Monitor times at specific date and time (detect changes via Flow)
+     */
+    @Query("""
+        SELECT * FROM medication_times
+        WHERE validFrom <= :targetDate
+        AND validTo > :targetDate
+        AND time = :targetTime
+    """)
+    fun getAllTimesFlowAtDateTime(targetDate: String, targetTime: String): Flow<List<MedicationTime>>
+
+    /**
      * Get currently valid times (validTo > today)
      */
     @Query("""

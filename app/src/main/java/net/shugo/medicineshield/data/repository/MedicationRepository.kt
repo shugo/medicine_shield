@@ -319,9 +319,13 @@ class MedicationRepository(
     /**
      * Retrieve the list of medications for the specified date
      */
-    fun getMedications(dateString: String): Flow<List<DailyMedicationItem>> {
+    fun getMedications(dateString: String, time: String? = null): Flow<List<DailyMedicationItem>> {
         val medications = medicationDao.getAllMedications()
-        val medicationTimes = medicationTimeDao.getAllTimesFlowOnDate(dateString)
+        val medicationTimes = if (time != null) {
+            medicationTimeDao.getAllTimesFlowAtDateTime(dateString, time)
+        } else {
+            medicationTimeDao.getAllTimesFlowOnDate(dateString)
+        }
         val medicationConfigs = medicationConfigDao.getAllConfigsFlowOnDate(dateString)
         val intakes = medicationIntakeDao.getIntakesByDate(dateString)
 
@@ -749,9 +753,9 @@ class MedicationRepository(
         scheduledDate: String,
         time: String
     ): List<String> {
-        val items = getMedications(scheduledDate).first()
+        val items = getMedications(scheduledDate, time).first()
         return items.filter {
-            it.scheduledTime == time && it.status == MedicationIntakeStatus.UNCHECKED
+            it.status == MedicationIntakeStatus.UNCHECKED
         }.map { it.medicationName }
     }
 }
