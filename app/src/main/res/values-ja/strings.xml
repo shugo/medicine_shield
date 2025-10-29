@@ -125,7 +125,6 @@
     <string name="reminder_channel_description">服用されなかった場合に再度通知します</string>
     <string name="reminder_notification_title">服用リマインダー (%s)</string>
     <string name="reminder_notification_message">まだ %s を服用していません</string>
-    <string name="reminder_notification_message_multiple">まだ %s を服用していません</string>
 
     <!-- As-Needed Medication -->
     <string name="as_needed_medication">頓服</string>

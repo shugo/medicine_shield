@@ -140,12 +140,9 @@ class NotificationHelper(private val context: Context) {
         )
 
         // Create notification message
-        val message = if (medications.size == 1) {
-            context.getString(R.string.reminder_notification_message, medications[0])
-        } else {
-            val separator = context.getString(R.string.medication_list_separator)
-            context.getString(R.string.reminder_notification_message_multiple, medications.joinToString(separator))
-        }
+        val separator = context.getString(R.string.medication_list_separator)
+        val medicationList = medications.joinToString(separator)
+        val message = context.getString(R.string.reminder_notification_message, medicationList)
 
         // Create notification
         val soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
