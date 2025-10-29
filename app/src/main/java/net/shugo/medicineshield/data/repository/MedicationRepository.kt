@@ -352,8 +352,8 @@ class MedicationRepository(
                 val validConfig = medicationWithTimes.config
 
                 if (validConfig != null && shouldTakeMedication(validConfig, targetDate)) {
-                    if (validConfig.isAsNeeded) {
-                        // PRN medication processing
+                    if (validConfig.isAsNeeded && time == null) {
+                        // PRN medication processing (only when time is not specified)
                         // Retrieve all taken records for that day
                         val takenIntakes = intakeList.filter {
                             it.medicationId == medication.id && it.takenAt != null
@@ -747,12 +747,13 @@ class MedicationRepository(
      *
      * @param scheduledDate Date string (yyyy-MM-dd format)
      * @param time Time string (HH:mm format)
-     * @return List of medication names that are UNCHECKED at the specified time
+     * @return List of medication names that are UNCHECKED at the specified time (PRN medications excluded)
      */
     suspend fun getUncheckedMedicationNamesAtTime(
         scheduledDate: String,
         time: String
     ): List<String> {
+        // getMedications with time parameter already excludes PRN medications
         val items = getMedications(scheduledDate, time).first()
         return items.filter {
             it.status == MedicationIntakeStatus.UNCHECKED
