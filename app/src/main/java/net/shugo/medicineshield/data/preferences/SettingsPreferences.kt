@@ -17,6 +17,8 @@ class SettingsPreferences(context: Context) {
         private const val DEFAULT_REMINDER_ENABLED = false
         private const val KEY_REMINDER_DELAY_MINUTES = "reminder_delay_minutes"
         private const val DEFAULT_REMINDER_DELAY_MINUTES = 30
+
+        const val MAX_REMINDER_DELAY_MINUTES = 1440 // 24 hours
     }
 
     /**

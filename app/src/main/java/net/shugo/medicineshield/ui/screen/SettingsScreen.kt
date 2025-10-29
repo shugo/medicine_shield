@@ -43,6 +43,7 @@ import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import net.shugo.medicineshield.R
+import net.shugo.medicineshield.data.preferences.SettingsPreferences
 import net.shugo.medicineshield.viewmodel.SettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -194,14 +195,14 @@ fun SettingsScreen(
                                     onValueChange = { newValue ->
                                         reminderDelayText = newValue
                                         val minutes = newValue.toIntOrNull()
-                                        if (minutes != null && minutes > 0 && minutes <= 1440) {
+                                        if (minutes != null && minutes > 0 && minutes <= SettingsPreferences.MAX_REMINDER_DELAY_MINUTES) {
                                             viewModel.setReminderDelayMinutes(minutes)
                                         }
                                     },
                                     modifier = Modifier.width(150.dp),
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                     singleLine = true,
-                                    isError = reminderDelayText.toIntOrNull()?.let { it <= 0 || it > 1440 } ?: true
+                                    isError = reminderDelayText.toIntOrNull()?.let { it <= 0 || it > SettingsPreferences.MAX_REMINDER_DELAY_MINUTES } ?: true
                                 )
                             }
                         }
