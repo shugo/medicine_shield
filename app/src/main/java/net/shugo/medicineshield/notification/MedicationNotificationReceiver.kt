@@ -5,10 +5,8 @@ import android.content.Context
 import android.content.Intent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import net.shugo.medicineshield.data.database.AppDatabase
-import net.shugo.medicineshield.data.model.MedicationIntakeStatus
 import net.shugo.medicineshield.data.repository.MedicationRepository
 
 class MedicationNotificationReceiver : BroadcastReceiver() {
@@ -31,11 +29,8 @@ class MedicationNotificationReceiver : BroadcastReceiver() {
                     database.dailyNoteDao()
                 )
 
-                // Get medications for the scheduled date
-                val items = repository.getMedications(scheduledDate).first()
-                val medications = items.filter {
-                    it.scheduledTime == time && it.status != MedicationIntakeStatus.TAKEN
-                }.map { it.medicationName }
+                // Get unchecked medications at the specified time
+                val medications = repository.getUncheckedMedicationNamesAtTime(scheduledDate, time)
 
                 // Create NotificationScheduler
                 val scheduler = NotificationScheduler.create(context, repository)

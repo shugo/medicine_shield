@@ -2,6 +2,7 @@ package net.shugo.medicineshield.data.repository
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import net.shugo.medicineshield.data.dao.DailyNoteDao
 import net.shugo.medicineshield.data.dao.MedicationConfigDao
@@ -734,5 +735,23 @@ class MedicationRepository(
             // When canceling the cancellation, delete the record itself to return to unchecked state
             medicationIntakeDao.delete(existingIntake)
         }
+    }
+
+    /**
+     * Get list of unchecked medication names at specified time
+     * Used for notification and reminder display
+     *
+     * @param scheduledDate Date string (yyyy-MM-dd format)
+     * @param time Time string (HH:mm format)
+     * @return List of medication names that are UNCHECKED at the specified time
+     */
+    suspend fun getUncheckedMedicationNamesAtTime(
+        scheduledDate: String,
+        time: String
+    ): List<String> {
+        val items = getMedications(scheduledDate).first()
+        return items.filter {
+            it.scheduledTime == time && it.status == MedicationIntakeStatus.UNCHECKED
+        }.map { it.medicationName }
     }
 }

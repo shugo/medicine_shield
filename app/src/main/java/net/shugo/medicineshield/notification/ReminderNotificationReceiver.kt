@@ -5,10 +5,8 @@ import android.content.Context
 import android.content.Intent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import net.shugo.medicineshield.data.database.AppDatabase
-import net.shugo.medicineshield.data.model.MedicationIntakeStatus
 import net.shugo.medicineshield.data.repository.MedicationRepository
 
 class ReminderNotificationReceiver : BroadcastReceiver() {
@@ -31,13 +29,8 @@ class ReminderNotificationReceiver : BroadcastReceiver() {
                     database.dailyNoteDao()
                 )
 
-                // Get medications for the scheduled date
-                val items = repository.getMedications(scheduledDate).first()
-
-                // Get all UNCHECKED medications at the specified time
-                val medications = items.filter {
-                    it.scheduledTime == time && it.status == MedicationIntakeStatus.UNCHECKED
-                }.map { it.medicationName }
+                // Get unchecked medications at the specified time
+                val medications = repository.getUncheckedMedicationNamesAtTime(scheduledDate, time)
 
                 // Show reminder notification if there are any unchecked medications
                 if (medications.isNotEmpty()) {
