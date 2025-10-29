@@ -26,6 +26,12 @@ class SettingsViewModel(
     private val _notificationsEnabled = MutableStateFlow(settingsPreferences.isNotificationsEnabled())
     val notificationsEnabled: StateFlow<Boolean> = _notificationsEnabled.asStateFlow()
 
+    private val _reminderEnabled = MutableStateFlow(settingsPreferences.isReminderEnabled())
+    val reminderEnabled: StateFlow<Boolean> = _reminderEnabled.asStateFlow()
+
+    private val _reminderDelayMinutes = MutableStateFlow(settingsPreferences.getReminderDelayMinutes())
+    val reminderDelayMinutes: StateFlow<Int> = _reminderDelayMinutes.asStateFlow()
+
     val appVersion: String by lazy {
         try {
             val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -59,6 +65,26 @@ class SettingsViewModel(
                 // Cancel all notifications
                 cancelAllNotifications()
             }
+        }
+    }
+
+    /**
+     * Toggle reminder notification enabled/disabled
+     */
+    fun setReminderEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsPreferences.setReminderEnabled(enabled)
+            _reminderEnabled.value = enabled
+        }
+    }
+
+    /**
+     * Set reminder delay in minutes
+     */
+    fun setReminderDelayMinutes(minutes: Int) {
+        viewModelScope.launch {
+            settingsPreferences.setReminderDelayMinutes(minutes)
+            _reminderDelayMinutes.value = minutes
         }
     }
 

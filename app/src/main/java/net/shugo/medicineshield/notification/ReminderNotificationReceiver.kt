@@ -11,11 +11,15 @@ import net.shugo.medicineshield.data.database.AppDatabase
 import net.shugo.medicineshield.data.model.MedicationIntakeStatus
 import net.shugo.medicineshield.data.repository.MedicationRepository
 
-class MedicationNotificationReceiver : BroadcastReceiver() {
+class ReminderNotificationReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
-        val time = intent.getStringExtra(NotificationScheduler.EXTRA_NOTIFICATION_TIME) ?: return
-        val scheduledDate = intent.getStringExtra(NotificationScheduler.EXTRA_SCHEDULED_DATE) ?: return
+        val time = intent.getStringExtra(ReminderNotificationScheduler.EXTRA_NOTIFICATION_TIME) ?: return
+        val scheduledDate = intent.getStringExtra(ReminderNotificationScheduler.EXTRA_SCHEDULED_DATE) ?: return
+        val medicationId = intent.getLongExtra(ReminderNotificationScheduler.EXTRA_MEDICATION_ID, -1L)
+        val sequenceNumber = intent.getIntExtra(ReminderNotificationScheduler.EXTRA_SEQUENCE_NUMBER, -1)
+
+        if (medicationId == -1L || sequenceNumber == -1) return
 
         val pendingResult = goAsync()
 
@@ -33,40 +37,28 @@ class MedicationNotificationReceiver : BroadcastReceiver() {
 
                 // Get medications for the scheduled date
                 val items = repository.getMedications(scheduledDate).first()
-                val medications = items.filter {
-                    it.scheduledTime == time && it.status != MedicationIntakeStatus.TAKEN
-                }.map { it.medicationName }
 
-                // Create NotificationScheduler
-                val scheduler = NotificationScheduler.create(context, repository)
+                // Find the specific medication
+                val medication = items.find {
+                    it.medicationId == medicationId &&
+                    it.sequenceNumber == sequenceNumber &&
+                    it.scheduledTime == time
+                }
 
-                // Show notification
-                if (medications.isNotEmpty()) {
+                // Only show reminder if medication is still UNCHECKED
+                if (medication != null && medication.status == MedicationIntakeStatus.UNCHECKED) {
                     val notificationHelper = NotificationHelper(context)
+                    val scheduler = NotificationScheduler.create(context, repository)
                     val notificationId = scheduler.getNotificationIdForTime(time)
-                    notificationHelper.showMedicationNotification(
-                        medications,
+
+                    // Show reminder notification
+                    notificationHelper.showReminderNotification(
+                        medication.medicationName,
                         time,
                         notificationId,
                         scheduledDate
                     )
-
-                    // Schedule reminder notifications for each unchecked medication
-                    val reminderScheduler = ReminderNotificationScheduler.create(context, repository)
-                    items.filter {
-                        it.scheduledTime == time && it.status == MedicationIntakeStatus.UNCHECKED
-                    }.forEach { item ->
-                        reminderScheduler.scheduleReminderNotification(
-                            item.medicationId,
-                            item.sequenceNumber,
-                            scheduledDate,
-                            time
-                        )
-                    }
                 }
-
-                // Schedule next notification
-                scheduler.scheduleNextNotificationForTime(time)
 
             } finally {
                 pendingResult.finish()

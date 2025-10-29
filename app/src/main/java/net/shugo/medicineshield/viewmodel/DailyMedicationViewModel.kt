@@ -15,6 +15,7 @@ import net.shugo.medicineshield.data.model.MedicationIntakeStatus
 import net.shugo.medicineshield.data.repository.MedicationRepository
 import net.shugo.medicineshield.notification.NotificationHelper
 import net.shugo.medicineshield.notification.NotificationScheduler
+import net.shugo.medicineshield.notification.ReminderNotificationScheduler
 import net.shugo.medicineshield.utils.DateUtils
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -56,6 +57,9 @@ class DailyMedicationViewModel(
     private val notificationHelper = NotificationHelper(application.applicationContext)
     private val notificationScheduler by lazy {
         NotificationScheduler.create(application.applicationContext, repository)
+    }
+    private val reminderScheduler by lazy {
+        ReminderNotificationScheduler.create(application.applicationContext, repository)
     }
 
     init {
@@ -170,6 +174,9 @@ class DailyMedicationViewModel(
             if (willBeMarkedAsTaken && medication != null && !medication.isAsNeeded) {
                 checkAndDismissNotificationIfComplete(medication.scheduledTime, medicationId, sequenceNumber)
             }
+
+            // Cancel reminder notification when status changes (either taken or unchecked)
+            reminderScheduler.cancelReminderNotification(medicationId, sequenceNumber)
         }
     }
 
@@ -213,6 +220,9 @@ class DailyMedicationViewModel(
         viewModelScope.launch {
             val dateString = DateUtils.formatIsoDate(_selectedDate.value)
             repository.cancelIntake(medicationId, sequenceNumber, dateString)
+
+            // Cancel reminder notification when medication is canceled
+            reminderScheduler.cancelReminderNotification(medicationId, sequenceNumber)
         }
     }
 
