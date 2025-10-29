@@ -102,6 +102,10 @@
     <string name="notification_settings">通知设置</string>
     <string name="enable_notifications">启用通知</string>
     <string name="notification_description">在服药时间接收提醒</string>
+    <string name="enable_reminder">启用再次提醒通知</string>
+    <string name="reminder_description">如果未服药则发送提醒</string>
+    <string name="reminder_delay">提醒延迟（分钟）</string>
+    <string name="reminder_delay_description">发送提醒前的等待时间</string>
     <string name="app_info">应用信息</string>
     <string name="version">版本</string>
     <string name="license_info">许可证信息</string>
@@ -117,6 +121,10 @@
     <string name="notification_message_single">请服用 %s</string>
     <string name="notification_message_multiple">请服用 %s</string>
     <string name="medication_list_separator">、</string>
+    <string name="reminder_channel_name">服药再次提醒通知</string>
+    <string name="reminder_channel_description">如果未服药则提醒您</string>
+    <string name="reminder_notification_title">服药提醒 (%s)</string>
+    <string name="reminder_notification_message">您还没有服用 %s</string>
 
     <!-- As-Needed Medication -->
     <string name="as_needed_medication">临时用药</string>

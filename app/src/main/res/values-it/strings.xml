@@ -102,6 +102,10 @@
     <string name="notification_settings">Impostazioni notifiche</string>
     <string name="enable_notifications">Abilita notifiche</string>
     <string name="notification_description">Ricevi promemoria quando è ora di prendere i farmaci</string>
+    <string name="enable_reminder">Abilita notifiche promemoria</string>
+    <string name="reminder_description">Invia promemoria se il farmaco non è stato preso</string>
+    <string name="reminder_delay">Ritardo promemoria (minuti)</string>
+    <string name="reminder_delay_description">Tempo di attesa prima di inviare il promemoria</string>
     <string name="app_info">Informazioni app</string>
     <string name="version">Versione</string>
     <string name="license_info">Informazioni licenza</string>
@@ -117,6 +121,10 @@
     <string name="notification_message_single">Per favore prendi %s</string>
     <string name="notification_message_multiple">Per favore prendi %s</string>
     <string name="medication_list_separator">,&#160;</string>
+    <string name="reminder_channel_name">Notifiche promemoria farmaci</string>
+    <string name="reminder_channel_description">Ti ricorda se il farmaco non è stato preso</string>
+    <string name="reminder_notification_title">Promemoria farmaco (%s)</string>
+    <string name="reminder_notification_message">Non hai ancora preso %s</string>
 
     <!-- As-Needed Medication -->
     <string name="as_needed_medication">Al bisogno</string>

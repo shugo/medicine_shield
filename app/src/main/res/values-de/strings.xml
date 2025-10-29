@@ -102,6 +102,10 @@
     <string name="notification_settings">Benachrichtigungseinstellungen</string>
     <string name="enable_notifications">Benachrichtigungen aktivieren</string>
     <string name="notification_description">Erinnerungen erhalten, wenn es Zeit ist, Medikamente einzunehmen</string>
+    <string name="enable_reminder">Erinnerungs-Benachrichtigungen aktivieren</string>
+    <string name="reminder_description">Erinnerung senden, wenn Medikament nicht eingenommen wurde</string>
+    <string name="reminder_delay">Erinnerungsverzögerung (Minuten)</string>
+    <string name="reminder_delay_description">Wartezeit vor dem Senden der Erinnerung</string>
     <string name="app_info">App-Informationen</string>
     <string name="version">Version</string>
     <string name="license_info">Lizenzinformationen</string>
@@ -117,6 +121,10 @@
     <string name="notification_message_single">Bitte nehmen Sie %s ein</string>
     <string name="notification_message_multiple">Bitte nehmen Sie %s ein</string>
     <string name="medication_list_separator">,&#160;</string>
+    <string name="reminder_channel_name">Medikamenten-Erinnerungsbenachrichtigungen</string>
+    <string name="reminder_channel_description">Erinnert Sie, wenn Medikamente nicht eingenommen wurden</string>
+    <string name="reminder_notification_title">Medikamenten-Erinnerung (%s)</string>
+    <string name="reminder_notification_message">Sie haben %s noch nicht eingenommen</string>
 
     <!-- As-Needed Medication -->
     <string name="as_needed_medication">Bei Bedarf</string>
