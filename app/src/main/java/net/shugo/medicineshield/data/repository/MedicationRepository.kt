@@ -233,7 +233,7 @@ class MedicationRepository(
         val timesToEnd = currentTimes.filter { it.sequenceNumber !in newMap }
         timesToEnd.forEach { oldTime ->
             // Check if today's MedicationIntake exists
-            val todayIntake = medicationIntakeDao.getIntakeByMedicationAndDateTime(
+            val todayIntake = medicationIntakeDao.getIntakeByMedicationAndDateAndSeq(
                 medicationId, today, oldTime.sequenceNumber
             )
 
@@ -445,7 +445,7 @@ class MedicationRepository(
         isTaken: Boolean,
         scheduledDate: String = getCurrentDateString()
     ) {
-        val existingIntake = medicationIntakeDao.getIntakeByMedicationAndDateTime(
+        val existingIntake = medicationIntakeDao.getIntakeByMedicationAndDateAndSeq(
             medicationId, scheduledDate, sequenceNumber
         )
 
@@ -590,7 +590,7 @@ class MedicationRepository(
         sequenceNumber: Int,
         scheduledDate: String = getCurrentDateString()
     ) {
-        val intake = medicationIntakeDao.getIntakeByMedicationAndDateTime(
+        val intake = medicationIntakeDao.getIntakeByMedicationAndDateAndSeq(
             medicationId, scheduledDate, sequenceNumber
         )
         if (intake != null) {
@@ -607,7 +607,7 @@ class MedicationRepository(
         newTakenAt: String,  // HH:mm format
         scheduledDate: String = getCurrentDateString()
     ) {
-        val existingIntake = medicationIntakeDao.getIntakeByMedicationAndDateTime(
+        val existingIntake = medicationIntakeDao.getIntakeByMedicationAndDateAndSeq(
             medicationId, scheduledDate, sequenceNumber
         )
         if (existingIntake != null) {
@@ -696,7 +696,7 @@ class MedicationRepository(
         sequenceNumber: Int,
         scheduledDate: String = getCurrentDateString()
     ) {
-        val existingIntake = medicationIntakeDao.getIntakeByMedicationAndDateTime(
+        val existingIntake = medicationIntakeDao.getIntakeByMedicationAndDateAndSeq(
             medicationId, scheduledDate, sequenceNumber
         )
 
@@ -731,7 +731,7 @@ class MedicationRepository(
         sequenceNumber: Int,
         scheduledDate: String = getCurrentDateString()
     ) {
-        val existingIntake = medicationIntakeDao.getIntakeByMedicationAndDateTime(
+        val existingIntake = medicationIntakeDao.getIntakeByMedicationAndDateAndSeq(
             medicationId, scheduledDate, sequenceNumber
         )
 
