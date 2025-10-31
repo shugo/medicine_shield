@@ -34,8 +34,8 @@
     <string name="medication_times_label">服用時間: %s</string>
     <string name="cycle_label">サイクル: %s</string>
     <string name="period_label">期間: %s</string>
-    <string name="period_no_end">%s 〜</string>
-    <string name="period_with_end">%s 〜 %s</string>
+    <string name="period_no_end">%s～</string>
+    <string name="period_with_end">%1$s～%2$s</string>
 
     <!-- Medication Form Screen -->
     <string name="add_medication_title">お薬を追加</string>
@@ -80,7 +80,7 @@
     <string name="dose_unit_puff">吸入</string>
     <string name="dose_unit_app">回</string>
     <string name="dose_unit_custom">カスタム</string>
-    <string name="dose_format">× %s%s</string>
+    <string name="dose_format">× %1$s%2$s</string>
 
     <!-- Cycle Descriptions -->
     <string name="cycle_daily_full">毎日</string>
@@ -155,7 +155,7 @@
     <string name="error_invalid_end_date">終了日は開始日より後に設定してください</string>
     <string name="error_no_days_selected">少なくとも1つの曜日を選択してください</string>
     <string name="error_invalid_interval">1以上の日数を入力してください</string>
-    <string name="error_invalid_dose">%.1f〜%.1fの範囲の数値を入力してください</string>
+    <string name="error_invalid_dose">%1$.1f〜%2$.1fの範囲の数値を入力してください</string>
     <string name="error_invalid_start_date_past">編集時は開始日を過去の日付に変更できません</string>
     <string name="error_form_has_errors">入力内容に誤りがあります。上記の項目を確認してください。</string>
 </resources>

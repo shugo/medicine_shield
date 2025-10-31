@@ -34,8 +34,8 @@
     <string name="medication_times_label">복용 시간: %s</string>
     <string name="cycle_label">주기: %s</string>
     <string name="period_label">기간: %s</string>
-    <string name="period_no_end">%s 〜</string>
-    <string name="period_with_end">%s 〜 %s</string>
+    <string name="period_no_end">%s～</string>
+    <string name="period_with_end">%1$s～%2$s</string>
 
     <!-- Medication Form Screen -->
     <string name="add_medication_title">약 추가</string>
@@ -80,7 +80,7 @@
     <string name="dose_unit_puff">회</string>
     <string name="dose_unit_app">회</string>
     <string name="dose_unit_custom">사용자 지정</string>
-    <string name="dose_format">× %s%s</string>
+    <string name="dose_format">× %1$s%2$s</string>
 
     <!-- Cycle Descriptions -->
     <string name="cycle_daily_full">매일</string>
@@ -155,7 +155,7 @@
     <string name="error_invalid_end_date">종료일은 시작일보다 나중으로 설정하세요</string>
     <string name="error_no_days_selected">최소 1개의 요일을 선택하세요</string>
     <string name="error_invalid_interval">1 이상의 일수를 입력하세요</string>
-    <string name="error_invalid_dose">%.1f〜%.1f 범위의 숫자를 입력하세요</string>
+    <string name="error_invalid_dose">%1$.1f〜%2$.1f 범위의 숫자를 입력하세요</string>
     <string name="error_invalid_start_date_past">편집 시 시작일을 과거 날짜로 변경할 수 없습니다</string>
     <string name="error_form_has_errors">입력 내용에 오류가 있습니다. 위의 항목을 확인하세요.</string>
 </resources>

@@ -34,8 +34,8 @@
     <string name="medication_times_label">Horarios: %s</string>
     <string name="cycle_label">Ciclo: %s</string>
     <string name="period_label">Período: %s</string>
-    <string name="period_no_end">%s ~</string>
-    <string name="period_with_end">%s ~ %s</string>
+    <string name="period_no_end">%s -</string>
+    <string name="period_with_end">%1$s - %2$s</string>
 
     <!-- Medication Form Screen -->
     <string name="add_medication_title">Agregar medicamento</string>
@@ -80,7 +80,7 @@
     <string name="dose_unit_puff">inh.</string>
     <string name="dose_unit_app">aplic.</string>
     <string name="dose_unit_custom">Personalizado</string>
-    <string name="dose_format">× %s %s</string>
+    <string name="dose_format">× %1$s %2$s</string>
 
     <!-- Cycle Descriptions -->
     <string name="cycle_daily_full">Diario</string>
@@ -155,7 +155,7 @@
     <string name="error_invalid_end_date">La fecha de fin debe ser posterior a la fecha de inicio</string>
     <string name="error_no_days_selected">Por favor seleccione al menos un día</string>
     <string name="error_invalid_interval">Por favor ingrese un número de días mayor o igual a 1</string>
-    <string name="error_invalid_dose">Por favor ingrese un número en el rango de %.1f a %.1f.</string>
+    <string name="error_invalid_dose">Por favor ingrese un número en el rango de %1$.1f a %2$.1f.</string>
     <string name="error_invalid_start_date_past">No se puede cambiar la fecha de inicio a una fecha pasada al editar</string>
     <string name="error_form_has_errors">El formulario contiene errores. Por favor verifique los campos anteriores.</string>
 </resources>
