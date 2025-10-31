@@ -35,7 +35,7 @@
     <string name="cycle_label">Zyklus: %s</string>
     <string name="period_label">Zeitraum: %s</string>
     <string name="period_no_end">%s ~</string>
-    <string name="period_with_end">%1$s ~ %2$s</string>
+    <string name="period_with_end">%1$s - %2$s</string>
 
     <!-- Medication Form Screen -->
     <string name="add_medication_title">Medikament hinzufügen</string>
