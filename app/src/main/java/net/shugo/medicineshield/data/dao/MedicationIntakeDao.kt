@@ -1,8 +1,12 @@
 package net.shugo.medicineshield.data.dao
 
-import androidx.room.*
-import net.shugo.medicineshield.data.model.MedicationIntake
+import androidx.room.Dao
+import androidx.room.Delete
+import androidx.room.Insert
+import androidx.room.Query
+import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
+import net.shugo.medicineshield.data.model.MedicationIntake
 
 @Dao
 interface MedicationIntakeDao {
@@ -19,7 +23,7 @@ interface MedicationIntakeDao {
     fun getIntakesByDate(date: String): Flow<List<MedicationIntake>>
 
     @Query("SELECT * FROM medication_intakes WHERE medicationId = :medicationId AND scheduledDate = :date AND sequenceNumber = :sequenceNumber")
-    suspend fun getIntakeByMedicationAndDateTime(
+    suspend fun getIntakeByMedicationAndDateAndSeq(
         medicationId: Long,
         date: String,
         sequenceNumber: Int

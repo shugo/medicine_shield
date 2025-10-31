@@ -224,7 +224,7 @@ class MedicationRepositoryTest {
         coEvery { medicationTimeDao.getCurrentTimesForMedication(medicationId) } returns listOf(existingTime)
         coEvery { medicationTimeDao.update(any()) } just Runs
         coEvery { medicationTimeDao.insert(any()) } returns 2L
-        coEvery { medicationIntakeDao.getIntakeByMedicationAndDateTime(any(), any(), any()) } returns null
+        coEvery { medicationIntakeDao.getIntakeByMedicationAndDateAndSeq(any(), any(), any()) } returns null
 
         // When - Change time (08:00 -> 09:00)
         repository.updateMedicationWithTimes(
@@ -583,7 +583,7 @@ class MedicationRepositoryTest {
         val scheduledDate = "2025-10-10"
 
         coEvery {
-            medicationIntakeDao.getIntakeByMedicationAndDateTime(medicationId, scheduledDate, sequenceNumber)
+            medicationIntakeDao.getIntakeByMedicationAndDateAndSeq(medicationId, scheduledDate, sequenceNumber)
         } returns null
         coEvery { medicationIntakeDao.insert(any()) } returns 1L
 
@@ -616,7 +616,7 @@ class MedicationRepositoryTest {
         )
 
         coEvery {
-            medicationIntakeDao.getIntakeByMedicationAndDateTime(medicationId, scheduledDate, sequenceNumber)
+            medicationIntakeDao.getIntakeByMedicationAndDateAndSeq(medicationId, scheduledDate, sequenceNumber)
         } returns existingIntake
         coEvery { medicationIntakeDao.update(any()) } just Runs
 
@@ -647,7 +647,7 @@ class MedicationRepositoryTest {
         )
 
         coEvery {
-            medicationIntakeDao.getIntakeByMedicationAndDateTime(medicationId, scheduledDate, sequenceNumber)
+            medicationIntakeDao.getIntakeByMedicationAndDateAndSeq(medicationId, scheduledDate, sequenceNumber)
         } returns existingIntake
         coEvery { medicationIntakeDao.update(any()) } just Runs
 
@@ -671,7 +671,7 @@ class MedicationRepositoryTest {
         val scheduledDate = "2025-10-10"
 
         coEvery {
-            medicationIntakeDao.getIntakeByMedicationAndDateTime(medicationId, scheduledDate, sequenceNumber)
+            medicationIntakeDao.getIntakeByMedicationAndDateAndSeq(medicationId, scheduledDate, sequenceNumber)
         } returns null
 
         // When
