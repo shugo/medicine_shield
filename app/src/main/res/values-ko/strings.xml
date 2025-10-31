@@ -80,7 +80,7 @@
     <string name="dose_unit_puff">회</string>
     <string name="dose_unit_app">회</string>
     <string name="dose_unit_custom">사용자 지정</string>
-    <string name="dose_format" formatted="false">× %s%s</string>
+    <string name="dose_format">× %1$s%2$s</string>
 
     <!-- Cycle Descriptions -->
     <string name="cycle_daily_full">매일</string>

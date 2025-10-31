@@ -80,7 +80,7 @@
     <string name="dose_unit_puff">吸入</string>
     <string name="dose_unit_app">回</string>
     <string name="dose_unit_custom">カスタム</string>
-    <string name="dose_format" formatted="false">× %s%s</string>
+    <string name="dose_format">× %1$s%2$s</string>
 
     <!-- Cycle Descriptions -->
     <string name="cycle_daily_full">毎日</string>

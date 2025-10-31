@@ -80,7 +80,7 @@
     <string name="dose_unit_puff">Hub</string>
     <string name="dose_unit_app">Anw.</string>
     <string name="dose_unit_custom">Benutzerdefiniert</string>
-    <string name="dose_format" formatted="false">× %s %s</string>
+    <string name="dose_format">× %1$s %2$s</string>
 
     <!-- Cycle Descriptions -->
     <string name="cycle_daily_full">Täglich</string>
