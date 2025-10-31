@@ -34,7 +34,7 @@
     <string name="medication_times_label">복용 시간: %s</string>
     <string name="cycle_label">주기: %s</string>
     <string name="period_label">기간: %s</string>
-    <string name="period_no_end">%s 〜</string>
+    <string name="period_no_end">%s～</string>
     <string name="period_with_end">%1$s～%2$s</string>
 
     <!-- Medication Form Screen -->

@@ -34,7 +34,7 @@
     <string name="medication_times_label">Horaires : %s</string>
     <string name="cycle_label">Cycle : %s</string>
     <string name="period_label">Période : %s</string>
-    <string name="period_no_end">%s ~</string>
+    <string name="period_no_end">%s -</string>
     <string name="period_with_end">%1$s - %2$s</string>
 
     <!-- Medication Form Screen -->
