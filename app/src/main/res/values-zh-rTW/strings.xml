@@ -35,7 +35,7 @@
     <string name="cycle_label">週期：%s</string>
     <string name="period_label">期間：%s</string>
     <string name="period_no_end">%s 〜</string>
-    <string name="period_with_end">%s 〜 %s</string>
+    <string name="period_with_end">%1$s 〜 %2$s</string>
 
     <!-- Medication Form Screen -->
     <string name="add_medication_title">新增藥品</string>
@@ -80,7 +80,7 @@
     <string name="dose_unit_puff">噴</string>
     <string name="dose_unit_app">次</string>
     <string name="dose_unit_custom">自訂</string>
-    <string name="dose_format">× %s%s</string>
+    <string name="dose_format" formatted="false">× %s%s</string>
 
     <!-- Cycle Descriptions -->
     <string name="cycle_daily_full">每天</string>
@@ -155,7 +155,7 @@
     <string name="error_invalid_end_date">結束日期必須晚於開始日期</string>
     <string name="error_no_days_selected">請至少選擇一個星期</string>
     <string name="error_invalid_interval">請輸入大於等於1的天數</string>
-    <string name="error_invalid_dose">請輸入%.1f〜%.1f範圍內的數值</string>
+    <string name="error_invalid_dose">請輸入%1$.1f〜%2$.1f範圍內的數值</string>
     <string name="error_invalid_start_date_past">編輯時不能將開始日期更改為過去的日期</string>
     <string name="error_form_has_errors">輸入內容有誤。請檢查上述項目。</string>
 </resources>

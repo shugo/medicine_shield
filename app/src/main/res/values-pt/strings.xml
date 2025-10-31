@@ -35,7 +35,7 @@
     <string name="cycle_label">Ciclo: %s</string>
     <string name="period_label">Período: %s</string>
     <string name="period_no_end">%s ~</string>
-    <string name="period_with_end">%s ~ %s</string>
+    <string name="period_with_end">%1$s ~ %2$s</string>
 
     <!-- Medication Form Screen -->
     <string name="add_medication_title">Adicionar medicamento</string>
@@ -80,7 +80,7 @@
     <string name="dose_unit_puff">inal.</string>
     <string name="dose_unit_app">aplic.</string>
     <string name="dose_unit_custom">Personalizado</string>
-    <string name="dose_format">× %s %s</string>
+    <string name="dose_format" formatted="false">× %s %s</string>
 
     <!-- Cycle Descriptions -->
     <string name="cycle_daily_full">Diário</string>
@@ -155,7 +155,7 @@
     <string name="error_invalid_end_date">A data de fim deve ser posterior à data de início</string>
     <string name="error_no_days_selected">Por favor selecione pelo menos um dia</string>
     <string name="error_invalid_interval">Por favor introduza um número de dias maior ou igual a 1</string>
-    <string name="error_invalid_dose">Por favor introduza um número no intervalo de %.1f a %.1f.</string>
+    <string name="error_invalid_dose">Por favor introduza um número no intervalo de %1$.1f a %2$.1f.</string>
     <string name="error_invalid_start_date_past">Não é possível alterar a data de início para uma data passada ao editar</string>
     <string name="error_form_has_errors">O formulário contém erros. Por favor verifique os campos acima.</string>
 </resources>
