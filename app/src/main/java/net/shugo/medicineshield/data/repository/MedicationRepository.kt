@@ -780,7 +780,7 @@ class MedicationRepository(
         // For medications: use endDate + retentionDays as the criteria
         val medicationIds = medicationConfigDao.getMedicationIdsEndedBefore(cutoffDate)
         medicationIds.forEach { medicationId ->
-            deleteMedication(medicationId)
+            deleteMedicationById(medicationId)
         }
     }
 }
