@@ -759,4 +759,84 @@ class MedicationRepository(
             it.status == MedicationIntakeStatus.UNCHECKED
         }.map { it.medicationName }
     }
+
+    // ========== Discontinue/Resume Medication Functions ==========
+
+    /**
+     * Discontinue medication by setting end date
+     * End date is set to yesterday if no intake records exist, otherwise today
+     */
+    suspend fun discontinueMedication(medicationId: Long) {
+        val currentConfig = medicationConfigDao.getCurrentConfigForMedication(medicationId) ?: return
+        val now = System.currentTimeMillis()
+        val today = formatDateString(now)
+
+        // Check if any intake records exist for today
+        val todayIntakes = medicationIntakeDao.getIntakesByMedicationAndDate(medicationId, today)
+        val hasIntakesToday = todayIntakes.isNotEmpty()
+
+        // Calculate yesterday's date
+        val calendar = Calendar.getInstance()
+        calendar.timeInMillis = now
+        calendar.add(Calendar.DAY_OF_YEAR, -1)
+        val yesterday = formatDateString(calendar.timeInMillis)
+
+        // Set end date to yesterday if no intakes today, otherwise today
+        val endDate = if (hasIntakesToday) today else yesterday
+
+        if (currentConfig.validFrom == today) {
+            // If validFrom is today, delete the old Config as it's not used
+            medicationConfigDao.delete(currentConfig)
+        } else {
+            // If validFrom is before today, invalidate existing Config
+            medicationConfigDao.update(
+                currentConfig.copy(
+                    validTo = today,
+                    updatedAt = now
+                )
+            )
+        }
+
+        // Create new Config with updated end date
+        val newConfig = currentConfig.copy(
+            id = 0,  // Generate new ID
+            medicationEndDate = endDate,
+            validFrom = today,
+            validTo = DateUtils.MAX_DATE,
+            updatedAt = now
+        )
+        medicationConfigDao.insert(newConfig)
+    }
+
+    /**
+     * Resume medication by clearing end date (set to MAX_DATE)
+     */
+    suspend fun resumeMedication(medicationId: Long) {
+        val currentConfig = medicationConfigDao.getCurrentConfigForMedication(medicationId) ?: return
+        val now = System.currentTimeMillis()
+        val today = formatDateString(now)
+
+        if (currentConfig.validFrom == today) {
+            // If validFrom is today, delete the old Config as it's not used
+            medicationConfigDao.delete(currentConfig)
+        } else {
+            // If validFrom is before today, invalidate existing Config
+            medicationConfigDao.update(
+                currentConfig.copy(
+                    validTo = today,
+                    updatedAt = now
+                )
+            )
+        }
+
+        // Create new Config with no end date (MAX_DATE)
+        val newConfig = currentConfig.copy(
+            id = 0,  // Generate new ID
+            medicationEndDate = DateUtils.MAX_DATE,
+            validFrom = today,
+            validTo = DateUtils.MAX_DATE,
+            updatedAt = now
+        )
+        medicationConfigDao.insert(newConfig)
+    }
 }

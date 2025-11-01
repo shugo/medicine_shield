@@ -79,6 +79,22 @@ class MedicationListViewModel(
         }
     }
 
+    fun discontinueMedication(medicationId: Long) {
+        viewModelScope.launch {
+            repository.discontinueMedication(medicationId)
+            // Reschedule notifications
+            notificationScheduler.rescheduleAllNotifications()
+        }
+    }
+
+    fun resumeMedication(medicationId: Long) {
+        viewModelScope.launch {
+            repository.resumeMedication(medicationId)
+            // Reschedule notifications
+            notificationScheduler.rescheduleAllNotifications()
+        }
+    }
+
     /**
      * Convert Long timestamp to yyyy-MM-dd format string
      */
