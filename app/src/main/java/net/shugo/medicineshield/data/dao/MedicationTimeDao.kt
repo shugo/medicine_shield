@@ -66,4 +66,10 @@ interface MedicationTimeDao {
 
     @Query("DELETE FROM medication_times WHERE medicationId = :medicationId")
     suspend fun deleteAllForMedication(medicationId: Long)
+
+    @Query("""
+        DELETE FROM medication_times
+        WHERE validTo <= :cutoffDate
+    """)
+    suspend fun deleteOldTimes(cutoffDate: String)
 }

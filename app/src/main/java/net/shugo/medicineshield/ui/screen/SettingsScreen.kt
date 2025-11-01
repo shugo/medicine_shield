@@ -55,10 +55,16 @@ fun SettingsScreen(
     val notificationsEnabled by viewModel.notificationsEnabled.collectAsState()
     val reminderEnabled by viewModel.reminderEnabled.collectAsState()
     val reminderDelayMinutes by viewModel.reminderDelayMinutes.collectAsState()
+    val dataRetentionEnabled by viewModel.dataRetentionEnabled.collectAsState()
+    val dataRetentionDays by viewModel.dataRetentionDays.collectAsState()
     val context = LocalContext.current
 
     var reminderDelayText by remember(reminderDelayMinutes) {
         mutableStateOf(reminderDelayMinutes.toString())
+    }
+
+    var dataRetentionDaysText by remember(dataRetentionDays) {
+        mutableStateOf(dataRetentionDays.toString())
     }
 
     Scaffold(
@@ -211,6 +217,111 @@ fun SettingsScreen(
                                     isError = !isValidReminderDelay(reminderDelayText.toIntOrNull())
                                 )
                             }
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Data Retention Settings Section
+            Text(
+                text = stringResource(R.string.data_retention_settings),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    // Enable Data Retention
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.enable_data_retention),
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = stringResource(R.string.data_retention_description),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+
+                        Switch(
+                            checked = dataRetentionEnabled,
+                            onCheckedChange = { enabled ->
+                                viewModel.setDataRetentionEnabled(enabled)
+                            }
+                        )
+                    }
+
+                    // Show retention period settings only when enabled
+                    if (dataRetentionEnabled) {
+                        HorizontalDivider(
+                            modifier = Modifier.padding(horizontal = 16.dp)
+                        )
+
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.data_retention_period),
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = stringResource(R.string.data_retention_period_description),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            fun isValidRetentionDays(days: Int?): Boolean {
+                                return days != null && days >= SettingsPreferences.MIN_DATA_RETENTION_DAYS
+                            }
+
+                            OutlinedTextField(
+                                value = dataRetentionDaysText,
+                                onValueChange = { newValue ->
+                                    dataRetentionDaysText = newValue
+                                    val days = newValue.toIntOrNull()
+                                    if (isValidRetentionDays(days)) {
+                                        viewModel.setDataRetentionDays(days!!)
+                                    }
+                                },
+                                modifier = Modifier.width(150.dp),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                singleLine = true,
+                                isError = !isValidRetentionDays(dataRetentionDaysText.toIntOrNull())
+                            )
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            // Warning message
+                            Text(
+                                text = stringResource(R.string.data_retention_warning),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.error
+                            )
                         }
                     }
                 }

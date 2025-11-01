@@ -36,6 +36,12 @@ class SettingsViewModel(
     private val _reminderDelayMinutes = MutableStateFlow(settingsPreferences.getReminderDelayMinutes())
     val reminderDelayMinutes: StateFlow<Int> = _reminderDelayMinutes.asStateFlow()
 
+    private val _dataRetentionEnabled = MutableStateFlow(settingsPreferences.isDataRetentionEnabled())
+    val dataRetentionEnabled: StateFlow<Boolean> = _dataRetentionEnabled.asStateFlow()
+
+    private val _dataRetentionDays = MutableStateFlow(settingsPreferences.getDataRetentionDays())
+    val dataRetentionDays: StateFlow<Int> = _dataRetentionDays.asStateFlow()
+
     val appVersion: String by lazy {
         try {
             val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -89,6 +95,26 @@ class SettingsViewModel(
         viewModelScope.launch {
             settingsPreferences.setReminderDelayMinutes(minutes)
             _reminderDelayMinutes.value = minutes
+        }
+    }
+
+    /**
+     * Toggle data retention enabled/disabled
+     */
+    fun setDataRetentionEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsPreferences.setDataRetentionEnabled(enabled)
+            _dataRetentionEnabled.value = enabled
+        }
+    }
+
+    /**
+     * Set data retention period in days
+     */
+    fun setDataRetentionDays(days: Int) {
+        viewModelScope.launch {
+            settingsPreferences.setDataRetentionDays(days)
+            _dataRetentionDays.value = days
         }
     }
 

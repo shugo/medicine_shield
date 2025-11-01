@@ -87,6 +87,9 @@ class MainActivity : ComponentActivity() {
         // Request notification permission
         requestNotificationPermission()
 
+        // Clean up old data if retention is enabled
+        cleanupOldDataIfEnabled()
+
         // Get the date passed when launching from notification
         scheduledDateState.value = intent?.getStringExtra(NotificationHelper.EXTRA_SCHEDULED_DATE)
 
@@ -140,6 +143,16 @@ class MainActivity : ComponentActivity() {
         lifecycleScope.launch {
             val scheduler = NotificationScheduler.create(applicationContext, repository)
             scheduler.rescheduleAllNotifications()
+        }
+    }
+
+    private fun cleanupOldDataIfEnabled() {
+        val settingsPreferences = SettingsPreferences(this)
+        if (settingsPreferences.isDataRetentionEnabled()) {
+            val retentionDays = settingsPreferences.getDataRetentionDays()
+            lifecycleScope.launch {
+                repository.cleanupOldData(retentionDays)
+            }
         }
     }
 }
