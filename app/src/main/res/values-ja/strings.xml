@@ -106,6 +106,12 @@
     <string name="reminder_description">服用されなかった場合に再度通知する</string>
     <string name="reminder_delay">再通知までの時間（分）</string>
     <string name="reminder_delay_description">再通知するまでの待機時間</string>
+    <string name="data_retention_settings">データ保存設定</string>
+    <string name="enable_data_retention">古いデータの自動削除</string>
+    <string name="data_retention_description">指定期間を過ぎたデータを自動的に削除します</string>
+    <string name="data_retention_days">保存期間（日）</string>
+    <string name="data_retention_days_description">この日数を過ぎたデータは削除されます</string>
+    <string name="data_retention_warning">⚠️ 警告：削除されたデータは復元できません。服用記録、薬、メモが削除対象になります。</string>
     <string name="app_info">アプリ情報</string>
     <string name="version">バージョン</string>
     <string name="license_info">ライセンス情報</string>

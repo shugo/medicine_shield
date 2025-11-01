@@ -106,6 +106,12 @@
     <string name="reminder_description">Send reminder if medication is not taken</string>
     <string name="reminder_delay">Reminder Delay (minutes)</string>
     <string name="reminder_delay_description">Time to wait before sending reminder</string>
+    <string name="data_retention_settings">Data Retention Settings</string>
+    <string name="enable_data_retention">Auto-delete old data</string>
+    <string name="data_retention_description">Automatically delete data older than the specified period</string>
+    <string name="data_retention_days">Retention Period (days)</string>
+    <string name="data_retention_days_description">Data older than this will be deleted</string>
+    <string name="data_retention_warning">⚠️ Warning: Deleted data cannot be recovered. Intake records, medications, and notes will be deleted.</string>
     <string name="app_info">App Information</string>
     <string name="version">Version</string>
     <string name="license_info">License Information</string>

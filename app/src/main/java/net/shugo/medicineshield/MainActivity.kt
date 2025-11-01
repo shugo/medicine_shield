@@ -80,6 +80,15 @@ class MainActivity : ComponentActivity() {
             database.dailyNoteDao()
         )
 
+        // Clean up old data if enabled
+        val settingsPreferences = SettingsPreferences(this)
+        if (settingsPreferences.isDataRetentionEnabled()) {
+            val retentionDays = settingsPreferences.getDataRetentionDays()
+            lifecycleScope.launch {
+                repository.cleanupOldData(retentionDays)
+            }
+        }
+
         // Create notification channel
         val notificationHelper = NotificationHelper(this)
         notificationHelper.createNotificationChannel()
