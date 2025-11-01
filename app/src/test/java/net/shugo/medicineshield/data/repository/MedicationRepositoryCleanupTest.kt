@@ -141,7 +141,8 @@ class MedicationRepositoryCleanupTest {
 
         // Create intakes at different dates
         createIntake(medicationId, -40)  // 40 days ago - should be deleted (40 > 30)
-        createIntake(medicationId, -30)  // 30 days ago - should be deleted (boundary, validTo <= cutoffDate)
+        createIntake(medicationId, -31)  // 31 days ago - should be deleted (31 > 30)
+        createIntake(medicationId, -30)  // 30 days ago - should be KEPT (boundary, scheduledDate < cutoffDate)
         createIntake(medicationId, -29)  // 29 days ago - should be kept
         createIntake(medicationId, -20)  // 20 days ago - should be kept
         createIntake(medicationId, -10)  // 10 days ago - should be kept
@@ -160,9 +161,13 @@ class MedicationRepositoryCleanupTest {
             .getIntakeByMedicationAndDateAndSeq(medicationId, formatDate(-40), 1)
         assertNull("Intake from 40 days ago should be deleted", intake40DaysAgo)
 
+        val intake31DaysAgo = database.medicationIntakeDao()
+            .getIntakeByMedicationAndDateAndSeq(medicationId, formatDate(-31), 1)
+        assertNull("Intake from 31 days ago should be deleted", intake31DaysAgo)
+
         val intake30DaysAgo = database.medicationIntakeDao()
             .getIntakeByMedicationAndDateAndSeq(medicationId, formatDate(-30), 1)
-        assertNull("Intake from exactly 30 days ago should be deleted (boundary)", intake30DaysAgo)
+        assertNotNull("Intake from exactly 30 days ago should be KEPT (boundary, scheduledDate < cutoffDate)", intake30DaysAgo)
 
         val intake29DaysAgo = database.medicationIntakeDao()
             .getIntakeByMedicationAndDateAndSeq(medicationId, formatDate(-29), 1)
@@ -181,7 +186,8 @@ class MedicationRepositoryCleanupTest {
     fun `cleanupOldData should delete daily notes older than retention period`() = runTest {
         // Given: Create daily notes at different dates
         createDailyNote(-50, "Note from 50 days ago")  // Should be deleted
-        createDailyNote(-30, "Note from 30 days ago")  // Should be deleted (boundary, <= cutoffDate)
+        createDailyNote(-31, "Note from 31 days ago")  // Should be deleted
+        createDailyNote(-30, "Note from 30 days ago")  // Should be KEPT (boundary, noteDate < cutoffDate)
         createDailyNote(-29, "Note from 29 days ago")  // Should be kept
         createDailyNote(-15, "Note from 15 days ago")  // Should be kept
         createDailyNote(0, "Note from today")          // Should be kept
@@ -194,9 +200,13 @@ class MedicationRepositoryCleanupTest {
             .getNoteByDateSync(formatDate(-50))
         assertNull("Note from 50 days ago should be deleted", note50DaysAgo)
 
+        val note31DaysAgo = database.dailyNoteDao()
+            .getNoteByDateSync(formatDate(-31))
+        assertNull("Note from 31 days ago should be deleted", note31DaysAgo)
+
         val note30DaysAgo = database.dailyNoteDao()
             .getNoteByDateSync(formatDate(-30))
-        assertNull("Note from exactly 30 days ago should be deleted (boundary)", note30DaysAgo)
+        assertNotNull("Note from exactly 30 days ago should be KEPT (boundary, noteDate < cutoffDate)", note30DaysAgo)
 
         val note29DaysAgo = database.dailyNoteDao()
             .getNoteByDateSync(formatDate(-29))
@@ -343,7 +353,7 @@ class MedicationRepositoryCleanupTest {
 
         // Create intakes exactly at the cutoff date and one day before/after
         createIntake(med1, -31, sequenceNumber = 1)  // Should be deleted (31 > 30)
-        createIntake(med1, -30, sequenceNumber = 2)  // Should be deleted (boundary, <= cutoffDate)
+        createIntake(med1, -30, sequenceNumber = 2)  // Should be KEPT (boundary, scheduledDate < cutoffDate)
         createIntake(med2, -29, sequenceNumber = 1)  // Should be kept
 
         // When: Clean up with 30 days retention
@@ -356,7 +366,7 @@ class MedicationRepositoryCleanupTest {
 
         val intake30DaysAgo = database.medicationIntakeDao()
             .getIntakeByMedicationAndDateAndSeq(med1, formatDate(-30), 2)
-        assertNull("Intake from exactly 30 days ago should be deleted (boundary, <= cutoffDate)", intake30DaysAgo)
+        assertNotNull("Intake from exactly 30 days ago should be KEPT (boundary, scheduledDate < cutoffDate)", intake30DaysAgo)
 
         val intake29DaysAgo = database.medicationIntakeDao()
             .getIntakeByMedicationAndDateAndSeq(med2, formatDate(-29), 1)

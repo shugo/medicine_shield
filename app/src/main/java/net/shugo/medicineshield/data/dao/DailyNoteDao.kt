@@ -30,6 +30,6 @@ interface DailyNoteDao {
     @Query("SELECT * FROM daily_notes WHERE noteDate > :currentDate ORDER BY noteDate ASC LIMIT 1")
     suspend fun getNextNote(currentDate: String): DailyNote?
 
-    @Query("DELETE FROM daily_notes WHERE noteDate <= :cutoffDate")
+    @Query("DELETE FROM daily_notes WHERE noteDate < :cutoffDate")
     suspend fun deleteOldNotes(cutoffDate: String): Int
 }
