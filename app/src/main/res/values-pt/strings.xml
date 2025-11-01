@@ -113,6 +113,12 @@
     <string name="mit0_license_url">https://opensource.org/license/mit-0</string>
     <string name="open_source_licenses">Licenças de código aberto</string>
     <string name="license_details">Esta aplicação utiliza as seguintes bibliotecas de código aberto:\n\n• Android Jetpack (Licença Apache 2.0)\n• Kotlin (Licença Apache 2.0)\n• Room Database (Licença Apache 2.0)\n• Jetpack Compose (Licença Apache 2.0)\n• Material Design 3 (Licença Apache 2.0)</string>
+    <string name="data_retention_settings">Configurações de retenção de dados</string>
+    <string name="enable_data_retention">Ativar limpeza automática de dados</string>
+    <string name="data_retention_description">Excluir automaticamente registros antigos de medicamentos</string>
+    <string name="data_retention_period">Período de retenção (dias)</string>
+    <string name="data_retention_period_description">Número de dias para manter os dados (mínimo 30)</string>
+    <string name="data_retention_warning">⚠️ Os dados anteriores ao período de retenção serão excluídos permanentemente</string>
 
     <!-- Notifications -->
     <string name="notification_channel_name">Lembretes de medicamentos</string>

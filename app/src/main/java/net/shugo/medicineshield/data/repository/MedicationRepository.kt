@@ -759,4 +759,28 @@ class MedicationRepository(
             it.status == MedicationIntakeStatus.UNCHECKED
         }.map { it.medicationName }
     }
+
+    /**
+     * Clean up old data based on retention period
+     *
+     * @param retentionDays Number of days to retain data
+     */
+    suspend fun cleanupOldData(retentionDays: Int) {
+        // Calculate cutoff date (retentionDays ago from today)
+        val cutoffTimestamp = System.currentTimeMillis() - (retentionDays * 24 * 60 * 60 * 1000L)
+        val cutoffDate = formatDateString(cutoffTimestamp)
+
+        // 1. Delete old intake records (older than retention period)
+        medicationIntakeDao.deleteOldIntakes(cutoffDate)
+
+        // 2. Delete old daily notes (older than retention period)
+        dailyNoteDao.deleteOldNotes(cutoffDate)
+
+        // 3. Delete medications that ended before (cutoff date)
+        // For medications: use endDate + retentionDays as the criteria
+        val medicationIds = medicationConfigDao.getMedicationIdsEndedBefore(cutoffDate)
+        medicationIds.forEach { medicationId ->
+            deleteMedication(medicationId)
+        }
+    }
 }

@@ -113,6 +113,12 @@
     <string name="mit0_license_url">https://licenses.opensource.jp/MIT-0/MIT-0.html</string>
     <string name="open_source_licenses">開放原始碼授權</string>
     <string name="license_details">本應用程式使用以下開放原始碼程式庫：\n\n• Android Jetpack (Apache License 2.0)\n• Kotlin (Apache License 2.0)\n• Room Database (Apache License 2.0)\n• Jetpack Compose (Apache License 2.0)\n• Material Design 3 (Apache License 2.0)</string>
+    <string name="data_retention_settings">資料保留設定</string>
+    <string name="enable_data_retention">啟用自動資料清理</string>
+    <string name="data_retention_description">自動刪除舊的用藥記錄</string>
+    <string name="data_retention_period">保留期限（天）</string>
+    <string name="data_retention_period_description">保留資料的天數（最少30天）</string>
+    <string name="data_retention_warning">⚠️ 超過保留期限的資料將被永久刪除</string>
 
     <!-- Notifications -->
     <string name="notification_channel_name">服藥提醒</string>
