@@ -17,8 +17,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -63,6 +65,8 @@ fun MedicationListScreen(
     val currentMedications by viewModel.currentMedications.collectAsState()
     val pastMedications by viewModel.pastMedications.collectAsState()
     var medicationToDelete by remember { mutableStateOf<Long?>(null) }
+    var medicationToDiscontinue by remember { mutableStateOf<Long?>(null) }
+    var medicationToResume by remember { mutableStateOf<Long?>(null) }
     var selectedTabIndex by remember { mutableStateOf(0) }
 
     Scaffold(
@@ -131,7 +135,10 @@ fun MedicationListScreen(
                     items(medications, key = { it.medication.id }) { medicationWithTimes ->
                         MedicationCard(
                             medicationWithTimes = medicationWithTimes,
+                            isCurrentTab = selectedTabIndex == 0,
                             onEdit = { onEditMedication(medicationWithTimes.medication.id) },
+                            onDiscontinue = { medicationToDiscontinue = medicationWithTimes.medication.id },
+                            onResume = { medicationToResume = medicationWithTimes.medication.id },
                             onDelete = { medicationToDelete = medicationWithTimes.medication.id }
                         )
                     }
@@ -163,12 +170,63 @@ fun MedicationListScreen(
             }
         )
     }
+
+    // Discontinue confirmation dialog
+    medicationToDiscontinue?.let { medicationId ->
+        AlertDialog(
+            onDismissRequest = { medicationToDiscontinue = null },
+            title = { Text(stringResource(R.string.discontinue_confirmation_title)) },
+            text = { Text(stringResource(R.string.discontinue_confirmation_message)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.discontinueMedication(medicationId)
+                        medicationToDiscontinue = null
+                    }
+                ) {
+                    Text(stringResource(R.string.yes))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { medicationToDiscontinue = null }) {
+                    Text(stringResource(R.string.no))
+                }
+            }
+        )
+    }
+
+    // Resume confirmation dialog
+    medicationToResume?.let { medicationId ->
+        AlertDialog(
+            onDismissRequest = { medicationToResume = null },
+            title = { Text(stringResource(R.string.resume_confirmation_title)) },
+            text = { Text(stringResource(R.string.resume_confirmation_message)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.resumeMedication(medicationId)
+                        medicationToResume = null
+                    }
+                ) {
+                    Text(stringResource(R.string.yes))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { medicationToResume = null }) {
+                    Text(stringResource(R.string.no))
+                }
+            }
+        )
+    }
 }
 
 @Composable
 fun MedicationCard(
     medicationWithTimes: MedicationWithTimes,
+    isCurrentTab: Boolean,
     onEdit: () -> Unit,
+    onDiscontinue: () -> Unit,
+    onResume: () -> Unit,
     onDelete: () -> Unit
 ) {
     val medication = medicationWithTimes.medication
@@ -201,9 +259,20 @@ fun MedicationCard(
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.weight(1f)
                 )
-                Row {
+                Column(
+                    horizontalAlignment = Alignment.End
+                ) {
                     IconButton(onClick = onEdit) {
                         Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.edit))
+                    }
+                    if (isCurrentTab) {
+                        IconButton(onClick = onDiscontinue) {
+                            Icon(Icons.Default.Close, contentDescription = stringResource(R.string.discontinue_medication))
+                        }
+                    } else {
+                        IconButton(onClick = onResume) {
+                            Icon(Icons.Default.PlayArrow, contentDescription = stringResource(R.string.resume_medication))
+                        }
                     }
                     IconButton(onClick = onDelete) {
                         Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete))
