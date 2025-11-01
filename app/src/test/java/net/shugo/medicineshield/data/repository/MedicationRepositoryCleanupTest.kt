@@ -220,11 +220,11 @@ class MedicationRepositoryCleanupTest {
     }
 
     @Test
-    fun `cleanupOldData should NOT delete medications with current config even if ended`() = runTest {
+    fun `cleanupOldData should delete medications ended before retention period`() = runTest {
         // Given: Create medications with different end dates
-        // Note: All these medications have validTo = MAX_DATE on their current config
+        // All have validTo = MAX_DATE, but different medicationEndDate
         val med1 = createMedication("Old Med 1", startDateOffset = -100, endDateOffset = -50)  // Ended 50 days ago
-        val med2 = createMedication("Old Med 2", startDateOffset = -100, endDateOffset = -30)  // Ended 30 days ago
+        val med2 = createMedication("Old Med 2", startDateOffset = -100, endDateOffset = -31)  // Ended 31 days ago
         val med3 = createMedication("Current Med", startDateOffset = -100, endDateOffset = -29) // Ended 29 days ago
         val med4 = createMedication("Active Med", startDateOffset = -100, endDateOffset = null)  // Still active
 
@@ -237,18 +237,19 @@ class MedicationRepositoryCleanupTest {
         // When: Clean up data with 30 days retention
         repository.cleanupOldData(retentionDays = 30)
 
-        // Then: ALL medications should be kept because they all have validTo = MAX_DATE
-        val keptMed1 = database.medicationDao().getMedicationById(med1)
-        assertNotNull("Medication should be kept (has config with validTo = MAX_DATE)", keptMed1)
+        // Then: Medications ended more than 30 days ago should be deleted
+        val deletedMed1 = database.medicationDao().getMedicationById(med1)
+        assertNull("Medication ended 50 days ago should be deleted (MAX(medicationEndDate) < cutoffDate)", deletedMed1)
 
-        val keptMed2 = database.medicationDao().getMedicationById(med2)
-        assertNotNull("Medication should be kept (has config with validTo = MAX_DATE)", keptMed2)
+        val deletedMed2 = database.medicationDao().getMedicationById(med2)
+        assertNull("Medication ended 31 days ago should be deleted (MAX(medicationEndDate) < cutoffDate)", deletedMed2)
 
+        // Medications ended within or after retention period should be kept
         val keptMed3 = database.medicationDao().getMedicationById(med3)
-        assertNotNull("Medication should be kept (has config with validTo = MAX_DATE)", keptMed3)
+        assertNotNull("Medication ended 29 days ago should be kept", keptMed3)
 
         val activeMed = database.medicationDao().getMedicationById(med4)
-        assertNotNull("Active medication should be kept", activeMed)
+        assertNotNull("Active medication (MAX_DATE) should be kept", activeMed)
     }
 
     @Test
@@ -479,9 +480,9 @@ class MedicationRepositoryCleanupTest {
     }
 
     @Test
-    fun `cleanupOldData should keep medication that was initially MAX_DATE then ended with current config`() = runTest {
+    fun `cleanupOldData should delete medication that was initially MAX_DATE then ended long ago`() = runTest {
         // Given: Create medication that initially had no end date, then was later ended,
-        // with a CURRENT config (validTo = MAX_DATE)
+        // with a CURRENT config (validTo = MAX_DATE) but ended before retention period
         val medication = Medication(name = "Ended But Current Config Med")
         val medicationId = database.medicationDao().insert(medication)
 
@@ -500,7 +501,7 @@ class MedicationRepositoryCleanupTest {
         )
         database.medicationConfigDao().insert(initialConfig)
 
-        // Second config: end date set to 50 days ago, BUT validTo = MAX_DATE (current config)
+        // Second config: end date set to 50 days ago, validTo = MAX_DATE (current config)
         // This matches actual implementation behavior
         val endedConfig = MedicationConfig(
             medicationId = medicationId,
@@ -519,9 +520,10 @@ class MedicationRepositoryCleanupTest {
         // When: Clean up with 30 days retention
         repository.cleanupOldData(retentionDays = 30)
 
-        // Then: Medication should be KEPT because it has a current config (validTo = MAX_DATE)
+        // Then: Medication should be DELETED because MAX(medicationEndDate) < cutoffDate
+        // Even though validTo = MAX_DATE, the medication ended 50 days ago (before retention period)
         val med = database.medicationDao().getMedicationById(medicationId)
-        assertNotNull("Medication with current config should be kept even if ended long ago", med)
+        assertNull("Medication ended before retention period should be deleted (MAX(medicationEndDate) < cutoffDate)", med)
     }
 
     @Test
