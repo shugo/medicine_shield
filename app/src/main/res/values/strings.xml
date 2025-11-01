@@ -115,7 +115,7 @@
     <string name="license_details">This application uses the following open source libraries:\n\n• Android Jetpack (Apache License 2.0)\n• Kotlin (Apache License 2.0)\n• Room Database (Apache License 2.0)\n• Jetpack Compose (Apache License 2.0)\n• Material Design 3 (Apache License 2.0)</string>
     <string name="data_retention_settings">Data Retention Settings</string>
     <string name="enable_data_retention">Enable Automatic Data Cleanup</string>
-    <string name="data_retention_description">Automatically delete old medication records</string>
+    <string name="data_retention_description">Automatically delete old medications, intake records, and notes</string>
     <string name="data_retention_period">Retention Period (days)</string>
     <string name="data_retention_period_description">Number of days to keep data (minimum 30)</string>
     <string name="data_retention_warning">⚠️ Data older than the retention period will be permanently deleted</string>

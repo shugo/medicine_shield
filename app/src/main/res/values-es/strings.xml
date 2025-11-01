@@ -115,7 +115,7 @@
     <string name="license_details">Esta aplicación utiliza las siguientes bibliotecas de código abierto:\n\n• Android Jetpack (Licencia Apache 2.0)\n• Kotlin (Licencia Apache 2.0)\n• Room Database (Licencia Apache 2.0)\n• Jetpack Compose (Licencia Apache 2.0)\n• Material Design 3 (Licencia Apache 2.0)</string>
     <string name="data_retention_settings">Configuración de retención de datos</string>
     <string name="enable_data_retention">Activar limpieza automática de datos</string>
-    <string name="data_retention_description">Eliminar automáticamente los registros antiguos de medicamentos</string>
+    <string name="data_retention_description">Eliminar automáticamente los medicamentos antiguos, registros de toma y notas</string>
     <string name="data_retention_period">Período de retención (días)</string>
     <string name="data_retention_period_description">Número de días para conservar los datos (mínimo 30)</string>
     <string name="data_retention_warning">⚠️ Los datos anteriores al período de retención se eliminarán permanentemente</string>
