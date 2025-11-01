@@ -149,6 +149,14 @@
     <string name="cancel_medication">取消服用</string>
     <string name="restore_medication">撤銷取消</string>
 
+    <!-- Medication Discontinuation -->
+    <string name="discontinue_medication">停藥</string>
+    <string name="resume_medication">恢復</string>
+    <string name="discontinue_confirmation_title">確認停藥</string>
+    <string name="discontinue_confirmation_message">您確定要停止服用此藥品嗎？</string>
+    <string name="resume_confirmation_title">確認恢復</string>
+    <string name="resume_confirmation_message">您確定要恢復服用此藥品嗎？\n開始日期將設定為今天。</string>
+
     <!-- Error Messages -->
     <string name="error_empty_name">請輸入藥品名稱</string>
     <string name="error_no_times">請至少設定一個服用時間</string>

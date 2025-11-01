@@ -149,6 +149,14 @@
     <string name="cancel_medication">복용 취소</string>
     <string name="restore_medication">취소 되돌리기</string>
 
+    <!-- Medication Discontinuation -->
+    <string name="discontinue_medication">복용 중단</string>
+    <string name="resume_medication">재개</string>
+    <string name="discontinue_confirmation_title">복용 중단 확인</string>
+    <string name="discontinue_confirmation_message">이 약의 복용을 중단하시겠습니까?</string>
+    <string name="resume_confirmation_title">복용 재개 확인</string>
+    <string name="resume_confirmation_message">이 약의 복용을 재개하시겠습니까?\n시작일이 오늘로 설정됩니다.</string>
+
     <!-- Error Messages -->
     <string name="error_empty_name">약품 이름을 입력하세요</string>
     <string name="error_no_times">최소 1개의 복용 시간을 설정하세요</string>
