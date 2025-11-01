@@ -149,6 +149,14 @@
     <string name="cancel_medication">Cancelar toma</string>
     <string name="restore_medication">Restaurar</string>
 
+    <!-- Medication Discontinuation -->
+    <string name="discontinue_medication">Suspender</string>
+    <string name="resume_medication">Reanudar</string>
+    <string name="discontinue_confirmation_title">Confirmar suspensión</string>
+    <string name="discontinue_confirmation_message">¿Está seguro de que desea suspender este medicamento?</string>
+    <string name="resume_confirmation_title">Confirmar reanudación</string>
+    <string name="resume_confirmation_message">¿Está seguro de que desea reanudar este medicamento?\nLa fecha de inicio se establecerá en hoy.</string>
+
     <!-- Error Messages -->
     <string name="error_empty_name">Por favor ingrese un nombre de medicamento</string>
     <string name="error_no_times">Por favor configure al menos un horario de toma</string>

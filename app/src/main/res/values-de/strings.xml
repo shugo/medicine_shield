@@ -149,6 +149,14 @@
     <string name="cancel_medication">Einnahme abbrechen</string>
     <string name="restore_medication">Wiederherstellen</string>
 
+    <!-- Medication Discontinuation -->
+    <string name="discontinue_medication">Absetzen</string>
+    <string name="resume_medication">Fortsetzen</string>
+    <string name="discontinue_confirmation_title">Absetzen bestätigen</string>
+    <string name="discontinue_confirmation_message">Sind Sie sicher, dass Sie dieses Medikament absetzen möchten?</string>
+    <string name="resume_confirmation_title">Fortsetzung bestätigen</string>
+    <string name="resume_confirmation_message">Sind Sie sicher, dass Sie dieses Medikament fortsetzen möchten?\nDas Startdatum wird auf heute gesetzt.</string>
+
     <!-- Error Messages -->
     <string name="error_empty_name">Bitte geben Sie einen Medikamentennamen ein</string>
     <string name="error_no_times">Bitte legen Sie mindestens eine Einnahmezeit fest</string>

@@ -149,6 +149,14 @@
     <string name="cancel_medication">服用をキャンセル</string>
     <string name="restore_medication">キャンセルを取り消し</string>
 
+    <!-- Medication Discontinuation -->
+    <string name="discontinue_medication">服用中止</string>
+    <string name="resume_medication">再開</string>
+    <string name="discontinue_confirmation_title">服用中止の確認</string>
+    <string name="discontinue_confirmation_message">このお薬の服用を中止しますか?</string>
+    <string name="resume_confirmation_title">服用再開の確認</string>
+    <string name="resume_confirmation_message">このお薬の服用を再開しますか?\n開始日が今日に設定されます。</string>
+
     <!-- Error Messages -->
     <string name="error_empty_name">お薬の名前を入力してください</string>
     <string name="error_no_times">少なくとも1つの服用時間を設定してください</string>
