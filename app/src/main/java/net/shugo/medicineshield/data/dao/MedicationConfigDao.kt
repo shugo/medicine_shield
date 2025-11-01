@@ -54,13 +54,14 @@ interface MedicationConfigDao {
 
     @Query("""
         DELETE FROM medication_configs
-        WHERE validTo < :cutoffDate
+        WHERE validTo <= :cutoffDate
     """)
     suspend fun deleteOldConfigs(cutoffDate: String)
 
     @Query("""
-        SELECT DISTINCT medicationId FROM medications
-        WHERE id NOT IN (SELECT DISTINCT medicationId FROM medication_configs)
+        SELECT medicationId FROM medication_configs
+        GROUP BY medicationId
+        HAVING MAX(medicationEndDate) < :cutoffDate
     """)
-    suspend fun getMedicationIdsWithoutConfigs(): List<Long>
+    suspend fun getMedicationIdsEndedBeforeWithNoActiveConfig(cutoffDate: String): List<Long>
 }

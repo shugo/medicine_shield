@@ -141,7 +141,8 @@ class MedicationRepositoryCleanupTest {
 
         // Create intakes at different dates
         createIntake(medicationId, -40)  // 40 days ago - should be deleted (40 > 30)
-        createIntake(medicationId, -30)  // 30 days ago - should be kept (boundary)
+        createIntake(medicationId, -30)  // 30 days ago - should be deleted (boundary, validTo <= cutoffDate)
+        createIntake(medicationId, -29)  // 29 days ago - should be kept
         createIntake(medicationId, -20)  // 20 days ago - should be kept
         createIntake(medicationId, -10)  // 10 days ago - should be kept
         createIntake(medicationId, 0)    // today - should be kept
@@ -161,7 +162,11 @@ class MedicationRepositoryCleanupTest {
 
         val intake30DaysAgo = database.medicationIntakeDao()
             .getIntakeByMedicationAndDateAndSeq(medicationId, formatDate(-30), 1)
-        assertNotNull("Intake from 30 days ago should be kept", intake30DaysAgo)
+        assertNull("Intake from exactly 30 days ago should be deleted (boundary)", intake30DaysAgo)
+
+        val intake29DaysAgo = database.medicationIntakeDao()
+            .getIntakeByMedicationAndDateAndSeq(medicationId, formatDate(-29), 1)
+        assertNotNull("Intake from 29 days ago should be kept", intake29DaysAgo)
 
         val intake20DaysAgo = database.medicationIntakeDao()
             .getIntakeByMedicationAndDateAndSeq(medicationId, formatDate(-20), 1)
@@ -176,7 +181,8 @@ class MedicationRepositoryCleanupTest {
     fun `cleanupOldData should delete daily notes older than retention period`() = runTest {
         // Given: Create daily notes at different dates
         createDailyNote(-50, "Note from 50 days ago")  // Should be deleted
-        createDailyNote(-30, "Note from 30 days ago")  // Should be kept (boundary)
+        createDailyNote(-30, "Note from 30 days ago")  // Should be deleted (boundary, <= cutoffDate)
+        createDailyNote(-29, "Note from 29 days ago")  // Should be kept
         createDailyNote(-15, "Note from 15 days ago")  // Should be kept
         createDailyNote(0, "Note from today")          // Should be kept
 
@@ -190,7 +196,11 @@ class MedicationRepositoryCleanupTest {
 
         val note30DaysAgo = database.dailyNoteDao()
             .getNoteByDateSync(formatDate(-30))
-        assertNotNull("Note from 30 days ago should be kept", note30DaysAgo)
+        assertNull("Note from exactly 30 days ago should be deleted (boundary)", note30DaysAgo)
+
+        val note29DaysAgo = database.dailyNoteDao()
+            .getNoteByDateSync(formatDate(-29))
+        assertNotNull("Note from 29 days ago should be kept", note29DaysAgo)
 
         val note15DaysAgo = database.dailyNoteDao()
             .getNoteByDateSync(formatDate(-15))
@@ -205,8 +215,8 @@ class MedicationRepositoryCleanupTest {
     fun `cleanupOldData should delete medications ended before retention period`() = runTest {
         // Given: Create medications with different end dates
         val med1 = createMedication("Old Med 1", startDateOffset = -100, endDateOffset = -50)  // Ended 50 days ago
-        val med2 = createMedication("Old Med 2", startDateOffset = -100, endDateOffset = -30)  // Ended 30 days ago (boundary)
-        val med3 = createMedication("Current Med", startDateOffset = -100, endDateOffset = -10) // Ended 10 days ago
+        val med2 = createMedication("Old Med 2", startDateOffset = -100, endDateOffset = -30)  // Ended 30 days ago (boundary, < cutoffDate)
+        val med3 = createMedication("Current Med", startDateOffset = -100, endDateOffset = -29) // Ended 29 days ago
         val med4 = createMedication("Active Med", startDateOffset = -100, endDateOffset = null)  // Still active
 
         // Verify all medications exist
@@ -222,11 +232,11 @@ class MedicationRepositoryCleanupTest {
         val deletedMed1 = database.medicationDao().getMedicationById(med1)
         assertNull("Medication ended 50 days ago should be deleted", deletedMed1)
 
-        val keptMed2 = database.medicationDao().getMedicationById(med2)
-        assertNotNull("Medication ended 30 days ago should be kept (boundary)", keptMed2)
+        val deletedMed2 = database.medicationDao().getMedicationById(med2)
+        assertNull("Medication ended exactly 30 days ago should be deleted (MAX(endDate) < cutoffDate)", deletedMed2)
 
         val keptMed3 = database.medicationDao().getMedicationById(med3)
-        assertNotNull("Medication ended 10 days ago should be kept", keptMed3)
+        assertNotNull("Medication ended 29 days ago should be kept", keptMed3)
 
         val activeMed = database.medicationDao().getMedicationById(med4)
         assertNotNull("Active medication should be kept", activeMed)
@@ -333,7 +343,7 @@ class MedicationRepositoryCleanupTest {
 
         // Create intakes exactly at the cutoff date and one day before/after
         createIntake(med1, -31, sequenceNumber = 1)  // Should be deleted (31 > 30)
-        createIntake(med1, -30, sequenceNumber = 2)  // Should be kept (boundary)
+        createIntake(med1, -30, sequenceNumber = 2)  // Should be deleted (boundary, <= cutoffDate)
         createIntake(med2, -29, sequenceNumber = 1)  // Should be kept
 
         // When: Clean up with 30 days retention
@@ -346,7 +356,7 @@ class MedicationRepositoryCleanupTest {
 
         val intake30DaysAgo = database.medicationIntakeDao()
             .getIntakeByMedicationAndDateAndSeq(med1, formatDate(-30), 2)
-        assertNotNull("Intake from exactly 30 days ago should be kept", intake30DaysAgo)
+        assertNull("Intake from exactly 30 days ago should be deleted (boundary, <= cutoffDate)", intake30DaysAgo)
 
         val intake29DaysAgo = database.medicationIntakeDao()
             .getIntakeByMedicationAndDateAndSeq(med2, formatDate(-29), 1)
@@ -439,5 +449,70 @@ class MedicationRepositoryCleanupTest {
         // Then: Medication should be deleted because all configs have validTo older than retention period
         val med = database.medicationDao().getMedicationById(medicationId)
         assertNull("Medication with all configs having old validTo should be deleted", med)
+    }
+
+    @Test
+    fun `cleanupOldData should respect validTo boundary condition with equals`() = runTest {
+        // Given: Create medication with config that has validTo exactly at cutoff date
+        val medication = Medication(name = "Boundary Med")
+        val medicationId = database.medicationDao().insert(medication)
+
+        // Config with validTo exactly 30 days ago (boundary condition)
+        val boundaryConfig = MedicationConfig(
+            medicationId = medicationId,
+            cycleType = CycleType.DAILY,
+            cycleValue = null,
+            medicationStartDate = formatDate(-100),
+            medicationEndDate = formatDate(-30),
+            isAsNeeded = false,
+            dose = 1.0,
+            doseUnit = "tablets",
+            validFrom = DateUtils.MIN_DATE,
+            validTo = formatDate(-30)  // validTo exactly at cutoff (should be deleted with <=)
+        )
+        database.medicationConfigDao().insert(boundaryConfig)
+
+        // When: Clean up with 30 days retention
+        repository.cleanupOldData(retentionDays = 30)
+
+        // Then: Config should be deleted (validTo <= cutoffDate), and medication should be deleted
+        val configs = database.medicationConfigDao().getCurrentConfigForMedication(medicationId)
+        assertNull("Config with validTo at cutoff date should be deleted", configs)
+
+        val med = database.medicationDao().getMedicationById(medicationId)
+        assertNull("Medication should be deleted when its config validTo <= cutoffDate", med)
+    }
+
+    @Test
+    fun `cleanupOldData should keep medication with validTo one day after cutoff`() = runTest {
+        // Given: Create medication with config that has validTo one day after cutoff
+        val medication = Medication(name = "Recent Med")
+        val medicationId = database.medicationDao().insert(medication)
+
+        // Config with validTo 29 days ago (one day after 30-day cutoff)
+        val recentConfig = MedicationConfig(
+            medicationId = medicationId,
+            cycleType = CycleType.DAILY,
+            cycleValue = null,
+            medicationStartDate = formatDate(-100),
+            medicationEndDate = DateUtils.MAX_DATE,
+            isAsNeeded = false,
+            dose = 1.0,
+            doseUnit = "tablets",
+            validFrom = DateUtils.MIN_DATE,
+            validTo = formatDate(-29)  // validTo one day after cutoff (should be kept)
+        )
+        database.medicationConfigDao().insert(recentConfig)
+
+        // When: Clean up with 30 days retention
+        repository.cleanupOldData(retentionDays = 30)
+
+        // Then: Config and medication should be kept
+        val configs = database.medicationConfigDao().getCurrentConfigForMedication(medicationId)
+        assertNull("Config is not current because validTo is in the past", configs)
+
+        // But medication should still exist since config was not deleted
+        val med = database.medicationDao().getMedicationById(medicationId)
+        assertNotNull("Medication should be kept when config validTo > cutoffDate", med)
     }
 }
