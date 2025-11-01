@@ -46,8 +46,9 @@ interface MedicationConfigDao {
     suspend fun delete(config: MedicationConfig)
 
     @Query("""
-        SELECT DISTINCT medicationId FROM medication_configs
-        WHERE medicationEndDate < :cutoffDate
+        SELECT medicationId FROM medication_configs
+        GROUP BY medicationId
+        HAVING MAX(medicationEndDate) < :cutoffDate
     """)
     suspend fun getMedicationIdsEndedBefore(cutoffDate: String): List<Long>
 }
