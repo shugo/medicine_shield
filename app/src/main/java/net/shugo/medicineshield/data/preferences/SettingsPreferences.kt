@@ -101,6 +101,7 @@ class SettingsPreferences(context: Context) {
      * Set data retention period in days
      */
     fun setDataRetentionDays(days: Int) {
+        require(days >= MIN_DATA_RETENTION_DAYS) { "Retention days must be at least $MIN_DATA_RETENTION_DAYS" }
         sharedPreferences.edit()
             .putInt(KEY_DATA_RETENTION_DAYS, days)
             .apply()
