@@ -113,6 +113,12 @@
     <string name="mit0_license_url">https://opensource.org/license/mit-0</string>
     <string name="open_source_licenses">Licenze open source</string>
     <string name="license_details">Questa applicazione utilizza le seguenti librerie open source:\n\n• Android Jetpack (Licenza Apache 2.0)\n• Kotlin (Licenza Apache 2.0)\n• Room Database (Licenza Apache 2.0)\n• Jetpack Compose (Licenza Apache 2.0)\n• Material Design 3 (Licenza Apache 2.0)</string>
+    <string name="data_retention_settings">Impostazioni conservazione dati</string>
+    <string name="enable_data_retention">Attiva pulizia automatica dei dati</string>
+    <string name="data_retention_description">Elimina automaticamente i vecchi farmaci, record di assunzione e note</string>
+    <string name="data_retention_period">Periodo di conservazione (giorni)</string>
+    <string name="data_retention_period_description">Numero di giorni di conservazione dei dati (minimo 30)</string>
+    <string name="data_retention_warning">⚠️ I dati più vecchi del periodo di conservazione verranno eliminati definitivamente</string>
 
     <!-- Notifications -->
     <string name="notification_channel_name">Promemoria farmaci</string>

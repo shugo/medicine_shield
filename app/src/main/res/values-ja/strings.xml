@@ -113,6 +113,12 @@
     <string name="mit0_license_url">https://licenses.opensource.jp/MIT-0/MIT-0.html</string>
     <string name="open_source_licenses">オープンソースライセンス</string>
     <string name="license_details">このアプリケーションは以下のオープンソースライブラリを使用しています:\n\n• Android Jetpack (Apache License 2.0)\n• Kotlin (Apache License 2.0)\n• Room Database (Apache License 2.0)\n• Jetpack Compose (Apache License 2.0)\n• Material Design 3 (Apache License 2.0)</string>
+    <string name="data_retention_settings">データ保存期間設定</string>
+    <string name="enable_data_retention">自動データ削除を有効にする</string>
+    <string name="data_retention_description">古いお薬、服用記録、メモを自動的に削除する</string>
+    <string name="data_retention_period">保存期間（日数）</string>
+    <string name="data_retention_period_description">データを保持する日数（最小30日）</string>
+    <string name="data_retention_warning">⚠️ 保存期間を過ぎたデータは永久に削除されます</string>
 
     <!-- Notifications -->
     <string name="notification_channel_name">服薬リマインダー</string>

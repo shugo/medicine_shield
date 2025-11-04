@@ -17,8 +17,13 @@ class SettingsPreferences(context: Context) {
         private const val DEFAULT_REMINDER_ENABLED = false
         private const val KEY_REMINDER_DELAY_MINUTES = "reminder_delay_minutes"
         private const val DEFAULT_REMINDER_DELAY_MINUTES = 30
+        private const val KEY_DATA_RETENTION_ENABLED = "data_retention_enabled"
+        private const val DEFAULT_DATA_RETENTION_ENABLED = false
+        private const val KEY_DATA_RETENTION_DAYS = "data_retention_days"
+        private const val DEFAULT_DATA_RETENTION_DAYS = 365
 
         const val MAX_REMINDER_DELAY_MINUTES = 1440 // 24 hours
+        const val MIN_DATA_RETENTION_DAYS = 30
     }
 
     /**
@@ -66,6 +71,39 @@ class SettingsPreferences(context: Context) {
     fun setReminderDelayMinutes(minutes: Int) {
         sharedPreferences.edit()
             .putInt(KEY_REMINDER_DELAY_MINUTES, minutes)
+            .apply()
+    }
+
+    /**
+     * Get whether data retention is enabled
+     */
+    fun isDataRetentionEnabled(): Boolean {
+        return sharedPreferences.getBoolean(KEY_DATA_RETENTION_ENABLED, DEFAULT_DATA_RETENTION_ENABLED)
+    }
+
+    /**
+     * Set whether data retention is enabled
+     */
+    fun setDataRetentionEnabled(enabled: Boolean) {
+        sharedPreferences.edit()
+            .putBoolean(KEY_DATA_RETENTION_ENABLED, enabled)
+            .apply()
+    }
+
+    /**
+     * Get data retention period in days
+     */
+    fun getDataRetentionDays(): Int {
+        return sharedPreferences.getInt(KEY_DATA_RETENTION_DAYS, DEFAULT_DATA_RETENTION_DAYS)
+    }
+
+    /**
+     * Set data retention period in days
+     */
+    fun setDataRetentionDays(days: Int) {
+        require(days >= MIN_DATA_RETENTION_DAYS) { "Retention days must be at least $MIN_DATA_RETENTION_DAYS" }
+        sharedPreferences.edit()
+            .putInt(KEY_DATA_RETENTION_DAYS, days)
             .apply()
     }
 }
