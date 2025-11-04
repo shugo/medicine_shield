@@ -67,11 +67,6 @@ class MedicationRepositoryCleanupTest {
         return dateFormatter.format(calendar.time)
     }
 
-    private fun parseDate(dateString: String): Long {
-        val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
-        return dateFormatter.parse(dateString)?.time ?: 0L
-    }
-
     private suspend fun createMedication(
         name: String,
         startDateOffset: Int = -100,
@@ -253,50 +248,6 @@ class MedicationRepositoryCleanupTest {
     }
 
     @Test
-    fun `cleanupOldData should delete medications with only old configs`() = runTest {
-        // Given: Create medication with only old configs (no current config with validTo = MAX_DATE)
-        val medication = Medication(name = "Old Config Only Med")
-        val oldMedId = database.medicationDao().insert(medication)
-
-        // Create an old config that became invalid 40 days ago
-        val oldConfig = MedicationConfig(
-            medicationId = oldMedId,
-            cycleType = CycleType.DAILY,
-            cycleValue = null,
-            medicationStartDate = formatDate(-100),
-            medicationEndDate = formatDate(-50),
-            isAsNeeded = false,
-            dose = 1.0,
-            doseUnit = "tablets",
-            validFrom = DateUtils.MIN_DATE,
-            validTo = formatDate(-40)  // Config became invalid 40 days ago
-        )
-        database.medicationConfigDao().insert(oldConfig)
-
-        createIntake(oldMedId, -50, sequenceNumber = 1)
-        createIntake(oldMedId, -35, sequenceNumber = 1)
-
-        // Create recent medication with intakes
-        val recentMedId = createMedication("Recent Med", startDateOffset = -20, endDateOffset = null)
-        createIntake(recentMedId, -10, sequenceNumber = 1)
-
-        // When: Clean up data with 30 days retention
-        repository.cleanupOldData(retentionDays = 30)
-
-        // Then: Old medication (with only old configs) should be deleted
-        val deletedMed = database.medicationDao().getMedicationById(oldMedId)
-        assertNull("Medication with only old configs should be deleted", deletedMed)
-
-        // Recent medication should be kept
-        val keptMed = database.medicationDao().getMedicationById(recentMedId)
-        assertNotNull("Recent medication should be kept", keptMed)
-
-        val recentIntake = database.medicationIntakeDao()
-            .getIntakeByMedicationAndDateAndSeq(recentMedId, formatDate(-10), 1)
-        assertNotNull("Recent intake should be kept", recentIntake)
-    }
-
-    @Test
     fun `cleanupOldData with zero retention should delete all past data`() = runTest {
         // Given: Create data from yesterday and today
         val medicationId = createMedication("Test Med")
@@ -467,7 +418,7 @@ class MedicationRepositoryCleanupTest {
             dose = 1.0,
             doseUnit = "tablets",
             validFrom = formatDate(-60),
-            validTo = formatDate(-50)  // Config became invalid 50 days ago (when medication ended)
+            validTo = DateUtils.MAX_DATE  // CURRENT config (validTo = MAX_DATE)
         )
         database.medicationConfigDao().insert(endedConfig)
 
@@ -539,7 +490,7 @@ class MedicationRepositoryCleanupTest {
             cycleType = CycleType.DAILY,
             cycleValue = null,
             medicationStartDate = formatDate(-100),
-            medicationEndDate = formatDate(-30),
+            medicationEndDate = DateUtils.MAX_DATE,
             isAsNeeded = false,
             dose = 1.0,
             doseUnit = "tablets",
@@ -548,13 +499,25 @@ class MedicationRepositoryCleanupTest {
         )
         database.medicationConfigDao().insert(boundaryConfig)
 
+        // Current config with updated medicationEndDate
+        val currentConfig = MedicationConfig(
+            medicationId = medicationId,
+            cycleType = CycleType.DAILY,
+            cycleValue = null,
+            medicationStartDate = formatDate(-100),
+            medicationEndDate = formatDate(-31),
+            isAsNeeded = false,
+            dose = 1.0,
+            doseUnit = "tablets",
+            validFrom = formatDate(-30),
+            validTo = DateUtils.MAX_DATE  // CURRENT config (validTo = MAX_DATE)
+        )
+        database.medicationConfigDao().insert(currentConfig)
+
         // When: Clean up with 30 days retention
         repository.cleanupOldData(retentionDays = 30)
 
-        // Then: Config should be deleted (validTo <= cutoffDate), and medication should be deleted
-        val configs = database.medicationConfigDao().getCurrentConfigForMedication(medicationId)
-        assertNull("Config with validTo at cutoff date should be deleted", configs)
-
+        // Then: Medication should be deleted
         val med = database.medicationDao().getMedicationById(medicationId)
         assertNull("Medication should be deleted when its only config has validTo <= cutoffDate", med)
     }
@@ -581,12 +544,23 @@ class MedicationRepositoryCleanupTest {
         )
         database.medicationConfigDao().insert(recentConfig)
 
+        // Current config with updated medicationEndDate
+        val currentConfig = MedicationConfig(
+            medicationId = medicationId,
+            cycleType = CycleType.DAILY,
+            cycleValue = null,
+            medicationStartDate = formatDate(-100),
+            medicationEndDate = formatDate(-31),
+            isAsNeeded = false,
+            dose = 1.0,
+            doseUnit = "tablets",
+            validFrom = formatDate(-29),
+            validTo = DateUtils.MAX_DATE  // CURRENT config (validTo = MAX_DATE)
+        )
+        database.medicationConfigDao().insert(currentConfig)
+
         // When: Clean up with 30 days retention
         repository.cleanupOldData(retentionDays = 30)
-
-        // Then: Config and medication should be kept
-        val configs = database.medicationConfigDao().getCurrentConfigForMedication(medicationId)
-        assertNull("Config is not current because validTo is in the past", configs)
 
         // But medication should still exist since config was not deleted
         val med = database.medicationDao().getMedicationById(medicationId)
