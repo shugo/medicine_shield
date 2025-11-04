@@ -244,111 +244,113 @@ fun MedicationCard(
             .fillMaxWidth()
             .clickable(onClick = onEdit)
     ) {
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Top
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            // Left column: medication info
+            Column(
+                modifier = Modifier.weight(1f)
             ) {
                 Text(
                     medication.name,
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.weight(1f)
+                    style = MaterialTheme.typography.titleLarge
                 )
-                Column(
-                    horizontalAlignment = Alignment.End
-                ) {
-                    IconButton(onClick = onEdit) {
-                        Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.edit))
-                    }
-                    if (isCurrentTab) {
-                        IconButton(onClick = onDiscontinue) {
-                            Icon(Icons.Default.Close, contentDescription = stringResource(R.string.discontinue_medication))
-                        }
+
+                Spacer(Modifier.height(8.dp))
+
+                // Get currently valid Config
+                val currentConfig = medicationWithTimes.config
+
+                currentConfig?.let { config ->
+                    // Intake time (for PRN: "As Needed x dose", for scheduled: time list)
+                    val timesText = if (config.isAsNeeded) {
+                        "${stringResource(R.string.as_needed_medication)} ${formatDose(doseFormat, config.dose, config.doseUnit)}"
                     } else {
-                        IconButton(onClick = onResume) {
-                            Icon(Icons.Default.PlayArrow, contentDescription = stringResource(R.string.resume_medication))
+                        times.joinToString(", ") {
+                            val time = timeParser.parse(it.time)
+                            val formattedTime = time?.let {
+                                timeFormatter.format(it)
+                            } ?: "00:00"
+                            "$formattedTime ${formatDose(doseFormat, it.dose, config.doseUnit)}"
                         }
-                    }
-                    IconButton(onClick = onDelete) {
-                        Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete))
-                    }
-                }
-            }
-
-            Spacer(Modifier.height(8.dp))
-
-            // Get currently valid Config
-            val currentConfig = medicationWithTimes.config
-
-            currentConfig?.let { config ->
-                // Intake time (for PRN: "As Needed x dose", for scheduled: time list)
-                val timesText = if (config.isAsNeeded) {
-                    "${stringResource(R.string.as_needed_medication)} ${formatDose(doseFormat, config.dose, config.doseUnit)}"
-                } else {
-                    times.joinToString(", ") {
-                        val time = timeParser.parse(it.time)
-                        val formattedTime = time?.let {
-                            timeFormatter.format(it)
-                        } ?: "00:00"
-                        "$formattedTime ${formatDose(doseFormat, it.dose, config.doseUnit)}"
-                    }
-                }
-                Text(
-                    stringResource(R.string.medication_times_label, timesText),
-                    style = MaterialTheme.typography.bodyMedium
-                )
-
-                Spacer(Modifier.height(4.dp))
-
-                // Cycle (hidden for PRN)
-                if (!config.isAsNeeded) {
-                    val cycleText = when (config.cycleType) {
-                        CycleType.DAILY -> stringResource(R.string.cycle_daily_full)
-                        CycleType.WEEKLY -> {
-                            val days = config.cycleValue?.split(",")?.mapNotNull { it.toIntOrNull() } ?: emptyList()
-                            val dayNames = days.map { getDayName(it) }
-                            val separator = stringResource(R.string.day_name_separator)
-                            "${stringResource(R.string.cycle_weekly_prefix)} ${dayNames.joinToString(separator)}"
-                        }
-                        CycleType.INTERVAL -> stringResource(R.string.cycle_interval_format, config.cycleValue ?: "")
                     }
                     Text(
-                        stringResource(R.string.cycle_label, cycleText),
+                        stringResource(R.string.medication_times_label, timesText),
                         style = MaterialTheme.typography.bodyMedium
                     )
 
                     Spacer(Modifier.height(4.dp))
-                }
 
-                // Period
-                val locale = Locale.getDefault()
-                val pattern = DateFormat.getBestDateTimePattern(locale, "yMd")
-                val dateFormat = SimpleDateFormat(pattern, locale)
-                val startDate = DateUtils.parseIsoDate(config.medicationStartDate)
-                val startDateStr = startDate?.let {
-                    dateFormat.format(it.time)
-                } ?: "????-??-??"
-                val endDateStr = if (config.medicationEndDate == DateUtils.MAX_DATE) {
-                    null
-                } else {
-                    val endDate = DateUtils.parseIsoDate(config.medicationEndDate)
-                    endDate?.let { dateFormat.format(it.time) }
+                    // Cycle (hidden for PRN)
+                    if (!config.isAsNeeded) {
+                        val cycleText = when (config.cycleType) {
+                            CycleType.DAILY -> stringResource(R.string.cycle_daily_full)
+                            CycleType.WEEKLY -> {
+                                val days = config.cycleValue?.split(",")?.mapNotNull { it.toIntOrNull() } ?: emptyList()
+                                val dayNames = days.map { getDayName(it) }
+                                val separator = stringResource(R.string.day_name_separator)
+                                "${stringResource(R.string.cycle_weekly_prefix)} ${dayNames.joinToString(separator)}"
+                            }
+                            CycleType.INTERVAL -> stringResource(R.string.cycle_interval_format, config.cycleValue ?: "")
+                        }
+                        Text(
+                            stringResource(R.string.cycle_label, cycleText),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+
+                        Spacer(Modifier.height(4.dp))
+                    }
+
+                    // Period
+                    val locale = Locale.getDefault()
+                    val pattern = DateFormat.getBestDateTimePattern(locale, "yMd")
+                    val dateFormat = SimpleDateFormat(pattern, locale)
+                    val startDate = DateUtils.parseIsoDate(config.medicationStartDate)
+                    val startDateStr = startDate?.let {
+                        dateFormat.format(it.time)
+                    } ?: "????-??-??"
+                    val endDateStr = if (config.medicationEndDate == DateUtils.MAX_DATE) {
+                        null
+                    } else {
+                        val endDate = DateUtils.parseIsoDate(config.medicationEndDate)
+                        endDate?.let { dateFormat.format(it.time) }
+                    }
+                    val periodText = if (endDateStr != null) {
+                        stringResource(R.string.period_with_end, startDateStr, endDateStr)
+                    } else {
+                        stringResource(R.string.period_no_end, startDateStr)
+                    }
+                    Text(
+                        stringResource(R.string.period_label, periodText),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
-                val periodText = if (endDateStr != null) {
-                    stringResource(R.string.period_with_end, startDateStr, endDateStr)
-                } else {
-                    stringResource(R.string.period_no_end, startDateStr)
+            }
+
+            // Right column: action buttons (minimal width)
+            Column(
+                horizontalAlignment = Alignment.End
+            ) {
+                IconButton(onClick = onEdit) {
+                    Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.edit))
                 }
-                Text(
-                    stringResource(R.string.period_label, periodText),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                if (isCurrentTab) {
+                    IconButton(onClick = onDiscontinue) {
+                        Icon(Icons.Default.Close, contentDescription = stringResource(R.string.discontinue_medication))
+                    }
+                } else {
+                    IconButton(onClick = onResume) {
+                        Icon(Icons.Default.PlayArrow, contentDescription = stringResource(R.string.resume_medication))
+                    }
+                }
+                IconButton(onClick = onDelete) {
+                    Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete))
+                }
             }
         }
     }
