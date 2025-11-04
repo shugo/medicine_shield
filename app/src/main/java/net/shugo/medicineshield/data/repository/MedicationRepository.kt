@@ -783,7 +783,7 @@ class MedicationRepository(
         medicationTimeDao.deleteOldTimes(cutoffDate)
 
         // 5. Delete medications where all remaining configs have ended before retention period
-        val medicationIds = medicationConfigDao.getMedicationIdsEndedBeforeWithNoActiveConfig(cutoffDate)
+        val medicationIds = medicationConfigDao.getMedicationIdsEndedBefore(cutoffDate)
         medicationIds.forEach { medicationId ->
             deleteMedicationById(medicationId)
         }
