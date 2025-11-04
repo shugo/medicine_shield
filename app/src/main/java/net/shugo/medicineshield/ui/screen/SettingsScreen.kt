@@ -46,6 +46,22 @@ import net.shugo.medicineshield.R
 import net.shugo.medicineshield.data.preferences.SettingsPreferences
 import net.shugo.medicineshield.viewmodel.SettingsViewModel
 
+/**
+ * Validates if the reminder delay value is within acceptable range.
+ */
+private fun isValidReminderDelay(minutes: Int?): Boolean {
+    return minutes != null &&
+           minutes > 0 &&
+           minutes <= SettingsPreferences.MAX_REMINDER_DELAY_MINUTES
+}
+
+/**
+ * Validates if the data retention days value meets minimum requirement.
+ */
+private fun isValidRetentionDays(days: Int?): Boolean {
+    return days != null && days >= SettingsPreferences.MIN_DATA_RETENTION_DAYS
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
@@ -196,12 +212,6 @@ fun SettingsScreen(
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
 
-                                fun isValidReminderDelay(minutes: Int?): Boolean {
-                                    return minutes != null &&
-                                           minutes > 0 &&
-                                           minutes <= SettingsPreferences.MAX_REMINDER_DELAY_MINUTES
-                                }
-
                                 OutlinedTextField(
                                     value = reminderDelayText,
                                     onValueChange = { newValue ->
@@ -294,10 +304,6 @@ fun SettingsScreen(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Spacer(modifier = Modifier.height(8.dp))
-
-                            fun isValidRetentionDays(days: Int?): Boolean {
-                                return days != null && days >= SettingsPreferences.MIN_DATA_RETENTION_DAYS
-                            }
 
                             OutlinedTextField(
                                 value = dataRetentionDaysText,
