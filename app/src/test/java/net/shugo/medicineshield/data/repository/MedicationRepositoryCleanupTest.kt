@@ -566,4 +566,39 @@ class MedicationRepositoryCleanupTest {
         val med = database.medicationDao().getMedicationById(medicationId)
         assertNotNull("Medication should be kept because its maximum medicationEndDate equals the cutoffDate boundary (not deleted when medicationEndDate == cutoffDate), regardless of validTo or number of configs", med)
     }
+
+    @Test
+    fun `cleanupOldData should NOT delete medications with intake records even if ended before retention period`() = runTest {
+        // Given: Create medications ended before retention period
+        // med1: ended 50 days ago, NO intake records - should be deleted
+        val med1 = createMedication("Old Med Without Intakes", startDateOffset = -100, endDateOffset = -50)
+
+        // med2: ended 50 days ago, HAS intake records - should be KEPT
+        val med2 = createMedication("Old Med With Intakes", startDateOffset = -100, endDateOffset = -50)
+        createIntake(med2, -60)  // Old intake record
+        createIntake(med2, -45)  // Another old intake record
+
+        // med3: ended 50 days ago, HAS intake records within retention period - should be KEPT
+        val med3 = createMedication("Old Med With Recent Intakes", startDateOffset = -100, endDateOffset = -50)
+        createIntake(med3, -20)  // Recent intake record (within retention period)
+
+        // Verify all medications exist
+        assertNotNull(database.medicationDao().getMedicationById(med1))
+        assertNotNull(database.medicationDao().getMedicationById(med2))
+        assertNotNull(database.medicationDao().getMedicationById(med3))
+
+        // When: Clean up data with 30 days retention
+        repository.cleanupOldData(retentionDays = 30)
+
+        // Then: Only med1 (no intake records) should be deleted
+        val deletedMed1 = database.medicationDao().getMedicationById(med1)
+        assertNull("Medication ended 50 days ago WITHOUT intake records should be deleted", deletedMed1)
+
+        // med2 and med3 should be kept because they have intake records
+        val keptMed2 = database.medicationDao().getMedicationById(med2)
+        assertNotNull("Medication ended 50 days ago WITH intake records should be KEPT", keptMed2)
+
+        val keptMed3 = database.medicationDao().getMedicationById(med3)
+        assertNotNull("Medication ended 50 days ago WITH recent intake records should be KEPT", keptMed3)
+    }
 }
