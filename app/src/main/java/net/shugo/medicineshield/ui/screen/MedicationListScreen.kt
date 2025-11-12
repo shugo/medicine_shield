@@ -63,6 +63,7 @@ fun MedicationListScreen(
     val currentMedications by viewModel.currentMedications.collectAsState()
     val pastMedications by viewModel.pastMedications.collectAsState()
     var medicationToDelete by remember { mutableStateOf<Long?>(null) }
+    var isCurrentTab by remember { mutableStateOf(true) }
     var selectedTabIndex by remember { mutableStateOf(0) }
 
     Scaffold(
@@ -132,7 +133,10 @@ fun MedicationListScreen(
                         MedicationCard(
                             medicationWithTimes = medicationWithTimes,
                             onEdit = { onEditMedication(medicationWithTimes.medication.id) },
-                            onDelete = { medicationToDelete = medicationWithTimes.medication.id }
+                            onDelete = {
+                                medicationToDelete = medicationWithTimes.medication.id
+                                isCurrentTab = selectedTabIndex == 0
+                            }
                         )
                     }
                 }
@@ -142,17 +146,26 @@ fun MedicationListScreen(
 
     // Delete confirmation dialog
     medicationToDelete?.let { medicationId ->
+        val (message, action) = if (isCurrentTab) {
+            // Current tab: Stop medication (set end date to yesterday)
+            stringResource(R.string.stop_medication_confirmation_message) to {
+                viewModel.stopMedication(medicationId)
+                medicationToDelete = null
+            }
+        } else {
+            // Past tab: Delete medication completely
+            stringResource(R.string.delete_confirmation_message) to {
+                viewModel.deleteMedication(medicationId)
+                medicationToDelete = null
+            }
+        }
+
         AlertDialog(
             onDismissRequest = { medicationToDelete = null },
             title = { Text(stringResource(R.string.delete_confirmation_title)) },
-            text = { Text(stringResource(R.string.delete_confirmation_message)) },
+            text = { Text(message) },
             confirmButton = {
-                TextButton(
-                    onClick = {
-                        viewModel.deleteMedication(medicationId)
-                        medicationToDelete = null
-                    }
-                ) {
+                TextButton(onClick = action) {
                     Text(stringResource(R.string.yes))
                 }
             },

@@ -29,6 +29,7 @@
     <string name="delete">Eliminar</string>
     <string name="delete_confirmation_title">Confirmar</string>
     <string name="delete_confirmation_message">Todo el historial de tomas también será eliminado.\n¿Está seguro de que desea eliminar este medicamento?</string>
+    <string name="stop_medication_confirmation_message">Este medicamento se moverá a la pestaña \"Medicamentos pasados\".\n¿Desea dejar de tomarlo?</string>
     <string name="yes">Sí</string>
     <string name="no">No</string>
     <string name="medication_times_label">Horarios: %s</string>

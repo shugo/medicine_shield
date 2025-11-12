@@ -314,6 +314,43 @@ class MedicationRepository(
         medicationDao.deleteById(medicationId)
     }
 
+    /**
+     * Stop taking medication by setting end date to yesterday
+     * (moves medication to "Past Medications" tab)
+     */
+    suspend fun stopMedication(medicationId: Long) {
+        val now = System.currentTimeMillis()
+        val today = formatDateString(now)
+
+        // Get yesterday's date
+        val calendar = Calendar.getInstance()
+        calendar.add(Calendar.DAY_OF_YEAR, -1)
+        val yesterday = formatDateString(calendar.timeInMillis)
+
+        // Get current config
+        val currentConfig = medicationConfigDao.getCurrentConfigForMedication(medicationId)
+        if (currentConfig != null) {
+            // Set validTo of current config to today
+            medicationConfigDao.update(
+                currentConfig.copy(
+                    validTo = today,
+                    updatedAt = now
+                )
+            )
+
+            // Insert new config with medicationEndDate = yesterday
+            val newConfig = currentConfig.copy(
+                id = 0, // Generate new ID
+                medicationEndDate = yesterday,
+                validFrom = today,
+                validTo = DateUtils.MAX_DATE,
+                createdAt = now,
+                updatedAt = now
+            )
+            medicationConfigDao.insert(newConfig)
+        }
+    }
+
     // ========== Daily Medication Functions ==========
 
     /**

@@ -29,6 +29,7 @@
     <string name="delete">Löschen</string>
     <string name="delete_confirmation_title">Bestätigen</string>
     <string name="delete_confirmation_message">Alle Einnahmehistorien werden ebenfalls gelöscht.\nSind Sie sicher, dass Sie dieses Medikament löschen möchten?</string>
+    <string name="stop_medication_confirmation_message">Dieses Medikament wird in die Registerkarte \"Vergangene Medikamente\" verschoben.\nMöchten Sie die Einnahme beenden?</string>
     <string name="yes">Ja</string>
     <string name="no">Nein</string>
     <string name="medication_times_label">Zeiten: %s</string>
