@@ -29,6 +29,7 @@
     <string name="delete">Delete</string>
     <string name="delete_confirmation_title">Confirm</string>
     <string name="delete_confirmation_message">All intake history will also be deleted.\nAre you sure you want to delete this medication?</string>
+    <string name="stop_medication_confirmation_message">This medication will be moved to the \"Past Medications\" tab.\nDo you want to stop taking it?</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
     <string name="medication_times_label">Times: %s</string>

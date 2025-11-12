@@ -79,6 +79,14 @@ class MedicationListViewModel(
         }
     }
 
+    fun stopMedication(medicationId: Long) {
+        viewModelScope.launch {
+            repository.stopMedication(medicationId)
+            // Reschedule notifications (medication will no longer appear in daily list from today)
+            notificationScheduler.rescheduleAllNotifications()
+        }
+    }
+
     /**
      * Convert Long timestamp to yyyy-MM-dd format string
      */

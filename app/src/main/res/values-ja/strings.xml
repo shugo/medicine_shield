@@ -29,6 +29,7 @@
     <string name="delete">削除</string>
     <string name="delete_confirmation_title">確認</string>
     <string name="delete_confirmation_message">服用履歴も削除されます。\n本当にこのお薬を削除しますか?</string>
+    <string name="stop_medication_confirmation_message">このお薬は「過去のお薬」タブに移動します。\n服用を中止しますか?</string>
     <string name="yes">はい</string>
     <string name="no">いいえ</string>
     <string name="medication_times_label">服用時間: %s</string>

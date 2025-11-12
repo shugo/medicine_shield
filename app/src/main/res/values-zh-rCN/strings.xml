@@ -29,6 +29,7 @@
     <string name="delete">删除</string>
     <string name="delete_confirmation_title">确认</string>
     <string name="delete_confirmation_message">服用记录也会被删除。\n您确定要删除这个药品吗？</string>
+    <string name="stop_medication_confirmation_message">该药品将移动到"过去的药品"标签。\n您要停止服用吗？</string>
     <string name="yes">是</string>
     <string name="no">否</string>
     <string name="medication_times_label">服用时间：%s</string>
