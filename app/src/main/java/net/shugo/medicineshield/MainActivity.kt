@@ -7,9 +7,9 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.content.res.Configuration
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,6 +24,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -68,8 +69,21 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Enable edge-to-edge display with proper status bar appearance
-        enableEdgeToEdge()
+        // On Android 15+ the system enforces edge-to-edge display, so only the
+        // system bar icon appearance needs to be adjusted here. enableEdgeToEdge()
+        // is intentionally not used because its backport for older versions
+        // references APIs deprecated in Android 15 (Window.setStatusBarColor,
+        // Window.setNavigationBarColor, LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES),
+        // which triggers a Google Play Console warning. On older versions the app
+        // falls back to the regular (non-edge-to-edge) window layout.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+            val isDarkTheme = (resources.configuration.uiMode and
+                Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+            WindowInsetsControllerCompat(window, window.decorView).apply {
+                isAppearanceLightStatusBars = !isDarkTheme
+                isAppearanceLightNavigationBars = !isDarkTheme
+            }
+        }
 
         val database = AppDatabase.getDatabase(applicationContext)
         repository = MedicationRepository(
