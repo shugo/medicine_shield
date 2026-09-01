@@ -7,6 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **You must think exclusively in English**. However, you are required to **respond in Japanese**.
 - You must not use hard-coded strings in UI.
 - You must write commit messages in English.
+- **You must not modify `local.properties`**. It is a developer-local file that may be shared with the host machine, so changing it (e.g. `sdk.dir`) can break builds on the host. If `sdk.dir` does not exist in the current environment, Gradle falls back to the `ANDROID_HOME` environment variable, so no modification is needed.
 
 ## Project Overview
 
