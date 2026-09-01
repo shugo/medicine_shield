@@ -41,6 +41,11 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Allow the debug build to be installed alongside the production
+            // app without uninstalling it (different application ID).
+            applicationIdSuffix = ".debug"
+        }
         release {
             // Enables code-related app optimization.
             isMinifyEnabled = true
